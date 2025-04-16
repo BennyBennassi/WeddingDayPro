@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
@@ -26,6 +26,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   handleExportPdf
 }) => {
   const selectedEvent = events?.find(event => event.id === selectedEventId);
+  const selectedBlockRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to the selected block section when a block is selected
+  useEffect(() => {
+    if (selectedEventId && selectedBlockRef.current) {
+      // Scroll the selected block section into view with smooth behavior
+      selectedBlockRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [selectedEventId]);
   
   const updateTimelineMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -163,7 +175,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       
       {/* Currently Selected Block of Time */}
       {selectedEvent ? (
-        <div className="mb-8 bg-gray-50 p-4 rounded-lg">
+        <div ref={selectedBlockRef} className="mb-8 bg-gray-50 p-4 rounded-lg border-2 border-primary animate-pulse-light">
           <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
           <EditTimeBlockForm 
             event={selectedEvent} 
