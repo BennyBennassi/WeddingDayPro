@@ -74,6 +74,7 @@ export const venueRestrictions = pgTable("venue_restrictions", {
   musicEndTime: text("music_end_time"),
   ceremonyStartTime: text("ceremony_start_time"),
   dinnerStartTime: text("dinner_start_time"),
+  showRestrictionLines: boolean("show_restriction_lines").default(true),
 });
 
 export const insertVenueRestrictionSchema = createInsertSchema(venueRestrictions)
@@ -83,6 +84,7 @@ export const insertVenueRestrictionSchema = createInsertSchema(venueRestrictions
     musicEndTime: true,
     ceremonyStartTime: true,
     dinnerStartTime: true,
+    showRestrictionLines: true,
   });
 
 export type InsertVenueRestriction = z.infer<typeof insertVenueRestrictionSchema>;

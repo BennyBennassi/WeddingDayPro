@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertTriangle, EyeIcon, EyeOffIcon } from 'lucide-react';
 
 interface VenueRestrictionsProps {
   restrictions: any;
@@ -18,7 +19,8 @@ const formSchema = z.object({
   hasCeremonyStartTime: z.boolean().default(false),
   ceremonyStartTime: z.string().optional(),
   hasDinnerStartTime: z.boolean().default(false),
-  dinnerStartTime: z.string().optional()
+  dinnerStartTime: z.string().optional(),
+  showRestrictionLines: z.boolean().default(true)
 });
 
 const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onUpdate }) => {
@@ -30,7 +32,8 @@ const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onU
       hasCeremonyStartTime: !!restrictions?.ceremonyStartTime,
       ceremonyStartTime: restrictions?.ceremonyStartTime || '14:00',
       hasDinnerStartTime: !!restrictions?.dinnerStartTime,
-      dinnerStartTime: restrictions?.dinnerStartTime || '19:00'
+      dinnerStartTime: restrictions?.dinnerStartTime || '19:00',
+      showRestrictionLines: restrictions?.showRestrictionLines !== false // Default to true if not set
     }
   });
   
@@ -42,7 +45,8 @@ const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onU
         hasCeremonyStartTime: !!restrictions.ceremonyStartTime,
         ceremonyStartTime: restrictions.ceremonyStartTime || '14:00',
         hasDinnerStartTime: !!restrictions.dinnerStartTime,
-        dinnerStartTime: restrictions.dinnerStartTime || '19:00'
+        dinnerStartTime: restrictions.dinnerStartTime || '19:00',
+        showRestrictionLines: restrictions.showRestrictionLines !== false // Default to true if not set
       });
     }
   }, [restrictions]);
@@ -51,7 +55,8 @@ const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onU
     onUpdate({
       musicEndTime: data.hasMusicEndTime ? data.musicEndTime : null,
       ceremonyStartTime: data.hasCeremonyStartTime ? data.ceremonyStartTime : null,
-      dinnerStartTime: data.hasDinnerStartTime ? data.dinnerStartTime : null
+      dinnerStartTime: data.hasDinnerStartTime ? data.dinnerStartTime : null,
+      showRestrictionLines: data.showRestrictionLines
     });
   };
 
