@@ -35,324 +35,278 @@ export interface IStorage {
   updateVenueRestriction(timelineId: number, restriction: Partial<InsertVenueRestriction>): Promise<VenueRestriction | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private timelineEvents: Map<number, TimelineEvent>;
-  private weddingTimelines: Map<number, WeddingTimeline>;
-  private venueRestrictions: Map<number, VenueRestriction>;
-  
-  private currentUserId: number;
-  private currentTimelineEventId: number;
-  private currentWeddingTimelineId: number;
-  private currentVenueRestrictionId: number;
+import { db } from "./db";
+import { 
+  users, 
+  timelineEvents, 
+  weddingTimelines, 
+  venueRestrictions,
+} from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
-  constructor() {
-    this.users = new Map();
-    this.timelineEvents = new Map();
-    this.weddingTimelines = new Map();
-    this.venueRestrictions = new Map();
-    
-    this.currentUserId = 1;
-    this.currentTimelineEventId = 1;
-    this.currentWeddingTimelineId = 1;
-    this.currentVenueRestrictionId = 1;
-    
-    // Add a default user and example timeline for quicker testing
-    const defaultUser: User = {
-      id: this.currentUserId++,
-      username: "demo",
-      password: "password",
-    };
-    this.users.set(defaultUser.id, defaultUser);
-    
-    const defaultTimeline: WeddingTimeline = {
-      id: this.currentWeddingTimelineId++,
-      userId: defaultUser.id,
-      name: "My Wedding",
-      weddingDate: "2023-12-31",
-      startHour: 6,
-      timeFormat: "24h",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.weddingTimelines.set(defaultTimeline.id, defaultTimeline);
-    
-    // Add some default timeline events based on the article
-    const defaultEvents: InsertTimelineEvent[] = [
-      {
-        userId: defaultUser.id,
-        name: "Hair & Makeup",
-        startTime: "08:00",
-        endTime: "12:00",
-        category: "preparation",
-        color: "bg-pink-100",
-        notes: "Bride and bridesmaids",
-        position: 1,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Travel to Ceremony",
-        startTime: "12:15",
-        endTime: "12:30",
-        category: "travel",
-        color: "bg-blue-100",
-        notes: "",
-        position: 2,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Ceremony",
-        startTime: "12:30",
-        endTime: "13:30",
-        category: "ceremony",
-        color: "bg-primary-light",
-        notes: "",
-        position: 3,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Receiving Line",
-        startTime: "13:30",
-        endTime: "13:45",
-        category: "custom",
-        color: "bg-purple-100",
-        notes: "",
-        position: 4,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Photos",
-        startTime: "13:45",
-        endTime: "15:30",
-        category: "photos",
-        color: "bg-green-100",
-        notes: "Family, bridal party and couple photos",
-        position: 5,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Travel to Reception",
-        startTime: "15:30",
-        endTime: "16:00",
-        category: "travel",
-        color: "bg-blue-100",
-        notes: "",
-        position: 6,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Drinks Reception",
-        startTime: "16:00",
-        endTime: "17:30",
-        category: "entertainment",
-        color: "bg-yellow-100",
-        notes: "",
-        position: 7,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Dinner Call",
-        startTime: "17:30",
-        endTime: "18:00",
-        category: "food",
-        color: "bg-orange-100",
-        notes: "",
-        position: 8,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Speeches",
-        startTime: "18:00",
-        endTime: "18:30",
-        category: "entertainment",
-        color: "bg-accent-light",
-        notes: "",
-        position: 9,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Dinner Service",
-        startTime: "18:30",
-        endTime: "20:30",
-        category: "food",
-        color: "bg-red-100",
-        notes: "",
-        position: 10,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Band Setup",
-        startTime: "20:30",
-        endTime: "21:30",
-        category: "entertainment",
-        color: "bg-gray-200",
-        notes: "",
-        position: 11,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Band",
-        startTime: "21:30",
-        endTime: "00:00",
-        category: "entertainment",
-        color: "bg-indigo-100",
-        notes: "",
-        position: 12,
-      },
-      {
-        userId: defaultUser.id,
-        name: "DJ",
-        startTime: "00:00",
-        endTime: "02:00",
-        category: "entertainment",
-        color: "bg-indigo-100",
-        notes: "",
-        position: 13,
-      },
-      {
-        userId: defaultUser.id,
-        name: "Residence Bar",
-        startTime: "03:00",
-        endTime: "05:00",
-        category: "entertainment",
-        color: "bg-teal-100",
-        notes: "Late night drinks",
-        position: 14,
-      },
-    ];
-    
-    for (const event of defaultEvents) {
-      const newEvent = {
-        ...event,
-        id: this.currentTimelineEventId++,
-      };
-      this.timelineEvents.set(newEvent.id, newEvent);
-    }
-    
-    // Add venue restrictions
-    const defaultRestriction: VenueRestriction = {
-      id: this.currentVenueRestrictionId++,
-      timelineId: defaultTimeline.id,
-      musicEndTime: "01:00",
-      ceremonyStartTime: null,
-      dinnerStartTime: "19:00",
-    };
-    this.venueRestrictions.set(defaultRestriction.id, defaultRestriction);
-  }
-
+export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
   
   // Timeline Event methods
   async getTimelineEvents(timelineId: number): Promise<TimelineEvent[]> {
-    return Array.from(this.timelineEvents.values())
-      .filter(event => this.weddingTimelines.get(timelineId)?.userId === event.userId)
-      .sort((a, b) => a.position - b.position);
+    const timeline = await this.getWeddingTimeline(timelineId);
+    if (!timeline) return [];
+    
+    return db
+      .select()
+      .from(timelineEvents)
+      .where(eq(timelineEvents.userId, timeline.userId))
+      .orderBy(timelineEvents.position);
   }
   
   async getTimelineEvent(id: number): Promise<TimelineEvent | undefined> {
-    return this.timelineEvents.get(id);
+    const [event] = await db
+      .select()
+      .from(timelineEvents)
+      .where(eq(timelineEvents.id, id));
+    return event;
   }
   
   async createTimelineEvent(event: InsertTimelineEvent): Promise<TimelineEvent> {
-    const id = this.currentTimelineEventId++;
-    const timelineEvent: TimelineEvent = { ...event, id };
-    this.timelineEvents.set(id, timelineEvent);
+    const [timelineEvent] = await db
+      .insert(timelineEvents)
+      .values({
+        ...event,
+        userId: event.userId ?? null,
+        notes: event.notes ?? null,
+      })
+      .returning();
     return timelineEvent;
   }
   
   async updateTimelineEvent(id: number, event: Partial<InsertTimelineEvent>): Promise<TimelineEvent | undefined> {
-    const existingEvent = this.timelineEvents.get(id);
-    if (!existingEvent) return undefined;
-    
-    const updatedEvent = { ...existingEvent, ...event };
-    this.timelineEvents.set(id, updatedEvent);
+    const [updatedEvent] = await db
+      .update(timelineEvents)
+      .set({
+        ...event,
+        userId: event.userId !== undefined ? (event.userId ?? null) : undefined,
+        notes: event.notes !== undefined ? (event.notes ?? null) : undefined,
+      })
+      .where(eq(timelineEvents.id, id))
+      .returning();
     return updatedEvent;
   }
   
   async deleteTimelineEvent(id: number): Promise<boolean> {
-    return this.timelineEvents.delete(id);
+    await db
+      .delete(timelineEvents)
+      .where(eq(timelineEvents.id, id));
+    return true; // Drizzle doesn't return count directly
   }
   
   // Wedding Timeline methods
   async getWeddingTimelines(userId: number): Promise<WeddingTimeline[]> {
-    return Array.from(this.weddingTimelines.values())
-      .filter(timeline => timeline.userId === userId)
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    return db
+      .select()
+      .from(weddingTimelines)
+      .where(eq(weddingTimelines.userId, userId));
   }
   
   async getWeddingTimeline(id: number): Promise<WeddingTimeline | undefined> {
-    return this.weddingTimelines.get(id);
+    const [timeline] = await db
+      .select()
+      .from(weddingTimelines)
+      .where(eq(weddingTimelines.id, id));
+    return timeline;
   }
   
   async createWeddingTimeline(timeline: InsertWeddingTimeline): Promise<WeddingTimeline> {
-    const id = this.currentWeddingTimelineId++;
-    const now = new Date();
-    const weddingTimeline: WeddingTimeline = { 
-      ...timeline, 
-      id,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.weddingTimelines.set(id, weddingTimeline);
+    const [weddingTimeline] = await db
+      .insert(weddingTimelines)
+      .values({
+        ...timeline,
+        userId: timeline.userId ?? null,
+      })
+      .returning();
     return weddingTimeline;
   }
   
   async updateWeddingTimeline(id: number, timeline: Partial<InsertWeddingTimeline>): Promise<WeddingTimeline | undefined> {
-    const existingTimeline = this.weddingTimelines.get(id);
-    if (!existingTimeline) return undefined;
-    
-    const updatedTimeline = { 
-      ...existingTimeline, 
-      ...timeline,
-      updatedAt: new Date()
-    };
-    this.weddingTimelines.set(id, updatedTimeline);
+    const [updatedTimeline] = await db
+      .update(weddingTimelines)
+      .set({
+        ...timeline,
+        userId: timeline.userId !== undefined ? (timeline.userId ?? null) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(weddingTimelines.id, id))
+      .returning();
     return updatedTimeline;
   }
   
   async deleteWeddingTimeline(id: number): Promise<boolean> {
-    return this.weddingTimelines.delete(id);
+    await db
+      .delete(weddingTimelines)
+      .where(eq(weddingTimelines.id, id));
+    return true;
   }
   
   // Venue Restriction methods
   async getVenueRestriction(timelineId: number): Promise<VenueRestriction | undefined> {
-    return Array.from(this.venueRestrictions.values())
-      .find(restriction => restriction.timelineId === timelineId);
+    const [restriction] = await db
+      .select()
+      .from(venueRestrictions)
+      .where(eq(venueRestrictions.timelineId, timelineId));
+    return restriction;
   }
   
   async createVenueRestriction(restriction: InsertVenueRestriction): Promise<VenueRestriction> {
-    const id = this.currentVenueRestrictionId++;
-    const venueRestriction: VenueRestriction = { ...restriction, id };
-    this.venueRestrictions.set(id, venueRestriction);
+    const [venueRestriction] = await db
+      .insert(venueRestrictions)
+      .values({
+        ...restriction,
+        timelineId: restriction.timelineId ?? null,
+        musicEndTime: restriction.musicEndTime ?? null,
+        ceremonyStartTime: restriction.ceremonyStartTime ?? null,
+        dinnerStartTime: restriction.dinnerStartTime ?? null,
+      })
+      .returning();
     return venueRestriction;
   }
   
   async updateVenueRestriction(timelineId: number, restriction: Partial<InsertVenueRestriction>): Promise<VenueRestriction | undefined> {
-    const existingRestriction = Array.from(this.venueRestrictions.values())
-      .find(r => r.timelineId === timelineId);
-      
-    if (!existingRestriction) return undefined;
+    const [existingRestriction] = await db
+      .select()
+      .from(venueRestrictions)
+      .where(eq(venueRestrictions.timelineId, timelineId));
     
-    const updatedRestriction = { ...existingRestriction, ...restriction };
-    this.venueRestrictions.set(existingRestriction.id, updatedRestriction);
+    if (!existingRestriction) {
+      return undefined;
+    }
+    
+    const [updatedRestriction] = await db
+      .update(venueRestrictions)
+      .set({
+        timelineId: restriction.timelineId !== undefined ? (restriction.timelineId ?? null) : undefined,
+        musicEndTime: restriction.musicEndTime !== undefined ? (restriction.musicEndTime ?? null) : undefined,
+        ceremonyStartTime: restriction.ceremonyStartTime !== undefined ? (restriction.ceremonyStartTime ?? null) : undefined,
+        dinnerStartTime: restriction.dinnerStartTime !== undefined ? (restriction.dinnerStartTime ?? null) : undefined,
+      })
+      .where(eq(venueRestrictions.id, existingRestriction.id))
+      .returning();
     return updatedRestriction;
   }
 }
 
-export const storage = new MemStorage();
+// Initialize the storage with the database implementation
+export const storage = new DatabaseStorage();
+
+// Add default data if it doesn't exist yet
+async function initializeDefaultData() {
+  try {
+    // Check if default user exists
+    const existingUser = await storage.getUserByUsername('demo');
+    
+    if (!existingUser) {
+      // Create default user
+      const defaultUser = await storage.createUser({
+        username: "demo",
+        password: "password",
+      });
+      
+      // Create default timeline
+      const defaultTimeline = await storage.createWeddingTimeline({
+        userId: defaultUser.id,
+        name: "My Wedding",
+        weddingDate: "2023-12-31",
+        startHour: 6,
+        timeFormat: "24h",
+      });
+      
+      // Add some default timeline events
+      const defaultEvents: InsertTimelineEvent[] = [
+        {
+          userId: defaultUser.id,
+          name: "Hair & Makeup",
+          startTime: "08:00",
+          endTime: "12:00",
+          category: "preparation",
+          color: "bg-pink-100",
+          notes: "Bride and bridesmaids",
+          position: 1,
+        },
+        {
+          userId: defaultUser.id,
+          name: "Travel to Ceremony",
+          startTime: "12:15",
+          endTime: "12:30",
+          category: "travel",
+          color: "bg-blue-100",
+          notes: "",
+          position: 2,
+        },
+        {
+          userId: defaultUser.id,
+          name: "Ceremony",
+          startTime: "12:30",
+          endTime: "13:30",
+          category: "ceremony",
+          color: "bg-primary-light",
+          notes: "",
+          position: 3,
+        },
+        {
+          userId: defaultUser.id,
+          name: "Receiving Line",
+          startTime: "13:30",
+          endTime: "13:45",
+          category: "custom",
+          color: "bg-purple-100",
+          notes: "",
+          position: 4,
+        },
+        {
+          userId: defaultUser.id,
+          name: "Photos",
+          startTime: "13:45",
+          endTime: "15:30",
+          category: "photos",
+          color: "bg-green-100",
+          notes: "Family, bridal party and couple photos",
+          position: 5,
+        },
+      ];
+      
+      for (const event of defaultEvents) {
+        await storage.createTimelineEvent(event);
+      }
+      
+      // Add venue restrictions
+      await storage.createVenueRestriction({
+        timelineId: defaultTimeline.id,
+        musicEndTime: "01:00",
+        ceremonyStartTime: null,
+        dinnerStartTime: "19:00",
+      });
+      
+      console.log('Default data initialized successfully');
+    }
+  } catch (error) {
+    console.error('Error initializing default data:', error);
+  }
+}
+
+// Call initialization (will only create data if it doesn't exist)
+initializeDefaultData();
