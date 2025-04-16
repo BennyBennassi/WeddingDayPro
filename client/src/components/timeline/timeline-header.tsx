@@ -42,7 +42,7 @@ const TimelineHeader = ({
 
   // Generate restriction markers for the header
   const generateRestrictionMarkers = () => {
-    if (!venueRestrictions || !showRestrictionLines) return null;
+    if (!venueRestrictions) return null;
     
     const markers = [];
     
@@ -64,8 +64,10 @@ const TimelineHeader = ({
             </div>
           </div>
           
-          {/* Vertical line extending down */}
-          <div className="absolute top-full w-0.5 h-screen bg-red-400 opacity-50 dashed-line pointer-events-none"></div>
+          {/* Vertical line extending down (only shown when restriction lines are enabled) */}
+          {showRestrictionLines && (
+            <div className="absolute top-full w-0.5 h-screen bg-red-400 opacity-50 dashed-line pointer-events-none"></div>
+          )}
         </div>
       );
     }
@@ -88,8 +90,10 @@ const TimelineHeader = ({
             </div>
           </div>
           
-          {/* Vertical line extending down */}
-          <div className="absolute top-full w-0.5 h-screen bg-purple-400 opacity-50 dashed-line pointer-events-none"></div>
+          {/* Vertical line extending down (only shown when restriction lines are enabled) */}
+          {showRestrictionLines && (
+            <div className="absolute top-full w-0.5 h-screen bg-purple-400 opacity-50 dashed-line pointer-events-none"></div>
+          )}
         </div>
       );
     }
@@ -112,8 +116,10 @@ const TimelineHeader = ({
             </div>
           </div>
           
-          {/* Vertical line extending down */}
-          <div className="absolute top-full w-0.5 h-screen bg-amber-400 opacity-50 dashed-line pointer-events-none"></div>
+          {/* Vertical line extending down (only shown when restriction lines are enabled) */}
+          {showRestrictionLines && (
+            <div className="absolute top-full w-0.5 h-screen bg-amber-400 opacity-50 dashed-line pointer-events-none"></div>
+          )}
         </div>
       );
     }
@@ -136,19 +142,21 @@ const TimelineHeader = ({
       
       {/* Time ruler with hour markings and restrictions */}
       <div className="pl-48 relative">
-        <div className="relative h-12 bg-gray-50 border-t border-b border-gray-200 mb-4 rounded-md">
+        <div className={`relative ${showRestrictionLines ? 'h-12' : 'h-8'} bg-gray-50 border-t border-b border-gray-200 mb-4 rounded-md`}>
           {/* Hour markers at the top */}
           <div className="absolute top-0 left-0 right-0 h-6 flex items-center">
             {generateHourMarks()}
           </div>
           
           {/* Restriction markers in the bottom half of the header */}
-          <div className="absolute bottom-0 left-0 right-0 h-6 flex items-center border-t border-gray-200">
-            <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-48 w-44 pl-2">
-              Venue Restrictions
+          {showRestrictionLines && (
+            <div className="absolute bottom-0 left-0 right-0 h-6 flex items-center border-t border-gray-200">
+              <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-48 w-44 pl-2">
+                Venue Restrictions
+              </div>
+              {generateRestrictionMarkers()}
             </div>
-            {generateRestrictionMarkers()}
-          </div>
+          )}
         </div>
       </div>
     </div>
