@@ -47,8 +47,8 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
   };
 
   return (
-    <div className="mb-6">
-      <h3 className="text-md font-medium text-gray-700 mb-4">Timeline Settings</h3>
+    <div className="mb-8 bg-gradient-to-r from-primary-50 to-transparent p-5 rounded-lg border border-primary-100">
+      <h3 className="text-md font-medium text-primary-800 mb-4">Timeline Settings</h3>
       <Form {...form}>
         <form onChange={form.handleSubmit(onSubmit)} className="space-y-3">
           <FormField

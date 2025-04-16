@@ -143,6 +143,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
+      {/* Timeline Settings - Moved to top */}
+      <TimelineSettings 
+        timeline={timeline} 
+        onUpdate={handleTimelineSettingsUpdate} 
+      />
+      
       {/* Create New Block of Time */}
       <div className="mb-8">
         <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
@@ -164,12 +170,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <p className="text-sm text-gray-500 mb-4">Click on a block of time in the timeline to edit it</p>
         </div>
       )}
-      
-      {/* Timeline Settings */}
-      <TimelineSettings 
-        timeline={timeline} 
-        onUpdate={handleTimelineSettingsUpdate} 
-      />
       
       {/* Venue Restrictions */}
       <VenueRestrictions 
