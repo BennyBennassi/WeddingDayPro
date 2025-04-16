@@ -14,12 +14,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import ColorPicker from '@/components/ui/color-picker';
 
-interface AddEventFormProps {
+interface AddTimeBlockFormProps {
   timelineId: number;
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Event name is required'),
+  name: z.string().min(1, 'Block of Time name is required'),
   startTime: z.string().min(1, 'Start time is required'),
   endTime: z.string().min(1, 'End time is required'),
   category: z.string().min(1, 'Category is required'),
@@ -27,7 +27,7 @@ const formSchema = z.object({
   notes: z.string().optional()
 });
 
-const AddEventForm: React.FC<AddEventFormProps> = ({ timelineId }) => {
+const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -237,4 +237,4 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ timelineId }) => {
   );
 };
 
-export default AddEventForm;
+export default AddTimeBlockForm;

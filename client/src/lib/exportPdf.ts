@@ -46,7 +46,7 @@ export function usePdfExport() {
     // Add table
     (doc as any).autoTable({
       startY: 35,
-      head: [['Time', 'Event', 'Category', 'Notes']],
+      head: [['Time', 'Block of Time', 'Category', 'Notes']],
       body: tableData,
       headStyles: {
         fillColor: [212, 138, 110],
