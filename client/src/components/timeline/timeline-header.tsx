@@ -25,7 +25,7 @@ const TimelineHeader = ({
     const marks = [];
     for (let i = 0; i < 24; i++) {
       const hour = (startHour + i) % 24;
-      const hourLabel = `${hour}:00`;
+      const hourLabel = `${hour}`;
       
       marks.push(
         <div 
