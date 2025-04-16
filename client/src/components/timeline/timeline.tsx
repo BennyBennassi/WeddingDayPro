@@ -80,10 +80,10 @@ const Timeline: React.FC<TimelineProps> = ({
       // Invalidate the query to refresh the data
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline.id}`] });
     } catch (error) {
-      console.error('Failed to update event time:', error);
+      console.error('Failed to update block of time:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update event time.',
+        description: 'Failed to update block of time.',
         variant: 'destructive',
       });
     }
@@ -102,7 +102,7 @@ const Timeline: React.FC<TimelineProps> = ({
       
       if (eventEndTime > restrictionTime) {
         return {
-          message: `Event ends after venue's music restriction time of ${venueRestrictions.musicEndTime}`
+          message: `Block of time ends after venue's music restriction time of ${venueRestrictions.musicEndTime}`
         };
       }
     }
@@ -136,7 +136,7 @@ const Timeline: React.FC<TimelineProps> = ({
     return false;
   };
 
-  // Sort events by position
+  // Sort time blocks by position
   const sortedEvents = [...(events || [])].sort((a, b) => a.position - b.position);
   
   return (
