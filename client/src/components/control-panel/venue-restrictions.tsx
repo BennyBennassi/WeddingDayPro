@@ -68,7 +68,34 @@ const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onU
       </h3>
       
       <Form {...form}>
-        <form onChange={form.handleSubmit(onSubmit)} className="space-y-2">
+        <form onChange={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Toggle for showing restriction lines */}
+          <FormField
+            control={form.control}
+            name="showRestrictionLines"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between py-2 border-b border-orange-100">
+                <div className="flex items-center">
+                  <FormLabel className="font-medium text-sm text-gray-700 flex items-center space-x-2">
+                    {field.value ? (
+                      <EyeIcon className="h-4 w-4 mr-2 text-orange-500" />
+                    ) : (
+                      <EyeOffIcon className="h-4 w-4 mr-2 text-gray-400" />
+                    )}
+                    <span>Show restriction lines on timeline</span>
+                  </FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-orange-500"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
           <FormField
             control={form.control}
             name="hasMusicEndTime"
