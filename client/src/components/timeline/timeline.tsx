@@ -141,7 +141,7 @@ const Timeline: React.FC<TimelineProps> = ({
   
   return (
     <div>
-      <TimelineHeader />
+      <TimelineHeader weddingDate={timeline?.weddingDate} />
       
       <div className="timeline-container min-w-max">
         <div className="timeline-header flex mb-2">
@@ -149,10 +149,21 @@ const Timeline: React.FC<TimelineProps> = ({
           <div className="w-48 flex-shrink-0"></div>
           <div className="flex-grow grid grid-cols-24 gap-0">
             {Array.from({ length: 24 }, (_, i) => {
-              const hour = (i + timeline?.startHour || 6) % 24;
+              // Use the timeline start hour, defaulting to 6 if not set
+              const startHour = timeline?.startHour || 6;
+              const hour = (i + startHour) % 24;
+              
+              // Add day indicator for hours that are on the next day
+              const dayIndicator = (i + startHour) >= 24 ? ' (+1)' : '';
+              
+              // Format the hour based on the user's preferred time format
+              const displayHour = timeline?.timeFormat === '12h' ? 
+                (hour % 12 || 12) + (hour >= 12 ? 'pm' : 'am') : 
+                hour.toString();
+              
               return (
                 <div key={i} className="text-xs text-gray-500 text-center col-span-1">
-                  {hour}
+                  {displayHour}{dayIndicator}
                 </div>
               );
             })}
@@ -192,6 +203,7 @@ const Timeline: React.FC<TimelineProps> = ({
                             isResizing={isResizing}
                             setIsResizing={setIsResizing}
                             timeFormat={timeline?.timeFormat || '24h'}
+                            startHour={timeline?.startHour || 6}
                           />
                         </div>
                       </div>

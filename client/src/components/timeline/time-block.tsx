@@ -15,6 +15,7 @@ interface TimeBlockProps {
   isResizing: boolean;
   setIsResizing: (isResizing: boolean) => void;
   timeFormat: string;
+  startHour: number;
 }
 
 const TimeBlock: React.FC<TimeBlockProps> = ({
@@ -45,7 +46,23 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   }, [left, width]);
 
   const formatTime = (time: string) => {
-    return timeFormat === '24h' ? formatTimeTo24h(time) : formatTimeTo12h(time);
+    // First parse the time
+    const [hour, minute] = time.split(':').map(Number);
+    
+    // Check if this time is likely on the next day (after midnight)
+    // based on the timeline start hour
+    const startHour = event.startHour || 6; // Default to 6am if not specified
+    
+    // If the hour is less than the start hour, it's likely on the next day
+    const isNextDay = hour < startHour;
+    const dayIndicator = isNextDay ? ' (+1)' : '';
+    
+    // Format according to user preference
+    const formattedTime = timeFormat === '24h' ? 
+      formatTimeTo24h(time) : 
+      formatTimeTo12h(time);
+    
+    return formattedTime + dayIndicator;
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
