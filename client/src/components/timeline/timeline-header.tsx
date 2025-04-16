@@ -20,15 +20,12 @@ const TimelineHeader = ({
     format(parse(weddingDate, 'yyyy-MM-dd', new Date()), 'EEEE, MMMM do, yyyy') : 
     'Your Wedding Day';
 
-  // Determine the hour marks to display
+  // Determine the hour marks to display (in 24-hour format)
   const generateHourMarks = () => {
     const marks = [];
     for (let i = 0; i < 24; i++) {
       const hour = (startHour + i) % 24;
-      const hourLabel = hour === 0 ? '12 AM' : 
-                      hour < 12 ? `${hour} AM` : 
-                      hour === 12 ? '12 PM' : 
-                      `${hour - 12} PM`;
+      const hourLabel = `${hour}:00`;
       
       marks.push(
         <div 
@@ -112,7 +109,7 @@ const TimelineHeader = ({
         </div>
         <div className="flex items-center text-gray-500 text-sm">
           <Clock className="h-4 w-4 mr-1" />
-          <span>Times shown in hours</span>
+          <span>24-hour format</span>
         </div>
       </div>
       
