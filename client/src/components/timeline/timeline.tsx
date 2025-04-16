@@ -185,7 +185,7 @@ const Timeline: React.FC<TimelineProps> = ({
             weddingDate={timeline?.weddingDate} 
             startHour={timeline?.startHour || 6}
             venueRestrictions={venueRestrictions}
-            showRestrictionLines={venueRestrictions?.showRestrictionLines}
+            showRestrictionLines={venueRestrictions?.showRestrictionLines === true}
           />
           
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
