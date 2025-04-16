@@ -102,7 +102,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ timelineId }) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Event Name</FormLabel>
+              <FormLabel>Block of Time Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., First Dance" {...field} />
               </FormControl>
@@ -230,7 +230,7 @@ const AddEventForm: React.FC<AddEventFormProps> = ({ timelineId }) => {
           disabled={createEventMutation.isPending}
         >
           <Plus className="h-5 w-5 mr-1" />
-          Add Event
+          Add Block of Time
         </Button>
       </form>
     </Form>

@@ -121,7 +121,7 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Event Name</FormLabel>
+                <FormLabel>Block of Time Name</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>

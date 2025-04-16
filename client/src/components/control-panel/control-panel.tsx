@@ -145,14 +145,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       
       {/* Create New Event */}
       <div className="mb-8">
-        <h3 className="text-md font-medium text-gray-700 mb-4">Add New Event</h3>
+        <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
         <AddEventForm timelineId={timeline?.id} />
       </div>
       
-      {/* Currently Selected Event */}
+      {/* Currently Selected Block of Time */}
       {selectedEvent ? (
         <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Event</h3>
+          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
           <EditEventForm 
             event={selectedEvent} 
             onClose={() => setSelectedEventId(null)} 
@@ -160,8 +160,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         </div>
       ) : (
         <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Event</h3>
-          <p className="text-sm text-gray-500 mb-4">Click on an event in the timeline to edit it</p>
+          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
+          <p className="text-sm text-gray-500 mb-4">Click on a block of time in the timeline to edit it</p>
         </div>
       )}
       
