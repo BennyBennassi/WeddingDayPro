@@ -52,8 +52,8 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
     },
     onSuccess: () => {
       toast({
-        title: 'Event Added',
-        description: 'Your event has been added to the timeline.'
+        title: 'Block of Time Added',
+        description: 'Your block of time has been added to the timeline.'
       });
       form.reset({
         name: '',
@@ -68,10 +68,10 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to add event. Please try again.',
+        description: 'Failed to add block of time. Please try again.',
         variant: 'destructive'
       });
-      console.error('Failed to add event:', error);
+      console.error('Failed to add block of time:', error);
     }
   });
 

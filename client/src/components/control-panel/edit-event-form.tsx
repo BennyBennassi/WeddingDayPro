@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import ColorPicker from '@/components/ui/color-picker';
 
-interface EditEventFormProps {
+interface EditTimeBlockFormProps {
   event: any;
   onClose: () => void;
 }
@@ -25,7 +25,7 @@ const formSchema = z.object({
   color: z.string().min(1, 'Color is required')
 });
 
-const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
+const EditTimeBlockForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,18 +45,18 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
     },
     onSuccess: () => {
       toast({
-        title: 'Event Updated',
-        description: 'Your event has been updated successfully.'
+        title: 'Block of Time Updated',
+        description: 'Your block of time has been updated successfully.'
       });
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.userId}`] });
     },
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to update event. Please try again.',
+        description: 'Failed to update block of time. Please try again.',
         variant: 'destructive'
       });
-      console.error('Failed to update event:', error);
+      console.error('Failed to update block of time:', error);
     }
   });
 
@@ -66,8 +66,8 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
     },
     onSuccess: () => {
       toast({
-        title: 'Event Deleted',
-        description: 'Your event has been removed from the timeline.'
+        title: 'Block of Time Deleted',
+        description: 'Your block of time has been removed from the timeline.'
       });
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.userId}`] });
       onClose();
@@ -75,10 +75,10 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to delete event. Please try again.',
+        description: 'Failed to delete block of time. Please try again.',
         variant: 'destructive'
       });
-      console.error('Failed to delete event:', error);
+      console.error('Failed to delete block of time:', error);
     }
   });
 
@@ -87,7 +87,7 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this event?')) {
+    if (confirm('Are you sure you want to delete this block of time?')) {
       deleteEventMutation.mutate();
     }
   };
@@ -249,4 +249,4 @@ const EditEventForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
   );
 };
 
-export default EditEventForm;
+export default EditTimeBlockForm;
