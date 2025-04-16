@@ -231,7 +231,7 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
         
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary-dark text-white"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           disabled={createEventMutation.isPending}
         >
           <Plus className="h-5 w-5 mr-1" />

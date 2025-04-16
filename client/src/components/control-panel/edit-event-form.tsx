@@ -234,7 +234,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
           <div className="flex space-x-2">
             <Button
               type="submit"
-              className="flex-1 bg-secondary hover:bg-secondary-dark text-white"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={updateEventMutation.isPending}
             >
               Update
