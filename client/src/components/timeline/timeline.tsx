@@ -180,36 +180,6 @@ const Timeline: React.FC<TimelineProps> = ({
       <TimelineHeader weddingDate={timeline?.weddingDate} />
       
       <div className="timeline-container min-w-max">
-        <div className="timeline-header flex mb-2">
-          {/* Time markers */}
-          <div className="w-48 flex-shrink-0"></div>
-          <div className="flex-grow relative">
-            {/* Only display time markers for hours that have events */}
-            {determineVisibleHours().map((hour, i) => {
-              // Calculate position as percentage
-              const startHour = timeline?.startHour || 6;
-              const hourPosition = ((hour - startHour + 24) % 24) / 24 * 100;
-              
-              // Add day indicator for hours that are on the next day
-              const dayIndicator = hour < startHour ? ' (+1)' : '';
-              
-              // Format the hour based on the user's preferred time format
-              const displayHour = timeline?.timeFormat === '12h' ? 
-                (hour % 12 || 12) + (hour >= 12 ? 'pm' : 'am') : 
-                hour.toString();
-              
-              return (
-                <div 
-                  key={i} 
-                  className="text-xs text-gray-500 text-center absolute transform -translate-x-1/2"
-                  style={{ left: `${hourPosition}%` }}
-                >
-                  {displayHour}{dayIndicator}
-                </div>
-              );
-            })}
-          </div>
-        </div>
         
         <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
