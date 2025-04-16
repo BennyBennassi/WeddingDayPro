@@ -135,6 +135,42 @@ const Timeline: React.FC<TimelineProps> = ({
     
     return false;
   };
+  
+  // Determine which hours should be displayed on the timeline based on events
+  const determineVisibleHours = (): number[] => {
+    if (!events || events.length === 0) {
+      // Default hours if no events
+      const startHour = timeline?.startHour || 6;
+      return [startHour, (startHour + 6) % 24, (startHour + 12) % 24, (startHour + 18) % 24];
+    }
+    
+    const startHour = timeline?.startHour || 6;
+    const visibleHoursSet = new Set<number>();
+    
+    // Always show the start hour
+    visibleHoursSet.add(startHour);
+    
+    // Add hours from event start and end times
+    events.forEach(event => {
+      const eventStartHour = parseInt(event.startTime.split(':')[0]);
+      const eventEndHour = parseInt(event.endTime.split(':')[0]);
+      
+      visibleHoursSet.add(eventStartHour);
+      visibleHoursSet.add(eventEndHour);
+      
+      // Add the hour before and after if different
+      visibleHoursSet.add((eventStartHour - 1 + 24) % 24);
+      visibleHoursSet.add((eventEndHour + 1) % 24);
+    });
+    
+    // Convert set to array and sort
+    return Array.from(visibleHoursSet).sort((a, b) => {
+      // Sort with respect to the timeline start hour
+      const adjustedA = (a - startHour + 24) % 24;
+      const adjustedB = (b - startHour + 24) % 24;
+      return adjustedA - adjustedB;
+    });
+  };
 
   // Sort time blocks by position
   const sortedEvents = [...(events || [])].sort((a, b) => a.position - b.position);
@@ -147,14 +183,15 @@ const Timeline: React.FC<TimelineProps> = ({
         <div className="timeline-header flex mb-2">
           {/* Time markers */}
           <div className="w-48 flex-shrink-0"></div>
-          <div className="flex-grow grid grid-cols-24 gap-0">
-            {Array.from({ length: 24 }, (_, i) => {
-              // Use the timeline start hour, defaulting to 6 if not set
+          <div className="flex-grow relative">
+            {/* Only display time markers for hours that have events */}
+            {determineVisibleHours().map((hour, i) => {
+              // Calculate position as percentage
               const startHour = timeline?.startHour || 6;
-              const hour = (i + startHour) % 24;
+              const hourPosition = ((hour - startHour + 24) % 24) / 24 * 100;
               
               // Add day indicator for hours that are on the next day
-              const dayIndicator = (i + startHour) >= 24 ? ' (+1)' : '';
+              const dayIndicator = hour < startHour ? ' (+1)' : '';
               
               // Format the hour based on the user's preferred time format
               const displayHour = timeline?.timeFormat === '12h' ? 
@@ -162,7 +199,11 @@ const Timeline: React.FC<TimelineProps> = ({
                 hour.toString();
               
               return (
-                <div key={i} className="text-xs text-gray-500 text-center col-span-1">
+                <div 
+                  key={i} 
+                  className="text-xs text-gray-500 text-center absolute transform -translate-x-1/2"
+                  style={{ left: `${hourPosition}%` }}
+                >
                   {displayHour}{dayIndicator}
                 </div>
               );
