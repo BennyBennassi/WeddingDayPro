@@ -40,7 +40,7 @@ const TimelineHeader = ({
     return marks;
   };
 
-  // Generate restriction markers
+  // Generate restriction markers for the header
   const generateRestrictionMarkers = () => {
     if (!venueRestrictions || !showRestrictionLines) return null;
     
@@ -51,19 +51,21 @@ const TimelineHeader = ({
       markers.push(
         <div 
           key="music-end"
-          className="absolute h-full flex flex-col items-center z-10"
+          className="absolute flex items-center z-10"
           style={{ left: position }}
         >
-          <div className="group relative">
+          <div className="group">
             <div className="w-4 h-4 bg-red-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
               <AlertTriangle className="h-2 w-2 text-white" />
             </div>
-            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-red-100 border border-red-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+            <div className="invisible group-hover:visible absolute top-full mt-1 px-2 py-1 bg-red-100 border border-red-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2 z-20">
               <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
               <span className="text-xs font-medium text-red-600">Music End: {venueRestrictions.musicEndTime}</span>
             </div>
           </div>
-          <div className="w-0.5 h-full bg-red-400 opacity-50 dashed-line"></div>
+          
+          {/* Vertical line extending down */}
+          <div className="absolute top-full w-0.5 h-screen bg-red-400 opacity-50 dashed-line pointer-events-none"></div>
         </div>
       );
     }
@@ -73,19 +75,21 @@ const TimelineHeader = ({
       markers.push(
         <div 
           key="ceremony-start"
-          className="absolute h-full flex flex-col items-center z-10"
+          className="absolute flex items-center z-10"
           style={{ left: position }}
         >
-          <div className="group relative">
+          <div className="group">
             <div className="w-4 h-4 bg-purple-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
               <AlertTriangle className="h-2 w-2 text-white" />
             </div>
-            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-purple-100 border border-purple-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+            <div className="invisible group-hover:visible absolute top-full mt-1 px-2 py-1 bg-purple-100 border border-purple-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2 z-20">
               <AlertTriangle className="h-3 w-3 text-purple-500 mr-1" />
               <span className="text-xs font-medium text-purple-600">Ceremony After: {venueRestrictions.ceremonyStartTime}</span>
             </div>
           </div>
-          <div className="w-0.5 h-full bg-purple-400 opacity-50 dashed-line"></div>
+          
+          {/* Vertical line extending down */}
+          <div className="absolute top-full w-0.5 h-screen bg-purple-400 opacity-50 dashed-line pointer-events-none"></div>
         </div>
       );
     }
@@ -95,19 +99,21 @@ const TimelineHeader = ({
       markers.push(
         <div 
           key="dinner-start"
-          className="absolute h-full flex flex-col items-center z-10"
+          className="absolute flex items-center z-10"
           style={{ left: position }}
         >
-          <div className="group relative">
+          <div className="group">
             <div className="w-4 h-4 bg-amber-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
               <AlertTriangle className="h-2 w-2 text-white" />
             </div>
-            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+            <div className="invisible group-hover:visible absolute top-full mt-1 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2 z-20">
               <AlertTriangle className="h-3 w-3 text-amber-500 mr-1" />
               <span className="text-xs font-medium text-amber-600">Dinner By: {venueRestrictions.dinnerStartTime}</span>
             </div>
           </div>
-          <div className="w-0.5 h-full bg-amber-400 opacity-50 dashed-line"></div>
+          
+          {/* Vertical line extending down */}
+          <div className="absolute top-full w-0.5 h-screen bg-amber-400 opacity-50 dashed-line pointer-events-none"></div>
         </div>
       );
     }
@@ -128,15 +134,21 @@ const TimelineHeader = ({
         </div>
       </div>
       
-      {/* Time ruler with hour markings */}
+      {/* Time ruler with hour markings and restrictions */}
       <div className="pl-48 relative">
-        <div className="relative h-8 bg-gray-50 border-t border-b border-gray-200 mb-4 rounded-md">
-          {generateHourMarks()}
-        </div>
-        
-        {/* Restriction markers - positioned relative to the timeline */}
-        <div className="relative" style={{ height: 'calc(100% - 2rem)' }}>
-          {generateRestrictionMarkers()}
+        <div className="relative h-12 bg-gray-50 border-t border-b border-gray-200 mb-4 rounded-md">
+          {/* Hour markers at the top */}
+          <div className="absolute top-0 left-0 right-0 h-6 flex items-center">
+            {generateHourMarks()}
+          </div>
+          
+          {/* Restriction markers in the bottom half of the header */}
+          <div className="absolute bottom-0 left-0 right-0 h-6 flex items-center border-t border-gray-200">
+            <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-48 w-44 pl-2">
+              Venue Restrictions
+            </div>
+            {generateRestrictionMarkers()}
+          </div>
         </div>
       </div>
     </div>
