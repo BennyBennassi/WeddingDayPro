@@ -178,11 +178,16 @@ const Timeline: React.FC<TimelineProps> = ({
   
   return (
     <div>
-      <TimelineHeader weddingDate={timeline?.weddingDate} />
-      
       <div className="timeline-container min-w-max">
-        
         <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
+          {/* Enhanced timeline header with restriction markers */}
+          <TimelineHeader 
+            weddingDate={timeline?.weddingDate} 
+            startHour={timeline?.startHour || 6}
+            venueRestrictions={venueRestrictions}
+            showRestrictionLines={venueRestrictions?.showRestrictionLines}
+          />
+          
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <Droppable droppableId="timeline-grid" type="event">
               {(provided) => (
@@ -203,41 +208,6 @@ const Timeline: React.FC<TimelineProps> = ({
                           <h3 className="font-medium text-gray-700">{event.name}</h3>
                         </div>
                         <div className="relative flex-grow h-14 bg-gray-100 rounded-md">
-                          {/* Add restriction lines for this time block row if enabled */}
-                          {venueRestrictions?.showRestrictionLines && (
-                            <>
-                              {venueRestrictions.musicEndTime && 
-                                event.category === 'entertainment' && (
-                                <RestrictionLine 
-                                  time={venueRestrictions.musicEndTime} 
-                                  startHour={timeline?.startHour || 6}
-                                  label="Music End"
-                                  type="end"
-                                />
-                              )}
-                              
-                              {venueRestrictions.ceremonyStartTime && 
-                                event.category === 'ceremony' && (
-                                <RestrictionLine 
-                                  time={venueRestrictions.ceremonyStartTime} 
-                                  startHour={timeline?.startHour || 6}
-                                  label="Ceremony Start"
-                                  type="start"
-                                />
-                              )}
-                              
-                              {venueRestrictions.dinnerStartTime && 
-                                (event.category === 'dining' || event.name.toLowerCase().includes('dinner')) && (
-                                <RestrictionLine 
-                                  time={venueRestrictions.dinnerStartTime} 
-                                  startHour={timeline?.startHour || 6}
-                                  label="Dinner By"
-                                  type="end"
-                                />
-                              )}
-                            </>
-                          )}
-                          
                           <TimeBlock
                             event={event}
                             index={index}
