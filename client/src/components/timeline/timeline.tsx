@@ -203,11 +203,10 @@ const Timeline: React.FC<TimelineProps> = ({
                           <h3 className="font-medium text-gray-700">{event.name}</h3>
                         </div>
                         <div className="relative flex-grow h-14 bg-gray-100 rounded-md">
-                          {/* Add restriction lines for this time block row if enabled */}
+                          {/* Always show restriction lines if enabled, regardless of block type */}
                           {venueRestrictions?.showRestrictionLines && (
                             <>
-                              {venueRestrictions.musicEndTime && 
-                                event.category === 'entertainment' && (
+                              {venueRestrictions.musicEndTime && (
                                 <RestrictionLine 
                                   time={venueRestrictions.musicEndTime} 
                                   startHour={timeline?.startHour || 6}
@@ -216,8 +215,7 @@ const Timeline: React.FC<TimelineProps> = ({
                                 />
                               )}
                               
-                              {venueRestrictions.ceremonyStartTime && 
-                                event.category === 'ceremony' && (
+                              {venueRestrictions.ceremonyStartTime && (
                                 <RestrictionLine 
                                   time={venueRestrictions.ceremonyStartTime} 
                                   startHour={timeline?.startHour || 6}
@@ -226,8 +224,7 @@ const Timeline: React.FC<TimelineProps> = ({
                                 />
                               )}
                               
-                              {venueRestrictions.dinnerStartTime && 
-                                (event.category === 'dining' || event.name.toLowerCase().includes('dinner')) && (
+                              {venueRestrictions.dinnerStartTime && (
                                 <RestrictionLine 
                                   time={venueRestrictions.dinnerStartTime} 
                                   startHour={timeline?.startHour || 6}
