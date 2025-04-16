@@ -29,7 +29,8 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   conflict,
   isResizing,
   setIsResizing,
-  timeFormat
+  timeFormat,
+  startHour
 }) => {
   const [blockLeft, setBlockLeft] = useState(left);
   const [blockWidth, setBlockWidth] = useState(width);
@@ -48,10 +49,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   const formatTime = (time: string) => {
     // First parse the time
     const [hour, minute] = time.split(':').map(Number);
-    
-    // Check if this time is likely on the next day (after midnight)
-    // based on the timeline start hour
-    const startHour = event.startHour || 6; // Default to 6am if not specified
     
     // If the hour is less than the start hour, it's likely on the next day
     const isNextDay = hour < startHour;
