@@ -56,10 +56,10 @@ const Timeline: React.FC<TimelineProps> = ({
       // Invalidate the query to refresh the data
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline.id}`] });
     } catch (error) {
-      console.error('Failed to update event position:', error);
+      console.error('Failed to update block of time position:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update event position.',
+        description: 'Failed to update block of time position.',
         variant: 'destructive',
       });
     }

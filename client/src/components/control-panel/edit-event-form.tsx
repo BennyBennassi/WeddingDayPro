@@ -18,14 +18,14 @@ interface EditTimeBlockFormProps {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Event name is required'),
+  name: z.string().min(1, 'Block of Time name is required'),
   startTime: z.string().min(1, 'Start time is required'),
   endTime: z.string().min(1, 'End time is required'),
   category: z.string().min(1, 'Category is required'),
   color: z.string().min(1, 'Color is required')
 });
 
-const EditTimeBlockForm: React.FC<EditEventFormProps> = ({ event, onClose }) => {
+const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({

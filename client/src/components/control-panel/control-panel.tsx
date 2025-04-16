@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
-import AddEventForm from './add-event-form';
-import EditEventForm from './edit-event-form';
+import AddTimeBlockForm from './add-event-form';
+import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
 import VenueRestrictions from './venue-restrictions';
 import ExportOptions from './export-options';
@@ -143,17 +143,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
-      {/* Create New Event */}
+      {/* Create New Block of Time */}
       <div className="mb-8">
         <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
-        <AddEventForm timelineId={timeline?.id} />
+        <AddTimeBlockForm timelineId={timeline?.id} />
       </div>
       
       {/* Currently Selected Block of Time */}
       {selectedEvent ? (
         <div className="mb-8 bg-gray-50 p-4 rounded-lg">
           <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
-          <EditEventForm 
+          <EditTimeBlockForm 
             event={selectedEvent} 
             onClose={() => setSelectedEventId(null)} 
           />
