@@ -66,56 +66,56 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     switch (templateType) {
       case 'church':
         templateEvents = [
-          { name: "Hair & Makeup", startTime: "08:00", endTime: "12:00", category: "preparation", color: "bg-pink-100", notes: "", position: 1 },
+          { name: "Hair & Makeup", startTime: "08:00", endTime: "12:00", category: "morning_prep", color: "bg-pink-100", notes: "", position: 1 },
           { name: "Travel to Church", startTime: "12:15", endTime: "12:30", category: "travel", color: "bg-blue-100", notes: "", position: 2 },
           { name: "Church Ceremony", startTime: "13:00", endTime: "14:00", category: "ceremony", color: "bg-primary-light", notes: "", position: 3 },
           { name: "Photos at Church", startTime: "14:00", endTime: "14:30", category: "photos", color: "bg-green-100", notes: "", position: 4 },
           { name: "Travel to Reception", startTime: "14:30", endTime: "15:00", category: "travel", color: "bg-blue-100", notes: "", position: 5 },
-          { name: "Drinks Reception", startTime: "15:30", endTime: "17:00", category: "entertainment", color: "bg-yellow-100", notes: "", position: 6 },
-          { name: "Dinner Call", startTime: "17:00", endTime: "17:30", category: "food", color: "bg-orange-100", notes: "", position: 7 },
-          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "food", color: "bg-red-100", notes: "", position: 8 },
-          { name: "Speeches", startTime: "19:30", endTime: "20:00", category: "entertainment", color: "bg-accent-light", notes: "", position: 9 },
+          { name: "Drinks Reception", startTime: "15:30", endTime: "17:00", category: "drinks_reception", color: "bg-yellow-100", notes: "", position: 6 },
+          { name: "Bell Call", startTime: "17:00", endTime: "17:30", category: "bell_call", color: "bg-orange-100", notes: "", position: 7 },
+          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "dining", color: "bg-red-100", notes: "", position: 8 },
+          { name: "Speeches", startTime: "19:30", endTime: "20:00", category: "speeches", color: "bg-accent-light", notes: "", position: 9 },
           { name: "Band", startTime: "21:00", endTime: "23:30", category: "entertainment", color: "bg-indigo-100", notes: "", position: 10 },
-          { name: "DJ", startTime: "23:30", endTime: "01:30", category: "entertainment", color: "bg-indigo-100", notes: "", position: 11 },
+          { name: "DJ", startTime: "23:30", endTime: "01:30", category: "dancing", color: "bg-indigo-100", notes: "", position: 11 },
         ];
         break;
       case 'single-venue':
         templateEvents = [
-          { name: "Hair & Makeup", startTime: "10:00", endTime: "13:00", category: "preparation", color: "bg-pink-100", notes: "", position: 1 },
+          { name: "Hair & Makeup", startTime: "10:00", endTime: "13:00", category: "morning_prep", color: "bg-pink-100", notes: "", position: 1 },
           { name: "Ceremony", startTime: "14:00", endTime: "15:00", category: "ceremony", color: "bg-primary-light", notes: "", position: 2 },
-          { name: "Drinks Reception", startTime: "15:00", endTime: "17:00", category: "entertainment", color: "bg-yellow-100", notes: "", position: 3 },
+          { name: "Drinks Reception", startTime: "15:00", endTime: "17:00", category: "drinks_reception", color: "bg-yellow-100", notes: "", position: 3 },
           { name: "Photos", startTime: "15:15", endTime: "16:30", category: "photos", color: "bg-green-100", notes: "", position: 4 },
-          { name: "Dinner Call", startTime: "17:00", endTime: "17:30", category: "food", color: "bg-orange-100", notes: "", position: 5 },
-          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "food", color: "bg-red-100", notes: "", position: 6 },
-          { name: "Speeches", startTime: "19:30", endTime: "20:15", category: "entertainment", color: "bg-accent-light", notes: "", position: 7 },
+          { name: "Bell Call", startTime: "17:00", endTime: "17:30", category: "bell_call", color: "bg-orange-100", notes: "", position: 5 },
+          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "dining", color: "bg-red-100", notes: "", position: 6 },
+          { name: "Speeches", startTime: "19:30", endTime: "20:15", category: "speeches", color: "bg-accent-light", notes: "", position: 7 },
           { name: "Band Setup", startTime: "20:15", endTime: "21:00", category: "entertainment", color: "bg-gray-200", notes: "", position: 8 },
-          { name: "First Dance", startTime: "21:00", endTime: "21:15", category: "entertainment", color: "bg-purple-100", notes: "", position: 9 },
+          { name: "First Dance", startTime: "21:00", endTime: "21:15", category: "dancing", color: "bg-purple-100", notes: "", position: 9 },
           { name: "Band", startTime: "21:15", endTime: "23:45", category: "entertainment", color: "bg-indigo-100", notes: "", position: 10 },
-          { name: "DJ", startTime: "23:45", endTime: "01:30", category: "entertainment", color: "bg-indigo-100", notes: "", position: 11 },
+          { name: "DJ", startTime: "23:45", endTime: "01:30", category: "dancing", color: "bg-indigo-100", notes: "", position: 11 },
         ];
         break;
       case 'morning-ceremony':
         templateEvents = [
-          { name: "Hair & Makeup", startTime: "05:00", endTime: "08:00", category: "preparation", color: "bg-pink-100", notes: "", position: 1 },
+          { name: "Hair & Makeup", startTime: "05:00", endTime: "08:00", category: "morning_prep", color: "bg-pink-100", notes: "", position: 1 },
           { name: "Ceremony", startTime: "09:00", endTime: "10:00", category: "ceremony", color: "bg-primary-light", notes: "", position: 2 },
           { name: "Photos", startTime: "10:00", endTime: "11:30", category: "photos", color: "bg-green-100", notes: "", position: 3 },
-          { name: "Brunch", startTime: "11:30", endTime: "13:30", category: "food", color: "bg-red-100", notes: "", position: 4 },
+          { name: "Brunch", startTime: "11:30", endTime: "13:30", category: "dining", color: "bg-red-100", notes: "", position: 4 },
           { name: "Afternoon Activities", startTime: "13:30", endTime: "16:00", category: "entertainment", color: "bg-yellow-100", notes: "", position: 5 },
-          { name: "Dinner Call", startTime: "17:00", endTime: "17:30", category: "food", color: "bg-orange-100", notes: "", position: 6 },
-          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "food", color: "bg-red-100", notes: "", position: 7 },
-          { name: "Evening Entertainment", startTime: "20:00", endTime: "00:00", category: "entertainment", color: "bg-indigo-100", notes: "", position: 8 },
+          { name: "Bell Call", startTime: "17:00", endTime: "17:30", category: "bell_call", color: "bg-orange-100", notes: "", position: 6 },
+          { name: "Dinner Service", startTime: "17:30", endTime: "19:30", category: "dining", color: "bg-red-100", notes: "", position: 7 },
+          { name: "Evening Entertainment", startTime: "20:00", endTime: "00:00", category: "dancing", color: "bg-indigo-100", notes: "", position: 8 },
         ];
         break;
       case 'evening-ceremony':
         templateEvents = [
-          { name: "Hair & Makeup", startTime: "13:00", endTime: "16:00", category: "preparation", color: "bg-pink-100", notes: "", position: 1 },
+          { name: "Hair & Makeup", startTime: "13:00", endTime: "16:00", category: "morning_prep", color: "bg-pink-100", notes: "", position: 1 },
           { name: "Ceremony", startTime: "17:00", endTime: "18:00", category: "ceremony", color: "bg-primary-light", notes: "", position: 2 },
-          { name: "Cocktail Hour", startTime: "18:00", endTime: "19:00", category: "entertainment", color: "bg-yellow-100", notes: "", position: 3 },
+          { name: "Drinks Reception", startTime: "18:00", endTime: "19:00", category: "drinks_reception", color: "bg-yellow-100", notes: "", position: 3 },
           { name: "Photos", startTime: "18:15", endTime: "19:00", category: "photos", color: "bg-green-100", notes: "", position: 4 },
-          { name: "Dinner Service", startTime: "19:00", endTime: "21:00", category: "food", color: "bg-red-100", notes: "", position: 5 },
-          { name: "Speeches", startTime: "21:00", endTime: "21:30", category: "entertainment", color: "bg-accent-light", notes: "", position: 6 },
-          { name: "Dancing", startTime: "21:30", endTime: "01:30", category: "entertainment", color: "bg-indigo-100", notes: "", position: 7 },
-          { name: "Late Night Snacks", startTime: "23:00", endTime: "23:30", category: "food", color: "bg-orange-100", notes: "", position: 8 },
+          { name: "Dinner Service", startTime: "19:00", endTime: "21:00", category: "dining", color: "bg-red-100", notes: "", position: 5 },
+          { name: "Speeches", startTime: "21:00", endTime: "21:30", category: "speeches", color: "bg-accent-light", notes: "", position: 6 },
+          { name: "Dancing", startTime: "21:30", endTime: "01:30", category: "dancing", color: "bg-indigo-100", notes: "", position: 7 },
+          { name: "Late Night Snacks", startTime: "23:00", endTime: "23:30", category: "dining", color: "bg-orange-100", notes: "", position: 8 },
         ];
         break;
       default:

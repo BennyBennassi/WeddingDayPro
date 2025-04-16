@@ -36,7 +36,7 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
       name: '',
       startTime: '12:00',
       endTime: '13:00',
-      category: 'custom',
+      category: 'morning_prep',
       color: 'bg-primary-light',
       notes: ''
     }
@@ -59,7 +59,7 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
         name: '',
         startTime: '12:00',
         endTime: '13:00',
-        category: 'custom',
+        category: 'morning_prep',
         color: 'bg-primary-light',
         notes: ''
       });
@@ -178,13 +178,18 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="ceremony">Ceremony</SelectItem>
+                  <SelectItem value="morning_prep">Morning Prep</SelectItem>
                   <SelectItem value="travel">Travel</SelectItem>
-                  <SelectItem value="food">Food & Dining</SelectItem>
-                  <SelectItem value="photos">Photography</SelectItem>
+                  <SelectItem value="ceremony">Ceremony</SelectItem>
+                  <SelectItem value="photos">Photos</SelectItem>
+                  <SelectItem value="drinks_reception">Drinks Reception</SelectItem>
+                  <SelectItem value="bell_call">Bell Call</SelectItem>
+                  <SelectItem value="entrance">Entrance</SelectItem>
+                  <SelectItem value="dining">Dining</SelectItem>
+                  <SelectItem value="speeches">Speeches</SelectItem>
                   <SelectItem value="entertainment">Entertainment</SelectItem>
-                  <SelectItem value="preparation">Preparation</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="dancing">Dancing</SelectItem>
+                  <SelectItem value="residence">Residence</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>
