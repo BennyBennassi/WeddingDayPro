@@ -149,6 +149,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         onUpdate={handleTimelineSettingsUpdate} 
       />
       
+      {/* Venue Restrictions - Moved below Timeline Settings */}
+      <VenueRestrictions 
+        restrictions={venueRestrictions} 
+        onUpdate={handleVenueRestrictionsUpdate} 
+      />
+      
       {/* Create New Block of Time */}
       <div className="mb-8">
         <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
@@ -170,12 +176,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <p className="text-sm text-gray-500 mb-4">Click on a block of time in the timeline to edit it</p>
         </div>
       )}
-      
-      {/* Venue Restrictions */}
-      <VenueRestrictions 
-        restrictions={venueRestrictions} 
-        onUpdate={handleVenueRestrictionsUpdate} 
-      />
       
       {/* Template Options */}
       <div className="mb-6">

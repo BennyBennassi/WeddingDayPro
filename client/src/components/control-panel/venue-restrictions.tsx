@@ -56,9 +56,9 @@ const VenueRestrictions: React.FC<VenueRestrictionsProps> = ({ restrictions, onU
   };
 
   return (
-    <div className="bg-orange-50 p-4 rounded-lg mb-6">
-      <h3 className="text-md font-medium text-gray-700 mb-3 flex items-center">
-        <AlertTriangle className="h-5 w-5 mr-1 text-orange-500" />
+    <div className="mb-8 bg-gradient-to-r from-orange-50 to-transparent p-5 rounded-lg border border-orange-100">
+      <h3 className="text-md font-medium text-orange-800 mb-4 flex items-center">
+        <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
         Venue Restrictions
       </h3>
       
