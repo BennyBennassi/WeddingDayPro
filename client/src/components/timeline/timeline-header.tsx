@@ -54,9 +54,14 @@ const TimelineHeader = ({
           className="absolute h-full flex flex-col items-center z-10"
           style={{ left: position }}
         >
-          <div className="px-2 py-1 bg-red-100 border border-red-200 rounded-md shadow-sm flex items-center mb-1">
-            <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
-            <span className="text-xs font-medium text-red-600">Music End: {venueRestrictions.musicEndTime}</span>
+          <div className="group relative">
+            <div className="w-4 h-4 bg-red-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
+              <AlertTriangle className="h-2 w-2 text-white" />
+            </div>
+            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-red-100 border border-red-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+              <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
+              <span className="text-xs font-medium text-red-600">Music End: {venueRestrictions.musicEndTime}</span>
+            </div>
           </div>
           <div className="w-0.5 h-full bg-red-400 opacity-50 dashed-line"></div>
         </div>
@@ -71,9 +76,14 @@ const TimelineHeader = ({
           className="absolute h-full flex flex-col items-center z-10"
           style={{ left: position }}
         >
-          <div className="px-2 py-1 bg-purple-100 border border-purple-200 rounded-md shadow-sm flex items-center mb-1">
-            <AlertTriangle className="h-3 w-3 text-purple-500 mr-1" />
-            <span className="text-xs font-medium text-purple-600">Ceremony After: {venueRestrictions.ceremonyStartTime}</span>
+          <div className="group relative">
+            <div className="w-4 h-4 bg-purple-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
+              <AlertTriangle className="h-2 w-2 text-white" />
+            </div>
+            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-purple-100 border border-purple-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+              <AlertTriangle className="h-3 w-3 text-purple-500 mr-1" />
+              <span className="text-xs font-medium text-purple-600">Ceremony After: {venueRestrictions.ceremonyStartTime}</span>
+            </div>
           </div>
           <div className="w-0.5 h-full bg-purple-400 opacity-50 dashed-line"></div>
         </div>
@@ -88,9 +98,14 @@ const TimelineHeader = ({
           className="absolute h-full flex flex-col items-center z-10"
           style={{ left: position }}
         >
-          <div className="px-2 py-1 bg-amber-100 border border-amber-200 rounded-md shadow-sm flex items-center mb-1">
-            <AlertTriangle className="h-3 w-3 text-amber-500 mr-1" />
-            <span className="text-xs font-medium text-amber-600">Dinner By: {venueRestrictions.dinnerStartTime}</span>
+          <div className="group relative">
+            <div className="w-4 h-4 bg-amber-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
+              <AlertTriangle className="h-2 w-2 text-white" />
+            </div>
+            <div className="invisible group-hover:visible absolute bottom-full mb-2 px-2 py-1 bg-amber-100 border border-amber-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2">
+              <AlertTriangle className="h-3 w-3 text-amber-500 mr-1" />
+              <span className="text-xs font-medium text-amber-600">Dinner By: {venueRestrictions.dinnerStartTime}</span>
+            </div>
           </div>
           <div className="w-0.5 h-full bg-amber-400 opacity-50 dashed-line"></div>
         </div>
