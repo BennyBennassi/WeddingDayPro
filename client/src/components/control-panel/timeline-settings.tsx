@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface TimelineSettingsProps {
   timeline: any;
@@ -14,8 +13,7 @@ interface TimelineSettingsProps {
 
 const formSchema = z.object({
   weddingDate: z.string().min(1, 'Wedding date is required'),
-  startHour: z.string().min(1, 'Start hour is required'),
-  timeFormat: z.string().min(1, 'Time format is required')
+  startHour: z.string().min(1, 'Start hour is required')
 });
 
 const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate }) => {
@@ -23,8 +21,7 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
     resolver: zodResolver(formSchema),
     defaultValues: {
       weddingDate: timeline?.weddingDate || new Date().toISOString().split('T')[0],
-      startHour: timeline?.startHour?.toString() || '6',
-      timeFormat: timeline?.timeFormat || '24h'
+      startHour: timeline?.startHour?.toString() || '6'
     }
   });
   
@@ -32,8 +29,7 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
     if (timeline) {
       form.reset({
         weddingDate: timeline.weddingDate,
-        startHour: timeline.startHour.toString(),
-        timeFormat: timeline.timeFormat
+        startHour: timeline.startHour.toString()
       });
     }
   }, [timeline]);
@@ -41,8 +37,7 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     onUpdate({
       weddingDate: data.weddingDate,
-      startHour: parseInt(data.startHour),
-      timeFormat: data.timeFormat
+      startHour: parseInt(data.startHour)
     });
   };
 
@@ -99,30 +94,6 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
                     <SelectItem value="12">12:00 PM</SelectItem>
                   </SelectContent>
                 </Select>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="timeFormat"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between">
-                <FormLabel className="text-sm text-gray-700">Time Format</FormLabel>
-                <RadioGroup
-                  defaultValue={field.value}
-                  onValueChange={field.onChange}
-                  className="flex items-center space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="24h" id="timeFormat-24h" />
-                    <label htmlFor="timeFormat-24h" className="text-sm text-gray-700">24h</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="12h" id="timeFormat-12h" />
-                    <label htmlFor="timeFormat-12h" className="text-sm text-gray-700">12h</label>
-                  </div>
-                </RadioGroup>
               </FormItem>
             )}
           />
