@@ -10,7 +10,8 @@ import {
   insertTimelineTemplateSchema,
   insertTemplateEventSchema,
   timelineEvents,
-  venueRestrictions
+  venueRestrictions,
+  weddingTimelines
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -266,65 +267,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid timeline ID" });
       }
       
-      // First, clear all events for this timeline
+      // Check if timeline exists
+      const timeline = await storage.getWeddingTimeline(id);
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
+      }
+      
+      console.log(`Preparing to delete timeline ${id} (${timeline.name})`);
+      
+      // Step 1: Delete associated venue restrictions directly from the database
       try {
-        // Get all events for this specific timeline or by user
-        const timeline = await storage.getWeddingTimeline(id);
-        if (!timeline) {
-          return res.status(404).json({ message: "Timeline not found" });
-        }
+        // Use direct SQL to bypass the foreign key constraint
+        await db.execute(`DELETE FROM venue_restrictions WHERE timeline_id = $1`, [id]);
+        console.log(`Deleted venue restrictions for timeline ${id}`);
+      } catch (err) {
+        console.error(`Error deleting venue restrictions for timeline ${id}:`, err);
+        // Continue anyway
+      }
+      
+      // Step 2: Delete all timeline events that reference this timeline
+      try {
+        // First get events directly linked to this timeline
+        const events = await db.select().from(timelineEvents).where(eq(timelineEvents.timelineId, id));
+        console.log(`Found ${events.length} events directly linked to timeline ${id}`);
         
-        // First, directly get events for this specific timelineId
-        const events = await db.select()
-          .from(timelineEvents)
-          .where(eq(timelineEvents.timelineId, id));
-        
-        console.log(`Found ${events.length} events directly linked to timeline ${id} to delete`);
-        
-        // Delete all events
+        // Delete each event
         for (const event of events) {
           await storage.deleteTimelineEvent(event.id);
         }
         
-        // Also check for legacy events by userId
-        // Use SQL expression to handle potential null values properly
-        const userEvents = await db.select()
-          .from(timelineEvents)
-          .where(timeline.userId ? eq(timelineEvents.userId, timeline.userId) : undefined);
-        
-        console.log(`Found ${userEvents.length} user events for timeline owner`);
-        
-        // Delete those too
-        for (const event of userEvents) {
-          await storage.deleteTimelineEvent(event.id);
+        // Also look for events that might belong to this user without proper timeline_id
+        if (timeline.userId) {
+          // Get all events from this user that don't have a timeline_id
+          await db.execute(`
+            DELETE FROM timeline_events 
+            WHERE user_id = $1 AND (timeline_id IS NULL OR timeline_id = $2)
+          `, [timeline.userId, id]);
         }
-      } catch (eventError) {
-        console.error("Error deleting timeline events:", eventError);
-        // Continue with timeline deletion even if events deletion fails
+      } catch (err) {
+        console.error(`Error deleting events for timeline ${id}:`, err);
+        // Continue anyway
       }
       
-      // Next, delete any venue restrictions associated with this timeline
+      // Step 3: Finally delete the timeline itself
       try {
-        const restriction = await storage.getVenueRestriction(id);
-        if (restriction) {
-          // We need to directly delete the restriction from the table to bypass the foreign key constraint
-          await db.delete(venueRestrictions).where(eq(venueRestrictions.timelineId, id));
-          console.log(`Deleted venue restriction for timeline ${id}`);
+        const success = await storage.deleteWeddingTimeline(id);
+        if (success) {
+          console.log(`Successfully deleted timeline ${id}`);
+          res.status(204).send();
+        } else {
+          console.error(`Timeline ${id} could not be deleted from storage`);
+          res.status(500).json({ message: "Error deleting timeline, please try again" });
         }
-      } catch (restrictionError) {
-        console.error("Error deleting venue restriction:", restrictionError);
-        // Continue with timeline deletion even if restriction deletion fails
+      } catch (err) {
+        console.error(`Error deleting timeline ${id}:`, err);
+        res.status(500).json({ message: "Error deleting timeline, please try again" });
       }
-      
-      // Now delete the timeline itself
-      const success = await storage.deleteWeddingTimeline(id);
-      if (!success) {
-        return res.status(404).json({ message: "Timeline not found or could not be deleted" });
-      }
-      
-      res.status(204).send();
     } catch (error) {
-      console.error("Error deleting wedding timeline:", error);
+      console.error("Error in delete timeline workflow:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
