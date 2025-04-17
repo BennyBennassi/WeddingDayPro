@@ -77,6 +77,26 @@ export function useWeddingTimeline(timelineId: number) {
       queryClient.invalidateQueries({ queryKey: [`/api/venue-restrictions/${timelineId}`] });
     }
   });
+  
+  // Delete timeline mutation
+  const deleteTimelineMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/timelines/${timelineId}`, null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
+    }
+  });
+  
+  // Clear timeline (delete all events) mutation
+  const clearTimelineMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/timelines/${timelineId}/events`, null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timelineId}`] });
+    }
+  });
 
   const isLoading = isTimelineLoading || isEventsLoading || isRestrictionsLoading;
 
@@ -91,6 +111,10 @@ export function useWeddingTimeline(timelineId: number) {
     createEvent: (data: any) => createEventMutation.mutate(data),
     deleteEvent: (id: number) => deleteEventMutation.mutate(id),
     updateTimeline: (data: any) => updateTimelineMutation.mutate(data),
-    updateVenueRestrictions: (data: any) => updateVenueRestrictionsMutation.mutate(data)
+    updateVenueRestrictions: (data: any) => updateVenueRestrictionsMutation.mutate(data),
+    deleteTimeline: () => deleteTimelineMutation.mutate(),
+    clearTimeline: () => clearTimelineMutation.mutate(),
+    isDeleting: deleteTimelineMutation.isPending,
+    isClearing: clearTimelineMutation.isPending
   };
 }
