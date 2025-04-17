@@ -65,6 +65,15 @@ export default function Header({ onSave, onShare, showActionButtons = false }: H
                   Home
                 </span>
               </Link>
+              {user && (
+                <Link href="/profile">
+                  <span className={`text-sm font-medium transition-colors hover:text-primary ${
+                    location === "/profile" ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    My Profile
+                  </span>
+                </Link>
+              )}
               {user?.isAdmin && (
                 <Link href="/admin">
                   <span className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -119,10 +128,12 @@ export default function Header({ onSave, onShare, showActionButtons = false }: H
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
+                    <Link href="/profile">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
                     
                     <Link href="/">
                       <DropdownMenuItem>
