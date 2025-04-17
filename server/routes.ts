@@ -39,8 +39,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/timeline-events", async (req, res) => {
     try {
-      const eventData = insertTimelineEventSchema.parse(req.body);
-      const newEvent = await storage.createTimelineEvent(eventData);
+      // Make sure timelineId is properly set if provided in query param but not in body
+      let eventData = req.body;
+      
+      // If timelineId is in the query string but not in the body, add it
+      if (req.query.timelineId && !eventData.timelineId) {
+        const timelineId = parseInt(req.query.timelineId as string);
+        if (!isNaN(timelineId)) {
+          eventData = { ...eventData, timelineId };
+        }
+      }
+      
+      const parsedEventData = insertTimelineEventSchema.parse(eventData);
+      const newEvent = await storage.createTimelineEvent(parsedEventData);
       res.status(201).json(newEvent);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -101,16 +112,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all events for this timeline first
       const events = await storage.getTimelineEvents(timelineId);
+      console.log(`Found ${events.length} events to delete for timeline ${timelineId}`);
+      
       if (!events || events.length === 0) {
         return res.status(200).json({ message: "No events to delete" });
       }
       
       // Delete each event
+      let deletedCount = 0;
       for (const event of events) {
-        await storage.deleteTimelineEvent(event.id);
+        const success = await storage.deleteTimelineEvent(event.id);
+        if (success) deletedCount++;
       }
       
-      res.status(200).json({ message: `Successfully deleted ${events.length} events` });
+      // Return a success response
+      res.status(200).json({ 
+        message: `Successfully deleted ${deletedCount} events`,
+        deletedCount,
+        timelineId
+      });
     } catch (error) {
       console.error("Error clearing timeline events:", error);
       res.status(500).json({ message: "Internal server error" });

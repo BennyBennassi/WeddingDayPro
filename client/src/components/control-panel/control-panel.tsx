@@ -122,7 +122,12 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       return apiRequest('DELETE', `/api/timeline-events/timeline/${timeline?.id}`, null);
     },
     onSuccess: () => {
+      // Invalidate the current timeline's events
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline?.id}`] });
+      
+      // Force a refresh of the timeline view by setting events to empty array directly
+      queryClient.setQueryData([`/api/timeline-events/${timeline?.id}`], []);
+      
       toast({
         title: "Timeline cleared",
         description: "All events have been removed from your timeline.",
