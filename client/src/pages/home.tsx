@@ -166,34 +166,38 @@ function Home() {
       
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 pb-8">
-        {user && (
-          <div className="mt-8">
-            <ThingsToConsider
-              timelineId={selectedTimelineId}
-              onAddEvent={handleAddEvent}
-            />
-          </div>
-        )}
-        
         <div className="flex flex-col lg:flex-row mt-8">
-          {/* Timeline View Container */}
-          <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-x-auto bg-white rounded-lg shadow-sm">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <p>Loading timeline...</p>
+          {/* Left Column: Timeline and Things to Consider */}
+          <div className="flex-grow lg:pr-6">
+            {/* Timeline View Container */}
+            <div className="p-4 md:p-6 lg:p-8 overflow-x-auto bg-white rounded-lg shadow-sm">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <p>Loading timeline...</p>
+                </div>
+              ) : (
+                <Timeline 
+                  timeline={timeline} 
+                  events={events} 
+                  venueRestrictions={restrictions}
+                  selectedEventId={selectedEventId}
+                  setSelectedEventId={setSelectedEventId}
+                />
+              )}
+            </div>
+            
+            {/* Things to Consider - Now below timeline */}
+            {user && (
+              <div className="mt-8">
+                <ThingsToConsider
+                  timelineId={selectedTimelineId}
+                  onAddEvent={handleAddEvent}
+                />
               </div>
-            ) : (
-              <Timeline 
-                timeline={timeline} 
-                events={events} 
-                venueRestrictions={restrictions}
-                selectedEventId={selectedEventId}
-                setSelectedEventId={setSelectedEventId}
-              />
             )}
           </div>
           
-          {/* Control Panel */}
+          {/* Right Column: Control Panel */}
           <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto mt-6 lg:mt-0">
             <ControlPanel 
               timeline={timeline}

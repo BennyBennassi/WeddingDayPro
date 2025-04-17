@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ColorPicker from "@/components/ui/color-picker";
 import { Check, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -236,7 +237,7 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
   }) || [];
   
   return (
-    <Card className="mb-8">
+    <Card className="mb-8 bg-white rounded-lg shadow-sm">
       <CardHeader className="cursor-pointer" onClick={toggleSection}>
         <CardTitle className="flex items-center gap-2">
           <div className="flex-1">Things to Consider</div>
@@ -371,19 +372,10 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                             {question.promptColor && (
                               <div className="space-y-2">
                                 <label className="text-sm font-medium">Color</label>
-                                <div className="flex gap-2">
-                                  <div
-                                    className="w-10 h-10 rounded border"
-                                    style={{
-                                      backgroundColor: questionData.color || question.defaultColor || "#4f46e5",
-                                    }}
-                                  />
-                                  <Input
-                                    placeholder={question.defaultColor || "CSS color"}
-                                    value={questionData.color || ""}
-                                    onChange={(e) => handleFollowUpChange(question.id, "color", e.target.value)}
-                                  />
-                                </div>
+                                <ColorPicker
+                                  value={questionData.color || question.defaultColor || "bg-primary-light"}
+                                  onChange={(color) => handleFollowUpChange(question.id, "color", color)}
+                                />
                               </div>
                             )}
                           </div>
