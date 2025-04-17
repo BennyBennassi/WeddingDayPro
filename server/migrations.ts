@@ -41,6 +41,9 @@ async function runMigrations() {
     // Create template events table if not exists
     await createTemplateEventsTable();
     
+    // Add timeline_id column to timeline_events if it doesn't exist
+    await addColumnIfNotExists('timeline_events', 'timeline_id', 'INTEGER');
+    
     // Create sample timeline questions if needed
     await createSampleTimelineQuestions();
     

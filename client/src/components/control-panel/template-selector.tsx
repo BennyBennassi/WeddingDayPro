@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useTimelineTemplates } from "@/hooks/use-timeline-templates";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -10,6 +12,16 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -18,7 +30,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LayoutTemplate, AlertCircle } from "lucide-react";
+import { Loader2, LayoutTemplate, AlertCircle, LogIn } from "lucide-react";
 
 interface TemplateSelectorProps {
   timelineId: number;
@@ -28,7 +40,10 @@ export default function TemplateSelector({ timelineId }: TemplateSelectorProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  const [, setLocation] = useLocation();
   
+  const { user } = useAuth();
   const { 
     templates, 
     isLoading, 
@@ -38,12 +53,18 @@ export default function TemplateSelector({ timelineId }: TemplateSelectorProps) 
   } = useTimelineTemplates();
   
   const handleSelectTemplate = (templateId: number) => {
+    if (!user) {
+      setIsLoginPromptOpen(true);
+      setIsOpen(false);
+      return;
+    }
+    
     setSelectedTemplateId(templateId);
     setIsConfirmDialogOpen(true);
   };
   
   const handleApplyTemplate = () => {
-    if (selectedTemplateId === null) return;
+    if (selectedTemplateId === null || !user) return;
     
     applyTemplate({
       timelineId,
@@ -52,6 +73,11 @@ export default function TemplateSelector({ timelineId }: TemplateSelectorProps) 
     
     setIsConfirmDialogOpen(false);
     setIsOpen(false);
+  };
+  
+  const handleLoginRedirect = () => {
+    setIsLoginPromptOpen(false);
+    setLocation("/auth");
   };
   
   return (
@@ -164,6 +190,26 @@ export default function TemplateSelector({ timelineId }: TemplateSelectorProps) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Login Prompt Dialog */}
+      <AlertDialog open={isLoginPromptOpen} onOpenChange={setIsLoginPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Login Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to be logged in to apply a template to your timeline.
+              Would you like to log in or create an account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLoginRedirect}>
+              <LogIn className="h-4 w-4 mr-2" />
+              Go to Login
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

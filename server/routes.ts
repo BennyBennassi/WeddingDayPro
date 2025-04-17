@@ -623,8 +623,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Route to apply a template to a timeline
-  app.post("/api/timelines/:timelineId/apply-template", isAuthenticated, async (req, res) => {
+  app.post("/api/timelines/:timelineId/apply-template", async (req, res) => {
     try {
+      // Check if the user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to apply a template" });
+      }
+      
       const timelineId = parseInt(req.params.timelineId);
       const templateId = parseInt(req.body.templateId);
       
