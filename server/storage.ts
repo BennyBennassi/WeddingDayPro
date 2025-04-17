@@ -14,7 +14,9 @@ import {
   type TimelineTemplate,
   type InsertTimelineTemplate,
   type TemplateEvent,
-  type InsertTemplateEvent
+  type InsertTemplateEvent,
+  type PasswordResetToken,
+  type InsertPasswordResetToken
 } from "@shared/schema";
 
 export interface IStorage {
@@ -70,6 +72,12 @@ export interface IStorage {
   createTemplateEvent(event: InsertTemplateEvent): Promise<TemplateEvent>;
   updateTemplateEvent(id: number, event: Partial<InsertTemplateEvent>): Promise<TemplateEvent | undefined>;
   deleteTemplateEvent(id: number): Promise<boolean>;
+  
+  // Password Reset operations
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  invalidatePasswordResetToken(token: string): Promise<boolean>;
 }
 
 import { db } from "./db";
@@ -81,7 +89,8 @@ import {
   timelineQuestions,
   userQuestionResponses,
   timelineTemplates,
-  templateEvents
+  templateEvents,
+  passwordResetTokens
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -510,6 +519,36 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(templateEvents)
       .where(eq(templateEvents.id, id));
+    return true;
+  }
+  
+  // Password Reset methods
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+  
+  async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const [resetToken] = await db
+      .insert(passwordResetTokens)
+      .values(token)
+      .returning();
+    return resetToken;
+  }
+  
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    return resetToken;
+  }
+  
+  async invalidatePasswordResetToken(token: string): Promise<boolean> {
+    await db
+      .update(passwordResetTokens)
+      .set({ used: true })
+      .where(eq(passwordResetTokens.token, token));
     return true;
   }
 }

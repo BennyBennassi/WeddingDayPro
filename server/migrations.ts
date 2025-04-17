@@ -1,6 +1,6 @@
 import { pool } from "./db";
 
-async function runMigrations() {
+export async function runMigrations() {
   console.log("Running database migrations...");
   
   try {
@@ -52,6 +52,9 @@ async function runMigrations() {
 
     // Update existing timeline questions to set all prompt fields to false
     await updateExistingQuestionsPromptFields();
+    
+    // Create password reset tokens table if not exists
+    await createPasswordResetTokensTable();
 
   } catch (error) {
     console.error("Error running migrations:", error);
@@ -455,6 +458,39 @@ async function createSampleTimelineTemplates() {
     }
   } catch (error) {
     console.error("Error creating sample timeline templates:", error);
+  }
+}
+
+async function createPasswordResetTokensTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'password_reset_tokens'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE password_reset_tokens (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          token TEXT NOT NULL UNIQUE,
+          expires_at TIMESTAMP NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          used BOOLEAN NOT NULL DEFAULT FALSE
+        );
+      `);
+      console.log("Created password_reset_tokens table");
+    } else {
+      console.log("password_reset_tokens table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating password_reset_tokens table:", error);
   }
 }
 
