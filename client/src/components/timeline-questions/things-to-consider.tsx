@@ -218,7 +218,7 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
     setCurrentQuestionId(null);
     
     toast({
-      title: "Event added",
+      title: "Block of Time added",
       description: `${eventData.name} has been added to your timeline.`,
     });
   };
@@ -297,16 +297,16 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                       {isAnsweredYes && isExpanded && (
                         <div className="border-t p-4 space-y-4">
                           <div className="text-sm text-muted-foreground">
-                            Fill in the details to add this event to your timeline:
+                            Fill in the details to add this Block of Time to your timeline:
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Name field */}
                             {question.promptName && (
                               <div className="space-y-2">
-                                <label className="text-sm font-medium">Event Name</label>
+                                <label className="text-sm font-medium">Block of Time Name</label>
                                 <Input
-                                  placeholder={question.defaultName || "Enter event name"}
+                                  placeholder={question.defaultName || "Enter Block of Time name"}
                                   value={questionData.name || ""}
                                   onChange={(e) => handleFollowUpChange(question.id, "name", e.target.value)}
                                 />
@@ -387,7 +387,7 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                               onClick={() => handleAddEvent(question.id)}
                               className="gap-1"
                             >
-                              <Plus className="h-4 w-4" /> Add to Timeline
+                              <Plus className="h-4 w-4" /> Add Block of Time
                             </Button>
                           </div>
                         </div>
@@ -398,7 +398,7 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                           className="border-t p-2 text-center text-sm text-muted-foreground cursor-pointer hover:bg-accent/50"
                           onClick={() => toggleQuestion(question.id)}
                         >
-                          Click to add details and create event
+                          Click to add details and create Block of Time
                         </div>
                       )}
                     </div>
