@@ -137,10 +137,10 @@ export default function TimelineQuestionsManager() {
       defaultEndTime: "",
       defaultColor: "#4f46e5",
       defaultNotes: "",
-      promptName: true,
+      promptName: false,
       promptCategory: false,
-      promptStartTime: true,
-      promptEndTime: true,
+      promptStartTime: false,
+      promptEndTime: false,
       promptColor: false,
       promptNotes: false,
     });

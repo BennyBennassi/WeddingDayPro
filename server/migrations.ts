@@ -38,6 +38,9 @@ async function runMigrations() {
     // Create sample timeline questions if needed
     await createSampleTimelineQuestions();
 
+    // Update existing timeline questions to set all prompt fields to false
+    await updateExistingQuestionsPromptFields();
+
   } catch (error) {
     console.error("Error running migrations:", error);
   }
@@ -210,19 +213,19 @@ async function createSampleTimelineQuestions() {
         INSERT INTO timeline_questions 
           (question, description, active, "order", default_name, default_category, default_start_time, default_end_time, default_color, prompt_name, prompt_category, prompt_start_time, prompt_end_time, prompt_color, prompt_notes)
         VALUES
-          ('Will you have hair and makeup professionals?', 'Professional hair and makeup usually takes 30-45 minutes per person', true, 10, 'Hair & Makeup', 'Getting Ready', '10:00', '12:00', '#f472b6', true, true, true, true, true, true),
+          ('Will you have hair and makeup professionals?', 'Professional hair and makeup usually takes 30-45 minutes per person', true, 10, 'Hair & Makeup', 'Getting Ready', '10:00', '12:00', '#f472b6', false, false, false, false, false, false),
           
-          ('Are you having a first look?', 'A first look is a private moment for the couple to see each other before the ceremony', true, 20, 'First Look', 'Pre-Ceremony', '13:30', '14:00', '#a78bfa', true, true, true, true, true, true),
+          ('Are you having a first look?', 'A first look is a private moment for the couple to see each other before the ceremony', true, 20, 'First Look', 'Pre-Ceremony', '13:30', '14:00', '#a78bfa', false, false, false, false, false, false),
           
-          ('Will you have a cocktail hour?', 'Typically happens between ceremony and reception while photos are being taken', true, 30, 'Cocktail Hour', 'Reception', '17:00', '18:00', '#60a5fa', true, true, true, true, true, true),
+          ('Will you have a cocktail hour?', 'Typically happens between ceremony and reception while photos are being taken', true, 30, 'Cocktail Hour', 'Reception', '17:00', '18:00', '#60a5fa', false, false, false, false, false, false),
           
-          ('Are you planning to have toasts/speeches?', 'Usually takes place during reception dinner', true, 40, 'Toasts & Speeches', 'Reception', '19:00', '19:30', '#34d399', true, true, true, true, true, true),
+          ('Are you planning to have toasts/speeches?', 'Usually takes place during reception dinner', true, 40, 'Toasts & Speeches', 'Reception', '19:00', '19:30', '#34d399', false, false, false, false, false, false),
           
-          ('Will you have a cake cutting?', 'Traditional part of the reception', true, 50, 'Cake Cutting', 'Reception', '20:00', '20:15', '#fbbf24', true, true, true, true, true, true),
+          ('Will you have a cake cutting?', 'Traditional part of the reception', true, 50, 'Cake Cutting', 'Reception', '20:00', '20:15', '#fbbf24', false, false, false, false, false, false),
           
-          ('Are you planning a first dance?', 'Traditionally the first activity after dinner', true, 60, 'First Dance', 'Reception', '19:45', '19:55', '#f87171', true, true, true, true, true, true),
+          ('Are you planning a first dance?', 'Traditionally the first activity after dinner', true, 60, 'First Dance', 'Reception', '19:45', '19:55', '#f87171', false, false, false, false, false, false),
           
-          ('Will there be parent dances?', 'Usually follows the first dance', true, 70, 'Parent Dances', 'Reception', '19:55', '20:10', '#fb923c', true, true, true, true, true, true);
+          ('Will there be parent dances?', 'Usually follows the first dance', true, 70, 'Parent Dances', 'Reception', '19:55', '20:10', '#fb923c', false, false, false, false, false, false);
       `);
       
       console.log("Created sample timeline questions");
@@ -231,6 +234,38 @@ async function createSampleTimelineQuestions() {
     }
   } catch (error) {
     console.error("Error creating sample timeline questions:", error);
+  }
+}
+
+async function updateExistingQuestionsPromptFields() {
+  try {
+    // Check if timeline_questions table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'timeline_questions'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (tableExists) {
+      // Update existing questions to set all prompt fields to false
+      await pool.query(`
+        UPDATE timeline_questions 
+        SET 
+          prompt_name = false,
+          prompt_category = false,
+          prompt_start_time = false,
+          prompt_end_time = false,
+          prompt_color = false,
+          prompt_notes = false;
+      `);
+      
+      console.log("Updated existing timeline questions to default prompt fields to FALSE");
+    }
+  } catch (error) {
+    console.error("Error updating existing timeline questions:", error);
   }
 }
 
