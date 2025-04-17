@@ -161,8 +161,24 @@ function Home() {
     }
     
     // Generate a timeline name with TL prefix and number
-    const timelineCount = userTimelines?.length || 0;
-    const timelinePrefix = `TL${timelineCount + 1} - `;
+    // Find the highest TL number from existing timelines to ensure continuous numbering
+    let highestTLNumber = 0;
+    
+    if (userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0) {
+      userTimelines.forEach((timeline: any) => {
+        if (timeline.name) {
+          const match = timeline.name.match(/^TL(\d+) -/);
+          if (match && match[1]) {
+            const tlNumber = parseInt(match[1]);
+            if (tlNumber > highestTLNumber) {
+              highestTLNumber = tlNumber;
+            }
+          }
+        }
+      });
+    }
+    
+    const timelinePrefix = `TL${highestTLNumber + 1} - `;
     const defaultName = "New Timeline";
     
     // Set default values
@@ -178,9 +194,25 @@ function Home() {
   const handleSubmitNewTimeline = () => {
     if (!user) return;
     
-    // Generate the timeline name with the prefix
-    const timelineCount = userTimelines?.length || 0;
-    const timelinePrefix = `TL${timelineCount + 1} - `;
+    // Generate the timeline name with the proper TL number prefix
+    // Find the highest TL number from existing timelines
+    let highestTLNumber = 0;
+    
+    if (userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0) {
+      userTimelines.forEach((timeline: any) => {
+        if (timeline.name) {
+          const match = timeline.name.match(/^TL(\d+) -/);
+          if (match && match[1]) {
+            const tlNumber = parseInt(match[1]);
+            if (tlNumber > highestTLNumber) {
+              highestTLNumber = tlNumber;
+            }
+          }
+        }
+      });
+    }
+    
+    const timelinePrefix = `TL${highestTLNumber + 1} - `;
     const fullTimelineName = timelinePrefix + newTimelineName;
     
     createTimelineMutation.mutate({
@@ -384,7 +416,24 @@ function Home() {
               <Label htmlFor="timeline-name">Timeline Name</Label>
               <div className="flex items-center">
                 <div className="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 border-input text-muted-foreground">
-                  {`TL${(userTimelines?.length || 0) + 1} - `}
+                  {(() => {
+                    // Calculate the next TL number based on the highest existing TL number
+                    let highestTLNumber = 0;
+                    if (userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0) {
+                      userTimelines.forEach((timeline: any) => {
+                        if (timeline.name) {
+                          const match = timeline.name.match(/^TL(\d+) -/);
+                          if (match && match[1]) {
+                            const tlNumber = parseInt(match[1]);
+                            if (tlNumber > highestTLNumber) {
+                              highestTLNumber = tlNumber;
+                            }
+                          }
+                        }
+                      });
+                    }
+                    return `TL${highestTLNumber + 1} - `;
+                  })()}
                 </div>
                 <Input
                   id="timeline-name"

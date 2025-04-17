@@ -176,7 +176,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
           
           {/* Timeline Selector - only shows when user has timelines */}
-          {userTimelines && userTimelines.length > 0 ? (
+          {userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 ? (
             <div className="space-y-3">
               <div className="flex gap-2 items-center">
                 <Select
