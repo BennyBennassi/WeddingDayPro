@@ -1,7 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTimelineEventSchema, insertWeddingTimelineSchema, insertVenueRestrictionSchema } from "@shared/schema";
+import { 
+  insertTimelineEventSchema, 
+  insertWeddingTimelineSchema, 
+  insertVenueRestrictionSchema,
+  insertTimelineQuestionSchema,
+  insertUserQuestionResponseSchema
+} from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
@@ -267,6 +273,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error updating user:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Timeline Questions - Admin Only Routes
+  app.get("/api/admin/timeline-questions", isAdmin, async (req, res) => {
+    try {
+      const questions = await storage.getTimelineQuestions();
+      res.json(questions);
+    } catch (error) {
+      console.error("Error getting timeline questions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/timeline-questions/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+      }
+      
+      const question = await storage.getTimelineQuestion(id);
+      if (!question) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      
+      res.json(question);
+    } catch (error) {
+      console.error("Error getting timeline question:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/timeline-questions", isAdmin, async (req, res) => {
+    try {
+      const questionData = insertTimelineQuestionSchema.parse(req.body);
+      const newQuestion = await storage.createTimelineQuestion(questionData);
+      res.status(201).json(newQuestion);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating timeline question:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/admin/timeline-questions/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+      }
+      
+      const question = await storage.getTimelineQuestion(id);
+      if (!question) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      
+      const updatedQuestion = await storage.updateTimelineQuestion(id, req.body);
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error("Error updating timeline question:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/timeline-questions/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid question ID" });
+      }
+      
+      const success = await storage.deleteTimelineQuestion(id);
+      if (!success) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting timeline question:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Timeline Questions - User Routes
+  app.get("/api/timeline-questions", async (req, res) => {
+    try {
+      // Only return active questions for regular users
+      const questions = await storage.getTimelineQuestions(true);
+      res.json(questions);
+    } catch (error) {
+      console.error("Error getting timeline questions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // User Question Responses
+  app.get("/api/user-question-responses/:userId/:timelineId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const timelineId = parseInt(req.params.timelineId);
+      
+      if (isNaN(userId) || isNaN(timelineId)) {
+        return res.status(400).json({ message: "Invalid IDs provided" });
+      }
+      
+      // Make sure users can only access their own responses (admins can access all)
+      if (req.user?.id !== userId && !req.user?.isAdmin) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const responses = await storage.getUserQuestionResponses(userId, timelineId);
+      res.json(responses);
+    } catch (error) {
+      console.error("Error getting user question responses:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/user-question-responses", isAuthenticated, async (req, res) => {
+    try {
+      const responseData = insertUserQuestionResponseSchema.parse(req.body);
+      
+      // Make sure users can only create responses for themselves (admins can create for anyone)
+      if (req.user?.id !== responseData.userId && !req.user?.isAdmin) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const newResponse = await storage.createUserQuestionResponse(responseData);
+      res.status(201).json(newResponse);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating user question response:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/user-question-responses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid response ID" });
+      }
+      
+      // Check if the response exists and belongs to the user
+      const responses = await storage.getUserQuestionResponses(req.user!.id, req.body.timelineId);
+      const userResponse = responses.find(r => r.id === id);
+      
+      if (!userResponse && !req.user?.isAdmin) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const updatedResponse = await storage.updateUserQuestionResponse(id, req.body);
+      res.json(updatedResponse);
+    } catch (error) {
+      console.error("Error updating user question response:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
