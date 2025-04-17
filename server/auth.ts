@@ -148,6 +148,48 @@ export function setupAuth(app: Express) {
     const { password, ...userWithoutPassword } = req.user as User;
     res.status(200).json(userWithoutPassword);
   });
+  
+  // Password change endpoint
+  app.post("/api/user/change-password", isAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword, confirmPassword } = req.body;
+      
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({ message: "New passwords do not match" });
+      }
+      
+      // Minimum password length check
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+      
+      // Verify old password
+      const user = await storage.getUser((req.user as User).id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user with new password
+      await storage.updateUser(user.id, { password: hashedPassword });
+      
+      res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Admin-only endpoints
   app.get("/api/admin/users", (req, res) => {
