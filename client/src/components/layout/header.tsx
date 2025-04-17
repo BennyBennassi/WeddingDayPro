@@ -49,7 +49,7 @@ export default function Header({ onSave, onShare, showActionButtons = false }: H
                 <Link href="/"><span className="text-xl font-bold">Wedding Day Timeline</span></Link>
                 <div>
                   <p className="text-xs text-gray-600">for all couples from <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura and Benny Photography</a></p>
-                  <p className="text-xs text-gray-500">follow us on instagram <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
+                  <p className="text-xs text-gray-500">follow us on instagram <a href="https://www.instagram.com/lauraandbennyphotography/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
                 </div>
               </div>
             </div>
