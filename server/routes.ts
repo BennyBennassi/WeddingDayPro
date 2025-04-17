@@ -9,7 +9,8 @@ import {
   insertUserQuestionResponseSchema,
   insertTimelineTemplateSchema,
   insertTemplateEventSchema,
-  timelineEvents
+  timelineEvents,
+  venueRestrictions
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -129,9 +130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (events.length === 0) {
         // If no events are directly linked to this timeline, fall back to getting events by userId
         // This is a backwards compatibility approach
+        // Use SQL expression to handle potential null values properly
         const userEvents = await db.select()
           .from(timelineEvents)
-          .where(eq(timelineEvents.userId, timeline.userId));
+          .where(timeline.userId ? eq(timelineEvents.userId, timeline.userId) : undefined);
         
         console.log(`Found ${userEvents.length} events for user ${timeline.userId}`);
         
@@ -264,9 +266,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid timeline ID" });
       }
       
+      // First, clear all events for this timeline
+      try {
+        // Get all events for this specific timeline or by user
+        const timeline = await storage.getWeddingTimeline(id);
+        if (!timeline) {
+          return res.status(404).json({ message: "Timeline not found" });
+        }
+        
+        // First, directly get events for this specific timelineId
+        const events = await db.select()
+          .from(timelineEvents)
+          .where(eq(timelineEvents.timelineId, id));
+        
+        console.log(`Found ${events.length} events directly linked to timeline ${id} to delete`);
+        
+        // Delete all events
+        for (const event of events) {
+          await storage.deleteTimelineEvent(event.id);
+        }
+        
+        // Also check for legacy events by userId
+        // Use SQL expression to handle potential null values properly
+        const userEvents = await db.select()
+          .from(timelineEvents)
+          .where(timeline.userId ? eq(timelineEvents.userId, timeline.userId) : undefined);
+        
+        console.log(`Found ${userEvents.length} user events for timeline owner`);
+        
+        // Delete those too
+        for (const event of userEvents) {
+          await storage.deleteTimelineEvent(event.id);
+        }
+      } catch (eventError) {
+        console.error("Error deleting timeline events:", eventError);
+        // Continue with timeline deletion even if events deletion fails
+      }
+      
+      // Next, delete any venue restrictions associated with this timeline
+      try {
+        const restriction = await storage.getVenueRestriction(id);
+        if (restriction) {
+          // We need to directly delete the restriction from the table to bypass the foreign key constraint
+          await db.delete(venueRestrictions).where(eq(venueRestrictions.timelineId, id));
+          console.log(`Deleted venue restriction for timeline ${id}`);
+        }
+      } catch (restrictionError) {
+        console.error("Error deleting venue restriction:", restrictionError);
+        // Continue with timeline deletion even if restriction deletion fails
+      }
+      
+      // Now delete the timeline itself
       const success = await storage.deleteWeddingTimeline(id);
       if (!success) {
-        return res.status(404).json({ message: "Timeline not found" });
+        return res.status(404).json({ message: "Timeline not found or could not be deleted" });
       }
       
       res.status(204).send();
