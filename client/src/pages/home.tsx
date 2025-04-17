@@ -30,7 +30,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function Home() {
+interface HomeProps {
+  provideSaveHandler?: (handler: () => void) => void;
+  provideShareHandler?: (handler: () => void) => void;
+}
+
+function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(1); // Default to 1 for now
@@ -267,6 +272,17 @@ function Home() {
   };
 
   const isLoading = isTimelineLoading || isEventsLoading || isRestrictionsLoading;
+  
+  // Provide save and share handlers to the parent component
+  useEffect(() => {
+    if (provideSaveHandler) {
+      provideSaveHandler(handleSave);
+    }
+    
+    if (provideShareHandler) {
+      provideShareHandler(handleShare);
+    }
+  }, [provideSaveHandler, provideShareHandler, handleSave, handleShare]);
   
   // Handler for adding new events from Things to Consider
   const handleAddEvent = (eventData: any) => {
