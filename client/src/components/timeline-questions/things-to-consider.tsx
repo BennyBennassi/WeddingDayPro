@@ -37,10 +37,11 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
   const [followUpData, setFollowUpData] = useState<Record<string, any>>({});
   
   // Fetch questions and user responses
-  const { questions, isLoadingQuestions } = useTimelineQuestions();
+  const { questions, isLoadingQuestions, questionsError } = useTimelineQuestions();
   const {
     responses,
     isLoadingResponses,
+    responsesError,
     createResponseMutation,
     updateResponseMutation,
     getResponseForQuestion,
@@ -66,7 +67,7 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
   }
   
   // Show error message if there was an error loading the questions
-  if (error) {
+  if (questionsError || responsesError) {
     return (
       <Card>
         <CardHeader>
