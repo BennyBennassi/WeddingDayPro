@@ -70,9 +70,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               <ShieldAlert className="h-5 w-5" />
               <AlertTitle className="font-semibold ml-2">Unable to sign in</AlertTitle>
               <AlertDescription className="mt-2 ml-7">
-                <p className="text-sm">{loginError.includes("Invalid username or password") ? 
-                  "The username or password you entered is incorrect. Please check your credentials and try again." : 
-                  loginError}
+                <p className="text-sm">
+                  {loginError.includes("401") || 
+                   loginError.includes("Invalid username or password") || 
+                   loginError.includes("Authentication failed") || 
+                   loginError.includes("Unauthorized") ? 
+                    "The username or password you entered is incorrect. Please check your credentials and try again." : 
+                    loginError}
                 </p>
               </AlertDescription>
             </Alert>

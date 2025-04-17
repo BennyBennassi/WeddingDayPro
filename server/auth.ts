@@ -125,7 +125,7 @@ export function setupAuth(app: Express) {
     
     passport.authenticate("local", (err: Error, user: User, info: any) => {
       if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || "Invalid username or password" });
+      if (!user) return res.status(401).json({ message: "Please check your username and password and try again." });
       
       req.login(user, (err) => {
         if (err) return next(err);
@@ -146,7 +146,7 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({ message: "You need to sign in to access your account." });
     }
     
     // Return user without password
@@ -201,7 +201,7 @@ export function setupAuth(app: Express) {
     const user = req.user as User;
     
     if (!req.isAuthenticated() || !user.isAdmin) {
-      return res.status(403).json({ message: "Forbidden" });
+      return res.status(403).json({ message: "You don't have permission to access this feature." });
     }
 
     // Implement admin functionality here
@@ -234,7 +234,7 @@ export function isAuthenticated(req: Express.Request, res: Express.Response, nex
   if (req.isAuthenticated()) {
     return next();
   }
-  res.status(401).json({ message: "Authentication required" });
+  res.status(401).json({ message: "You need to sign in to access this feature." });
 }
 
 // Middleware to check if user is an admin
@@ -243,5 +243,5 @@ export function isAdmin(req: Express.Request, res: Express.Response, next: Expre
   if (req.isAuthenticated() && user.isAdmin) {
     return next();
   }
-  res.status(403).json({ message: "Admin access required" });
+  res.status(403).json({ message: "You don't have permission to access this feature." });
 }
