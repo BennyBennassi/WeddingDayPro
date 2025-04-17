@@ -169,6 +169,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
+      {/* Debug info - remove after fixing */}
+      {user ? (
+        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          <p>Logged in as: {user.username}</p>
+          <p>Has timelines: {userTimelines ? `Yes (${userTimelines.length})` : 'No'}</p>
+        </div>
+      ) : (
+        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+          <p>Not logged in</p>
+        </div>
+      )}
+      
       {/* Timeline Selector */}
       {user && userTimelines && userTimelines.length > 0 && (
         <div className="mb-6">
