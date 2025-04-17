@@ -250,8 +250,7 @@ export default function TimelineQuestionsManager() {
                     <Tabs defaultValue="general">
                       <TabsList className="mb-4">
                         <TabsTrigger value="general">General</TabsTrigger>
-                        <TabsTrigger value="defaults">Default Values</TabsTrigger>
-                        <TabsTrigger value="prompts">Prompt Settings</TabsTrigger>
+                        <TabsTrigger value="field_settings">Field Settings</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="general" className="space-y-4">
@@ -339,14 +338,38 @@ export default function TimelineQuestionsManager() {
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="defaults" className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                      <TabsContent value="field_settings" className="space-y-6">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Configure default values and which fields to prompt the user to fill in when they answer "Yes"
+                          to this question. Fields not prompted will use the default values.
+                        </p>
+                        
+                        {/* Name field settings */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-medium">Event Name</h3>
+                            <FormField
+                              control={form.control}
+                              name="promptName"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 m-0">
+                                  <FormLabel className="text-sm font-normal">Prompt user</FormLabel>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           <FormField
                             control={form.control}
                             name="defaultName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Default Name</FormLabel>
+                                <FormLabel>Default Value</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Event name"
@@ -354,17 +377,41 @@ export default function TimelineQuestionsManager() {
                                     value={field.value || ""}
                                   />
                                 </FormControl>
+                                <FormDescription>
+                                  Used when creating the event, or as placeholder if prompting user
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                          
+                        </div>
+                        
+                        {/* Category field settings */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-medium">Event Category</h3>
+                            <FormField
+                              control={form.control}
+                              name="promptCategory"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 m-0">
+                                  <FormLabel className="text-sm font-normal">Prompt user</FormLabel>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           <FormField
                             control={form.control}
                             name="defaultCategory"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Default Category</FormLabel>
+                                <FormLabel>Default Value</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Event category"
@@ -372,51 +419,114 @@ export default function TimelineQuestionsManager() {
                                     value={field.value || ""}
                                   />
                                 </FormControl>
+                                <FormDescription>
+                                  The category displayed in the timeline (e.g. "Getting Ready", "Ceremony")
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="defaultStartTime"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Default Start Time</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="HH:MM"
-                                    {...field}
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="defaultEndTime"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Default End Time</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="HH:MM"
-                                    {...field}
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        {/* Time field settings */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-medium">Event Timing</h3>
+                            <div className="flex items-center space-x-4">
+                              <FormField
+                                control={form.control}
+                                name="promptStartTime"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2 m-0">
+                                    <FormLabel className="text-sm font-normal">Prompt for start</FormLabel>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="promptEndTime"
+                                render={({ field }) => (
+                                  <FormItem className="flex items-center space-x-2 m-0">
+                                    <FormLabel className="text-sm font-normal">Prompt for end</FormLabel>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="defaultStartTime"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Default Start Time</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="HH:MM"
+                                      {...field}
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="defaultEndTime"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Default End Time</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="HH:MM"
+                                      {...field}
+                                      value={field.value || ""}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormDescription>
+                            Enter times in 24-hour format (e.g. "14:30" for 2:30 PM)
+                          </FormDescription>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Color field settings */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-medium">Event Color</h3>
+                            <FormField
+                              control={form.control}
+                              name="promptColor"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 m-0">
+                                  <FormLabel className="text-sm font-normal">Prompt user</FormLabel>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           <FormField
                             control={form.control}
                             name="defaultColor"
@@ -430,152 +540,59 @@ export default function TimelineQuestionsManager() {
                                       style={{ backgroundColor: field.value || "#4f46e5" }}
                                     />
                                     <Input
-                                      placeholder="CSS color or class"
+                                      placeholder="CSS color or hex code"
                                       {...field}
                                       value={field.value || ""}
+                                      className="flex-1"
                                     />
                                   </div>
                                 </FormControl>
+                                <FormDescription>
+                                  Use hex color codes (#4f46e5) or CSS color names (blue)
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         </div>
                         
-                        <FormField
-                          control={form.control}
-                          name="defaultNotes"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Default Notes</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Default notes for this event (optional)"
-                                  {...field}
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </TabsContent>
-                      
-                      <TabsContent value="prompts" className="space-y-4">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Choose which fields to prompt the user to fill in when they answer "Yes"
-                          to this question. Fields not prompted will use the default values.
-                        </p>
-                        
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Notes field settings */}
+                        <div className="border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-medium">Event Notes</h3>
+                            <FormField
+                              control={form.control}
+                              name="promptNotes"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 m-0">
+                                  <FormLabel className="text-sm font-normal">Prompt user</FormLabel>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           <FormField
                             control={form.control}
-                            name="promptName"
+                            name="defaultNotes"
                             render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for Name</FormLabel>
-                                </div>
+                              <FormItem>
+                                <FormLabel>Default Notes</FormLabel>
                                 <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                  <Textarea
+                                    placeholder="Default notes for this event (optional)"
+                                    {...field}
+                                    value={field.value || ""}
                                   />
                                 </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="promptCategory"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for Category</FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="promptStartTime"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for Start Time</FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="promptEndTime"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for End Time</FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="promptColor"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for Color</FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="promptNotes"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                <div className="space-y-0.5">
-                                  <FormLabel>Prompt for Notes</FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
+                                <FormDescription>
+                                  Additional information about this event to show in the timeline
+                                </FormDescription>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
