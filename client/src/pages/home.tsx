@@ -220,10 +220,16 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     const timelinePrefix = `TL${highestTLNumber + 1} - `;
     const fullTimelineName = timelinePrefix + newTimelineName;
     
+    // Set default wedding date to 6 months from now if not provided
+    const today = new Date();
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setMonth(today.getMonth() + 6);
+    const defaultWeddingDate = sixMonthsFromNow.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    
     createTimelineMutation.mutate({
       userId: user.id,
       name: fullTimelineName,
-      weddingDate: newTimelineDate,
+      weddingDate: defaultWeddingDate,
       startHour: 6,
       timeFormat: "24h"
     });
@@ -419,15 +425,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="wedding-date">Wedding Date</Label>
-              <Input
-                id="wedding-date"
-                type="date"
-                value={newTimelineDate}
-                onChange={(e) => setNewTimelineDate(e.target.value)}
-              />
-            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNewTimelineDialog(false)}>
@@ -435,7 +433,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             </Button>
             <Button 
               onClick={handleSubmitNewTimeline} 
-              disabled={!newTimelineName || !newTimelineDate || createTimelineMutation.isPending}
+              disabled={!newTimelineName || createTimelineMutation.isPending}
             >
               {createTimelineMutation.isPending ? 'Creating...' : 'Create Timeline'}
             </Button>

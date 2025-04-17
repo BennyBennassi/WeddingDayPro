@@ -131,15 +131,17 @@ const TimelineHeader = ({
 
   return (
     <div className="mb-6">
-      {weddingOf && (
-        <h1 className="text-2xl font-bold text-primary mb-2">Wedding of {weddingOf}</h1>
-      )}
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
         <div>
-          <h2 className="text-xl font-medium text-gray-800">{formattedDate}</h2>
-          <p className="text-gray-500 text-sm">Drag blocks to reorganize your timeline</p>
+          {weddingOf ? (
+            <h1 className="text-2xl font-bold text-primary">Wedding of {weddingOf}</h1>
+          ) : (
+            <h1 className="text-2xl font-bold text-primary">Wedding Day Timeline</h1>
+          )}
+          <h2 className="text-xl font-medium text-gray-700 mt-1">{formattedDate}</h2>
+          <p className="text-gray-500 text-sm mt-1">Drag blocks to reorganize your timeline</p>
         </div>
-        <div className="flex items-center text-gray-500 text-sm">
+        <div className="flex items-center text-gray-500 text-sm mt-2 md:mt-0">
           <Clock className="h-4 w-4 mr-1" />
           <span>24-hour format</span>
         </div>
