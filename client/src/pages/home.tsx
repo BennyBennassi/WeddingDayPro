@@ -369,16 +369,17 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center my-4">
-            <AuthModal 
-              triggerButton={
-                <Button variant="default" size="lg" className="w-full">
-                  Sign in or Register
-                </Button>
-              }
-              onAuthComplete={() => {
+            <Button 
+              variant="default" 
+              size="lg" 
+              className="w-full"
+              onClick={() => {
                 setShowAuthPrompt(false);
+                setLocation('/auth');
               }}
-            />
+            >
+              Go to Login / Register
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

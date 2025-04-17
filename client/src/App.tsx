@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import AdminPage from "@/pages/admin-page";
+import AuthPage from "@/pages/auth-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import Layout from "@/components/layout/layout";
@@ -26,22 +27,32 @@ function Router() {
   }, []);
   
   return (
-    <Layout onSave={saveHandler} onShare={shareHandler}>
+    <>
       <Switch>
-        <Route path="/">
-          {() => (
-            <Home 
-              provideSaveHandler={captureSaveHandler}
-              provideShareHandler={captureShareHandler}
-            />
-          )}
+        <Route path="/auth">
+          <AuthPage />
         </Route>
-        <ProtectedRoute path="/admin" adminOnly={true}>
-          <AdminPage />
-        </ProtectedRoute>
-        <Route component={NotFound} />
+        
+        <Route>
+          <Layout onSave={saveHandler} onShare={shareHandler}>
+            <Switch>
+              <Route path="/">
+                {() => (
+                  <Home 
+                    provideSaveHandler={captureSaveHandler}
+                    provideShareHandler={captureShareHandler}
+                  />
+                )}
+              </Route>
+              <ProtectedRoute path="/admin" adminOnly={true}>
+                <AdminPage />
+              </ProtectedRoute>
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
+        </Route>
       </Switch>
-    </Layout>
+    </>
   );
 }
 
