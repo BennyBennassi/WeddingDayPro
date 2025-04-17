@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import Timeline from "@/components/timeline/timeline";
 import ControlPanel from "@/components/control-panel/control-panel";
+import AuthModal from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
-import { Save, Share } from "lucide-react";
+import { Save, Share, UserCog } from "lucide-react";
 import { usePdfExport } from "@/lib/exportPdf";
+import { Link } from "wouter";
 
 function Home() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedTimelineId] = useState(1); // Use the default timeline for now
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const { generatePdf } = usePdfExport();
@@ -89,7 +93,7 @@ function Home() {
             <p className="text-sm text-gray-500">Plan your perfect day, hour by hour</p>
           </div>
           
-          <div className="flex space-x-3">
+          <div className="flex items-center space-x-3">
             <Button 
               variant="default" 
               className="bg-primary hover:bg-primary-dark text-white" 
@@ -107,6 +111,18 @@ function Home() {
               <Share className="h-4 w-4 mr-1" />
               Share
             </Button>
+            
+            <div className="ml-4 pl-4 border-l border-gray-200">
+              {user?.isAdmin && (
+                <Link href="/admin">
+                  <Button variant="outline" size="sm" className="mr-2">
+                    <UserCog className="h-4 w-4 mr-1" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              <AuthModal />
+            </div>
           </div>
         </div>
       </header>
