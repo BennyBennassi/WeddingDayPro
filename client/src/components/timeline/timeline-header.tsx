@@ -68,7 +68,7 @@ const TimelineHeader = ({
           
           {/* Vertical line extending down (only shown when restriction lines are enabled) */}
           {showRestrictionLines && (
-            <div className="absolute top-full w-0.5 h-screen bg-red-400 opacity-50 dashed-line pointer-events-none"></div>
+            <div className="absolute top-full w-0.5 h-full bg-red-400 opacity-50 dashed-line pointer-events-none"></div>
           )}
         </div>
       );
@@ -94,7 +94,7 @@ const TimelineHeader = ({
           
           {/* Vertical line extending down (only shown when restriction lines are enabled) */}
           {showRestrictionLines && (
-            <div className="absolute top-full w-0.5 h-screen bg-purple-400 opacity-50 dashed-line pointer-events-none"></div>
+            <div className="absolute top-full w-0.5 h-full bg-purple-400 opacity-50 dashed-line pointer-events-none"></div>
           )}
         </div>
       );
@@ -120,7 +120,7 @@ const TimelineHeader = ({
           
           {/* Vertical line extending down (only shown when restriction lines are enabled) */}
           {showRestrictionLines && (
-            <div className="absolute top-full w-0.5 h-screen bg-amber-400 opacity-50 dashed-line pointer-events-none"></div>
+            <div className="absolute top-full w-0.5 h-full bg-amber-400 opacity-50 dashed-line pointer-events-none"></div>
           )}
         </div>
       );
