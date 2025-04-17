@@ -90,14 +90,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Wedding timelines
-  app.get("/api/wedding-timelines/:userId", async (req, res) => {
+  app.get("/api/wedding-timelines", isAuthenticated, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const timelines = await storage.getWeddingTimelines(userId);
+      const timelines = await storage.getWeddingTimelines(req.user.id);
       res.json(timelines);
     } catch (error) {
       console.error("Error getting wedding timelines:", error);
@@ -120,6 +119,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(timeline);
     } catch (error) {
       console.error("Error getting wedding timeline:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.get("/api/wedding-timelines/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const timelines = await storage.getWeddingTimelines(userId);
+      res.json(timelines);
+    } catch (error) {
+      console.error("Error getting wedding timelines:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
