@@ -443,8 +443,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't allow admins to delete themselves
-      const adminUser = req.user as User;
-      if (id === adminUser.id) {
+      const adminUser = req.user;
+      if (id === adminUser?.id) {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
       

@@ -21,6 +21,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -43,6 +53,7 @@ import {
   HelpCircle,
   Users,
   LayoutTemplate,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import TimelineQuestionsManager from "@/components/admin/timeline-questions-manager";
@@ -64,6 +75,8 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 export default function AdminPage() {
   const { toast } = useToast();
   const [editingUser, setEditingUser] = useState<UserWithoutPassword | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserWithoutPassword | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Query to fetch all users (admin only)
   const { 
@@ -105,6 +118,34 @@ export default function AdminPage() {
     onError: (error: Error) => {
       toast({
         title: 'Update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Mutation to delete user
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/admin/users/${id}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Failed to delete user' }));
+        throw new Error(errorData.message || 'Failed to delete user');
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setUserToDelete(null);
+      setDeleteDialogOpen(false);
+      toast({
+        title: 'User deleted',
+        description: 'The user and all their data have been deleted successfully.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Delete failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -227,14 +268,30 @@ export default function AdminPage() {
                       {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        {!user.isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setUserToDelete(user);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -354,6 +411,58 @@ export default function AdminPage() {
           </Form>
         </DialogContent>
       </Dialog>
+      
+      {/* Delete User Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account
+              and all associated data including timelines, events, venue restrictions, and
+              question responses.
+              
+              {userToDelete && (
+                <div className="mt-4 p-4 border rounded-md bg-muted">
+                  <div className="font-semibold">User details:</div>
+                  <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                    <div className="text-muted-foreground">Username:</div>
+                    <div>{userToDelete.username}</div>
+                    
+                    <div className="text-muted-foreground">Name:</div>
+                    <div>{userToDelete.name || '-'}</div>
+                    
+                    <div className="text-muted-foreground">Email:</div>
+                    <div>{userToDelete.email || '-'}</div>
+                  </div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (userToDelete) {
+                  deleteUserMutation.mutate(userToDelete.id);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
