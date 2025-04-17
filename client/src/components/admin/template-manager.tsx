@@ -116,6 +116,14 @@ export default function TemplateManager() {
     error: eventsError,
   } = useQuery<TemplateEvent[]>({
     queryKey: ["/api/admin/template-events", selectedTemplate?.id],
+    queryFn: async () => {
+      if (!selectedTemplate) return [];
+      const response = await fetch(`/api/admin/template-events/${selectedTemplate.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch template events');
+      }
+      return response.json();
+    },
     enabled: !!selectedTemplate,
     retry: false,
   });
