@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     retry: false,
+    initialData: null,
   });
 
   // Login mutation
