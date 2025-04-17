@@ -64,6 +64,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   useEffect(() => {
     if (timeline) {
       setWeddingOfValue(timeline.weddingOf || '');
+      setWeddingDateValue(timeline.weddingDate || '');
     }
   }, [timeline]);
   
@@ -80,6 +81,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const debouncedUpdateWeddingOf = useCallback(
     debounce((value: string) => {
       updateTimelineMutation.mutate({ weddingOf: value });
+    }, 500),
+    [updateTimelineMutation]
+  );
+  
+  // Create debounced handler for wedding date field
+  const debouncedUpdateWeddingDate = useCallback(
+    debounce((value: string) => {
+      updateTimelineMutation.mutate({ weddingDate: value });
     }, 500),
     [updateTimelineMutation]
   );
@@ -290,8 +299,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 id="wedding-date"
                 type="date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                value={timeline.weddingDate}
-                onChange={(e) => updateTimelineMutation.mutate({ weddingDate: e.target.value })}
+                value={weddingDateValue}
+                onChange={(e) => {
+                  setWeddingDateValue(e.target.value);
+                  debouncedUpdateWeddingDate(e.target.value);
+                }}
               />
             </div>
           </div>
