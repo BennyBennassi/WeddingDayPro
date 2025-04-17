@@ -103,7 +103,7 @@ const Timeline: React.FC<TimelineProps> = ({
       
       if (eventEndTime > restrictionTime) {
         return {
-          message: `Block of time ends after venue's music restriction time of ${venueRestrictions.musicEndTime}`
+          message: `Block of time ends after music restriction time of ${venueRestrictions.musicEndTime}`
         };
       }
     }
@@ -116,7 +116,7 @@ const Timeline: React.FC<TimelineProps> = ({
       
       if (eventStartTime < restrictionTime) {
         return {
-          message: `Ceremony starts before venue's allowed time of ${venueRestrictions.ceremonyStartTime}`
+          message: `Ceremony starts before allowed time of ${venueRestrictions.ceremonyStartTime}`
         };
       }
     }
@@ -130,6 +130,21 @@ const Timeline: React.FC<TimelineProps> = ({
       if (eventStartTime > restrictionTime) {
         return {
           message: `Dinner starts after venue's required time of ${venueRestrictions.dinnerStartTime}`
+        };
+      }
+    }
+    
+    // Check custom restriction time
+    if (venueRestrictions.customRestrictionTime && venueRestrictions.customRestrictionName) {
+      const restrictionTime = parseTime(venueRestrictions.customRestrictionTime);
+      const eventStartTime = parseTime(startTime);
+      const eventEndTime = parseTime(endTime);
+      
+      // Generic check - consider this a restriction that events shouldn't overlap with
+      if ((eventStartTime <= restrictionTime && eventEndTime > restrictionTime) || 
+          (eventStartTime === restrictionTime)) {
+        return {
+          message: `Event conflicts with "${venueRestrictions.customRestrictionName}" time at ${venueRestrictions.customRestrictionTime}`
         };
       }
     }

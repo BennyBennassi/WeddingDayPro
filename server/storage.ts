@@ -214,6 +214,9 @@ export class DatabaseStorage implements IStorage {
         musicEndTime: restriction.musicEndTime ?? null,
         ceremonyStartTime: restriction.ceremonyStartTime ?? null,
         dinnerStartTime: restriction.dinnerStartTime ?? null,
+        customRestrictionTime: restriction.customRestrictionTime ?? null,
+        customRestrictionName: restriction.customRestrictionName ?? null,
+        showRestrictionLines: restriction.showRestrictionLines ?? true,
       })
       .returning();
     return venueRestriction;
@@ -236,6 +239,9 @@ export class DatabaseStorage implements IStorage {
         musicEndTime: restriction.musicEndTime !== undefined ? (restriction.musicEndTime ?? null) : undefined,
         ceremonyStartTime: restriction.ceremonyStartTime !== undefined ? (restriction.ceremonyStartTime ?? null) : undefined,
         dinnerStartTime: restriction.dinnerStartTime !== undefined ? (restriction.dinnerStartTime ?? null) : undefined,
+        customRestrictionTime: restriction.customRestrictionTime !== undefined ? (restriction.customRestrictionTime ?? null) : undefined,
+        customRestrictionName: restriction.customRestrictionName !== undefined ? (restriction.customRestrictionName ?? null) : undefined,
+        showRestrictionLines: restriction.showRestrictionLines !== undefined ? restriction.showRestrictionLines : undefined,
       })
       .where(eq(venueRestrictions.id, existingRestriction.id))
       .returning();
