@@ -2,11 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 import AddTimeBlockForm from './add-event-form';
 import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
 import VenueRestrictions from './venue-restrictions';
 import ExportOptions from './export-options';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface ControlPanelProps {
   timeline: any;
@@ -15,6 +20,10 @@ interface ControlPanelProps {
   selectedEventId: number | null;
   setSelectedEventId: (id: number | null) => void;
   handleExportPdf: () => void;
+  userTimelines?: any[];
+  selectedTimelineId?: number | null;
+  setSelectedTimelineId?: (id: number) => void;
+  handleCreateTimeline?: () => void;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -23,8 +32,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   venueRestrictions,
   selectedEventId,
   setSelectedEventId,
-  handleExportPdf
+  handleExportPdf,
+  userTimelines,
+  selectedTimelineId,
+  setSelectedTimelineId,
+  handleCreateTimeline
 }) => {
+  const { user } = useAuth();
   const selectedEvent = events?.find(event => event.id === selectedEventId);
   const selectedBlockRef = useRef<HTMLDivElement>(null);
   
@@ -155,7 +169,42 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
-      {/* Timeline Settings - Moved to top */}
+      {/* Timeline Selector */}
+      {user && userTimelines && userTimelines.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
+          <div className="flex gap-2 items-center">
+            <Select
+              value={selectedTimelineId?.toString()}
+              onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
+              disabled={!setSelectedTimelineId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a timeline" />
+              </SelectTrigger>
+              <SelectContent>
+                {userTimelines.map((t: any) => (
+                  <SelectItem key={t.id} value={t.id.toString()}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {handleCreateTimeline && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCreateTimeline}
+                title="Create new timeline"
+              >
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Timeline Settings */}
       <TimelineSettings 
         timeline={timeline} 
         onUpdate={handleTimelineSettingsUpdate} 

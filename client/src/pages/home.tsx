@@ -303,6 +303,10 @@ function Home() {
               selectedEventId={selectedEventId}
               setSelectedEventId={setSelectedEventId}
               handleExportPdf={handleExportPdf}
+              userTimelines={userTimelines}
+              selectedTimelineId={selectedTimelineId}
+              setSelectedTimelineId={setSelectedTimelineId}
+              handleCreateTimeline={handleCreateTimeline}
             />
           </div>
         </div>
@@ -382,39 +386,7 @@ function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Timeline Selector */}
-      {user && userTimelines && userTimelines.length > 0 && (
-        <div className="fixed bottom-4 left-4 z-20">
-          <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col gap-2">
-            <Label>Your Timelines</Label>
-            <div className="flex gap-2">
-              <Select
-                value={selectedTimelineId?.toString()}
-                onValueChange={(value) => setSelectedTimelineId(parseInt(value))}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select a timeline" />
-                </SelectTrigger>
-                <SelectContent>
-                  {userTimelines.map((t: any) => (
-                    <SelectItem key={t.id} value={t.id.toString()}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCreateTimeline}
-                title="Create new timeline"
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
     </div>
   );
