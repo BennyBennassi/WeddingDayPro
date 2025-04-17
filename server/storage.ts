@@ -24,6 +24,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
   
   // Timeline Event operations
   getTimelineEvents(timelineId: number): Promise<TimelineEvent[]>;
@@ -115,6 +116,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    // First, get all timelines for this user
+    const userTimelines = await this.getWeddingTimelines(id);
+    
+    // For each timeline, delete related data
+    for (const timeline of userTimelines) {
+      // Delete venue restrictions for this timeline
+      const venueRestriction = await this.getVenueRestriction(timeline.id);
+      if (venueRestriction) {
+        await db.delete(venueRestrictions)
+          .where(eq(venueRestrictions.timelineId, timeline.id));
+      }
+      
+      // Delete user question responses for this user and timeline
+      await db.delete(userQuestionResponses)
+        .where(and(
+          eq(userQuestionResponses.userId, id),
+          eq(userQuestionResponses.timelineId, timeline.id)
+        ));
+    }
+    
+    // Delete all timeline events for this user
+    await db.delete(timelineEvents)
+      .where(eq(timelineEvents.userId, id));
+      
+    // Delete all timelines for this user
+    await db.delete(weddingTimelines)
+      .where(eq(weddingTimelines.userId, id));
+    
+    // Finally, delete the user
+    await db.delete(users)
+      .where(eq(users.id, id));
+      
+    return true;
   }
   
   // Timeline Event methods
