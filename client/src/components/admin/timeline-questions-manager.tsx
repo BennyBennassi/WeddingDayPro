@@ -339,10 +339,19 @@ export default function TimelineQuestionsManager() {
                       </TabsContent>
                       
                       <TabsContent value="field_settings" className="space-y-6">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Configure default values and which fields to prompt the user to fill in when they answer "Yes"
-                          to this question. Fields not prompted will use the default values.
-                        </p>
+                        <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                          <h4 className="font-medium mb-2">How to use Field Settings</h4>
+                          <div className="text-sm text-muted-foreground">
+                            <strong>Prompt user toggle:</strong>
+                            <ul className="mt-1 ml-6 space-y-1 list-disc">
+                              <li>ON — User will be prompted to provide this information</li>
+                              <li>OFF — User will not be prompted and the default value below will be used automatically</li>
+                            </ul>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            For fields that aren't prompted, make sure to provide appropriate default values.
+                          </p>
+                        </div>
                         
                         {/* Name field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
@@ -378,7 +387,7 @@ export default function TimelineQuestionsManager() {
                                   />
                                 </FormControl>
                                 <FormDescription>
-                                  Used when creating the event, or as placeholder if prompting user
+                                  If "Prompt user" is OFF, this value will be used automatically. If ON, it will be shown as a suggestion.
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
@@ -420,7 +429,7 @@ export default function TimelineQuestionsManager() {
                                   />
                                 </FormControl>
                                 <FormDescription>
-                                  The category displayed in the timeline (e.g. "Getting Ready", "Ceremony")
+                                  If "Prompt user" is OFF, this value will be used automatically. If ON, it will be shown as a suggestion.
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
@@ -503,7 +512,7 @@ export default function TimelineQuestionsManager() {
                             />
                           </div>
                           <FormDescription>
-                            Enter times in 24-hour format (e.g. "14:30" for 2:30 PM)
+                            Enter times in 24-hour format (e.g. "14:30" for 2:30 PM). For either toggle that is OFF, the default time will be used automatically.
                           </FormDescription>
                         </div>
                         
@@ -548,7 +557,7 @@ export default function TimelineQuestionsManager() {
                                   </div>
                                 </FormControl>
                                 <FormDescription>
-                                  Use hex color codes (#4f46e5) or CSS color names (blue)
+                                  If "Prompt user" is OFF, this color will be used automatically. If ON, it will be shown as a suggestion.
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
@@ -590,7 +599,7 @@ export default function TimelineQuestionsManager() {
                                   />
                                 </FormControl>
                                 <FormDescription>
-                                  Additional information about this event to show in the timeline
+                                  If "Prompt user" is OFF, these notes will be used automatically. If ON, they will be shown as a suggestion.
                                 </FormDescription>
                                 <FormMessage />
                               </FormItem>
