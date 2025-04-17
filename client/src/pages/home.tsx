@@ -9,7 +9,7 @@ import ThingsToConsider from "@/components/timeline-questions/things-to-consider
 import { Button } from "@/components/ui/button";
 import { Save, Share, UserCog, PlusCircle } from "lucide-react";
 import { usePdfExport } from "@/lib/exportPdf";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Dialog, 
@@ -38,6 +38,7 @@ interface HomeProps {
 function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(1); // Default to 1 for now
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
