@@ -113,7 +113,7 @@ export default function TimelineQuestionsManager() {
       defaultCategory: question.defaultCategory || "",
       defaultStartTime: question.defaultStartTime || "",
       defaultEndTime: question.defaultEndTime || "",
-      defaultColor: question.defaultColor || "",
+      defaultColor: question.defaultColor || "bg-primary-light",
       defaultNotes: question.defaultNotes || "",
       promptName: question.promptName,
       promptCategory: question.promptCategory,
