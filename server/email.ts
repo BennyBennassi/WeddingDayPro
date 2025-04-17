@@ -52,6 +52,11 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
         body: error.response.body,
         headers: error.response.headers
       });
+      
+      // Additional specific error information
+      if (error.response.body && error.response.body.errors && error.response.body.errors.length > 0) {
+        console.error('SendGrid specific error:', JSON.stringify(error.response.body.errors, null, 2));
+      }
     }
     
     return false;
