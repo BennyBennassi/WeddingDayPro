@@ -129,7 +129,7 @@ const Timeline: React.FC<TimelineProps> = ({
       
       if (eventStartTime > restrictionTime) {
         return {
-          message: `Dinner starts after venue's required time of ${venueRestrictions.dinnerStartTime}`
+          message: `Dinner starts after required time of ${venueRestrictions.dinnerStartTime}`
         };
       }
     }
