@@ -932,18 +932,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email } = req.body;
       
+      console.log(`Password reset requested for email: ${email}`);
+      
       if (!email) {
+        console.log('Email is required but not provided');
         return res.status(400).json({ message: "Email is required" });
       }
       
       // Find user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
+        console.log(`User not found for email: ${email}`);
         // For security reasons, don't reveal if the email exists or not
         return res.status(200).json({ 
           message: "If your email is registered, you will receive a password reset link shortly" 
         });
       }
+      
+      console.log(`User found for email ${email}, generating reset token`);
       
       // Generate a secure random token
       const crypto = await import('crypto');
@@ -961,16 +967,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         used: false
       });
       
-      // Construct the reset URL
-      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password`;
+      // Get the host from request or use a fallback for development/testing
+      const host = req.get('host') || 'localhost:5000';
+      
+      // Construct the reset URL - ensure it's using https in production
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol || 'http';
+      const resetUrl = `${protocol}://${host}/reset-password`;
+      
+      console.log(`Reset URL generated: ${resetUrl}`);
       
       // Send the email
+      console.log(`Attempting to send password reset email to: ${email}`);
       const emailSent = await sendPasswordResetEmail(email, token, resetUrl);
       
       if (!emailSent) {
-        console.error("Failed to send password reset email to:", email);
-        return res.status(500).json({ message: "Failed to send password reset email" });
+        console.error(`Failed to send password reset email to: ${email}`);
+        return res.status(500).json({ message: "Failed to send password reset email. Please try again later or contact support." });
       }
+      
+      console.log(`Password reset email sent successfully to: ${email}`);
       
       res.status(200).json({ 
         message: "If your email is registered, you will receive a password reset link shortly" 
