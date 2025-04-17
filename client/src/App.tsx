@@ -7,16 +7,19 @@ import Home from "@/pages/home";
 import AdminPage from "@/pages/admin-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import Layout from "@/components/layout/layout";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <ProtectedRoute path="/admin" adminOnly={true}>
-        <AdminPage />
-      </ProtectedRoute>
-      <Route component={NotFound} />
-    </Switch>
+    <Layout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <ProtectedRoute path="/admin" adminOnly={true}>
+          <AdminPage />
+        </ProtectedRoute>
+        <Route component={NotFound} />
+      </Switch>
+    </Layout>
   );
 }
 
