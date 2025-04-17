@@ -278,14 +278,9 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <p className="text-sm text-gray-600">for all couples from <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura and Benny Photography</a></p>
-            <p className="text-xs text-gray-500">follow us on instagram <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
-          </div>
-          
+      {/* Action buttons */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-end items-center">
           <div className="flex items-center space-x-3">
             <Button 
               variant="default" 
@@ -304,21 +299,9 @@ function Home() {
               <Share className="h-4 w-4 mr-1" />
               Share
             </Button>
-            
-            <div className="ml-4 pl-4 border-l border-gray-200">
-              {user?.isAdmin && (
-                <Link href="/admin">
-                  <Button variant="outline" size="sm" className="mr-2">
-                    <UserCog className="h-4 w-4 mr-1" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <AuthModal />
-            </div>
           </div>
         </div>
-      </header>
+      </div>
       
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 pb-8">

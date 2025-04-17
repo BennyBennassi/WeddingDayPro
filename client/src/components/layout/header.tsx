@@ -28,86 +28,99 @@ export default function Header() {
   
   return (
     <header className="border-b bg-background sticky top-0 z-30">
-      <div className="container flex items-center justify-between h-16 px-4 mx-auto">
-        {/* App Logo and Name */}
-        <div className="flex items-center space-x-2">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white font-bold">
-              WDT
+      <div className="container px-4 mx-auto py-2">
+        {/* Top row with logo and user controls */}
+        <div className="flex items-center justify-between">
+          {/* App Logo and Name */}
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              <Link href="/">
+                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white font-bold">
+                  WDT
+                </div>
+              </Link>
+              <div className="flex flex-col">
+                <Link href="/"><span className="text-xl font-bold">Wedding Day Timeline</span></Link>
+                <div>
+                  <p className="text-xs text-gray-600">for all couples from <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura and Benny Photography</a></p>
+                  <p className="text-xs text-gray-500">follow us on instagram <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
+                </div>
+              </div>
             </div>
-            <span className="text-xl font-bold">Wedding Day Timeline</span>
-          </Link>
-        </div>
-        
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/">
-            <span className={`text-sm font-medium transition-colors hover:text-primary ${
-              location === "/" ? "text-primary" : "text-muted-foreground"
-            }`}>
-              Home
-            </span>
-          </Link>
-          {user?.isAdmin && (
-            <Link href="/admin">
-              <span className={`text-sm font-medium transition-colors hover:text-primary ${
-                location === "/admin" ? "text-primary" : "text-muted-foreground"
-              }`}>
-                Admin
-              </span>
-            </Link>
-          )}
-        </nav>
-        
-        {/* User Actions */}
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {getInitial(user.username)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                
-                <Link href="/">
-                  <DropdownMenuItem>
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Home</span>
-                  </DropdownMenuItem>
+          </div>
+          
+          <div className="flex items-center">
+            {/* Navigation Links */}
+            <nav className="hidden md:flex items-center space-x-6 mr-4">
+              <Link href="/">
+                <span className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location === "/" ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  Home
+                </span>
+              </Link>
+              {user?.isAdmin && (
+                <Link href="/admin">
+                  <span className={`text-sm font-medium transition-colors hover:text-primary ${
+                    location === "/admin" ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    Admin
+                  </span>
                 </Link>
-                
-                {user.isAdmin && (
-                  <Link href="/admin">
+              )}
+            </nav>
+            
+            {/* User Actions */}
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                      <Avatar className="h-9 w-9">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {getInitial(user.username)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Admin</span>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
                     </DropdownMenuItem>
-                  </Link>
-                )}
-                
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <AuthModal triggerButton={
-              <Button variant="outline">Log in</Button>
-            } />
-          )}
+                    
+                    <Link href="/">
+                      <DropdownMenuItem>
+                        <Home className="mr-2 h-4 w-4" />
+                        <span>Home</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    {user.isAdmin && (
+                      <Link href="/admin">
+                        <DropdownMenuItem>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Admin</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    )}
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <AuthModal triggerButton={
+                  <Button variant="outline">Log in</Button>
+                } />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>
