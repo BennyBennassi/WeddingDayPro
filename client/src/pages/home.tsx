@@ -45,6 +45,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false);
   const [newTimelineName, setNewTimelineName] = useState("");
   const [newTimelineDate, setNewTimelineDate] = useState("");
+  const [hasLoadedDefaultTemplate, setHasLoadedDefaultTemplate] = useState(false);
   
   // State for timeline switching
   const [showSaveChangesDialog, setShowSaveChangesDialog] = useState(false);
@@ -279,6 +280,58 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   };
 
   const isLoading = isTimelineLoading || isEventsLoading || isRestrictionsLoading;
+  
+  // For non-logged-in users, automatically load a default template
+  useEffect(() => {
+    const loadDefaultTemplateEvents = async () => {
+      if (!user && !hasLoadedDefaultTemplate && timeline) {
+        // Only load this once per session
+        setHasLoadedDefaultTemplate(true);
+        
+        // Load church wedding template by default for non-logged in users
+        try {
+          const { data: templates } = await queryClient.fetchQuery({ 
+            queryKey: ['/api/timeline-templates'] 
+          });
+          
+          if (templates && templates.length > 0) {
+            // Find Church Wedding template or use the first one
+            const defaultTemplate = templates.find((t: any) => 
+              t.name.toLowerCase().includes("church")
+            ) || templates[0];
+            
+            // Fetch template events
+            const { data: templateEvents } = await queryClient.fetchQuery({ 
+              queryKey: [`/api/admin/template-events/${defaultTemplate.id}`] 
+            });
+            
+            if (templateEvents && templateEvents.length > 0) {
+              // Convert template events to timeline events - this will show in the UI
+              // but won't be saved since the user isn't logged in
+              const newEvents = templateEvents.map((event: any) => ({
+                ...event,
+                id: event.id + 1000, // Ensure unique IDs
+                userId: null,
+                timelineId: timeline.id
+              }));
+              
+              // Update the events cache to display these events
+              queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
+              
+              toast({
+                title: "Example Timeline Loaded",
+                description: "This is a sample template. Login to create and save your own timelines.",
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error loading default template:", error);
+        }
+      }
+    };
+    
+    loadDefaultTemplateEvents();
+  }, [user, hasLoadedDefaultTemplate, timeline, selectedTimelineId, toast]);
   
   // Provide save and share handlers to the parent component
   useEffect(() => {

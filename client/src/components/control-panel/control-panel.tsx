@@ -229,12 +229,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     for (const event of templateEvents) {
       await apiRequest('POST', '/api/timeline-events', {
         ...event,
-        userId: 1 // Using the default user
+        userId: user?.id || 1, // Use logged in user or default user
+        timelineId: timeline?.id // Important: Add timelineId to associate with the timeline
       });
     }
     
     // Refresh events
     queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline?.id}`] });
+    
+    toast({
+      title: "Template Applied",
+      description: `The ${templateType} template has been applied to your timeline.`,
+    });
   };
 
   return (
