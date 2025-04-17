@@ -16,12 +16,21 @@ import RegisterForm from "./register-form";
 
 interface AuthModalProps {
   triggerButton?: React.ReactNode;
+  onAuthComplete?: () => void;
 }
 
-export default function AuthModal({ triggerButton }: AuthModalProps) {
+export default function AuthModal({ triggerButton, onAuthComplete }: AuthModalProps) {
   const { user, logoutMutation } = useAuth();
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  
+  // Handle successful authentication
+  const handleAuthSuccess = () => {
+    if (onAuthComplete) {
+      onAuthComplete();
+    }
+    setOpen(false);
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -84,7 +93,7 @@ export default function AuthModal({ triggerButton }: AuthModalProps) {
           </TabsList>
           
           <TabsContent value="login" className="space-y-4">
-            <LoginForm />
+            <LoginForm onSuccess={handleAuthSuccess} />
             <div className="text-sm text-center mt-4 text-muted-foreground">
               Don't have an account?{" "}
               <button
@@ -97,7 +106,7 @@ export default function AuthModal({ triggerButton }: AuthModalProps) {
           </TabsContent>
           
           <TabsContent value="register" className="space-y-4">
-            <RegisterForm />
+            <RegisterForm onSuccess={handleAuthSuccess} />
             <div className="text-sm text-center mt-4 text-muted-foreground">
               Already have an account?{" "}
               <button

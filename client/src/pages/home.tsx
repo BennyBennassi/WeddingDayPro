@@ -33,13 +33,19 @@ import { Label } from "@/components/ui/label";
 function Home() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(null);
+  const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(1); // Default to 1 for now
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false);
   const [newTimelineName, setNewTimelineName] = useState("");
   const [newTimelineDate, setNewTimelineDate] = useState("");
   const { generatePdf } = usePdfExport();
+  
+  // Fetch user's timelines
+  const { data: userTimelines, isLoading: isUserTimelinesLoading } = useQuery({
+    queryKey: ['/api/wedding-timelines'],
+    enabled: !!user, // Only run this query if user is logged in
+  });
 
   // Fetch the timeline data
   const { data: timeline, isLoading: isTimelineLoading } = useQuery({
@@ -83,10 +89,79 @@ function Home() {
     },
   });
 
+  // Mutation for creating a new timeline
+  const createTimelineMutation = useMutation({
+    mutationFn: async (timelineData: any) => {
+      const res = await apiRequest('POST', '/api/wedding-timelines', timelineData);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Failed to create timeline' }));
+        throw new Error(errorData.message || 'Failed to create timeline');
+      }
+      return await res.json();
+    },
+    onSuccess: (newTimeline) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
+      setSelectedTimelineId(newTimeline.id);
+      setShowNewTimelineDialog(false);
+      setNewTimelineName("");
+      setNewTimelineDate("");
+      toast({
+        title: 'Timeline Created',
+        description: `"${newTimeline.name}" has been created successfully.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to create timeline',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Handle timeline saving
   const handleSave = () => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    
     toast({
       title: "Timeline Saved",
       description: "Your wedding timeline has been saved successfully.",
+    });
+  };
+  
+  // Handle creating a new timeline
+  const handleCreateTimeline = () => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    
+    // Generate a timeline name with TL prefix and number
+    const timelineCount = userTimelines?.length || 0;
+    const defaultName = `TL${timelineCount + 1} - New Timeline`;
+    
+    // Set default values
+    setNewTimelineName(defaultName);
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    setNewTimelineDate(today);
+    
+    // Show create dialog
+    setShowNewTimelineDialog(true);
+  };
+  
+  // Submit new timeline
+  const handleSubmitNewTimeline = () => {
+    if (!user) return;
+    
+    createTimelineMutation.mutate({
+      userId: user.id,
+      name: newTimelineName,
+      weddingDate: newTimelineDate,
+      startHour: 6,
+      timeFormat: "24h"
     });
   };
 
@@ -239,6 +314,108 @@ function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
       </button>
+
+      {/* Auth Prompt Dialog */}
+      <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign in Required</DialogTitle>
+            <DialogDescription>
+              You need to sign in or create an account to save your timeline.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center my-4">
+            <AuthModal 
+              triggerButton={
+                <Button variant="default" size="lg" className="w-full">
+                  Sign in or Register
+                </Button>
+              }
+              onAuthComplete={() => {
+                setShowAuthPrompt(false);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Timeline Dialog */}
+      <Dialog open={showNewTimelineDialog} onOpenChange={setShowNewTimelineDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Timeline</DialogTitle>
+            <DialogDescription>
+              Create a new wedding timeline to organize your special day.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="timeline-name">Timeline Name</Label>
+              <Input
+                id="timeline-name"
+                placeholder="Enter a name for your timeline"
+                value={newTimelineName}
+                onChange={(e) => setNewTimelineName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="wedding-date">Wedding Date</Label>
+              <Input
+                id="wedding-date"
+                type="date"
+                value={newTimelineDate}
+                onChange={(e) => setNewTimelineDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewTimelineDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitNewTimeline} 
+              disabled={!newTimelineName || !newTimelineDate || createTimelineMutation.isPending}
+            >
+              {createTimelineMutation.isPending ? 'Creating...' : 'Create Timeline'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Timeline Selector */}
+      {user && userTimelines && userTimelines.length > 0 && (
+        <div className="fixed bottom-4 left-4 z-20">
+          <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col gap-2">
+            <Label>Your Timelines</Label>
+            <div className="flex gap-2">
+              <Select
+                value={selectedTimelineId?.toString()}
+                onValueChange={(value) => setSelectedTimelineId(parseInt(value))}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select a timeline" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userTimelines.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id.toString()}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCreateTimeline}
+                title="Create new timeline"
+              >
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

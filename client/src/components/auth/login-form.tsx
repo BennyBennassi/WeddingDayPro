@@ -22,7 +22,11 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginForm() {
+interface LoginFormProps {
+  onSuccess?: () => void;
+}
+
+export default function LoginForm({ onSuccess }: LoginFormProps) {
   const { loginMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,7 +39,13 @@ export default function LoginForm() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
+    });
   };
 
   return (

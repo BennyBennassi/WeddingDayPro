@@ -24,7 +24,11 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function RegisterForm() {
+interface RegisterFormProps {
+  onSuccess?: () => void;
+}
+
+export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const { registerMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
