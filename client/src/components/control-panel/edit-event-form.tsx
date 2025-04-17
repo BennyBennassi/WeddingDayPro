@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Loader2 } from 'lucide-react';
 import ColorPicker from '@/components/ui/color-picker';
 
 interface EditTimeBlockFormProps {
@@ -86,10 +88,10 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
     updateEventMutation.mutate(data);
   };
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this block of time?')) {
-      deleteEventMutation.mutate();
-    }
+    setShowDeleteDialog(true);
   };
   
   // Generate time options for select
@@ -250,6 +252,33 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
           </div>
         </form>
       </Form>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Block of Time</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{event.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteEventMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => deleteEventMutation.mutate()}
+              disabled={deleteEventMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteEventMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
