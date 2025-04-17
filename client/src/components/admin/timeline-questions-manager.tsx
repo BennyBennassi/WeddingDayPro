@@ -149,8 +149,17 @@ export default function TimelineQuestionsManager() {
   };
   
   const onSubmit = (data: QuestionFormValues) => {
+    console.log('Form submitted:', data);
     if (selectedQuestionId) {
-      updateQuestionMutation.mutate({ id: selectedQuestionId, data });
+      console.log(`Updating question with ID ${selectedQuestionId}:`, data);
+      updateQuestionMutation.mutate({ id: selectedQuestionId, data }, {
+        onSuccess: (updated) => {
+          console.log('Question updated successfully:', updated);
+        },
+        onError: (error) => {
+          console.error('Error updating question:', error);
+        }
+      });
     } else {
       createQuestionMutation.mutate(data);
       setShowNewForm(false);
