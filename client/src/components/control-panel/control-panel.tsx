@@ -3,6 +3,8 @@ import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { useWeddingTimeline } from '@/hooks/use-wedding-timeline';
 import AddTimeBlockForm from './add-event-form';
 import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
@@ -79,6 +81,61 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       queryClient.invalidateQueries({ queryKey: [`/api/venue-restrictions/${timeline?.id}`] });
     }
   });
+  
+  const { toast } = useToast();
+  
+  // Delete timeline mutation
+  const deleteTimelineMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/wedding-timelines/${timeline?.id}`, null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
+      toast({
+        title: "Timeline deleted",
+        description: "Your timeline has been successfully deleted.",
+      });
+      
+      // If there are other timelines, select the first one
+      if (userTimelines && userTimelines.length > 1 && setSelectedTimelineId) {
+        const remainingTimelines = userTimelines.filter(t => t.id !== timeline?.id);
+        if (remainingTimelines.length > 0) {
+          setSelectedTimelineId(remainingTimelines[0].id);
+        }
+      } else if (handleCreateTimeline) {
+        // If this was the last timeline, create a new one
+        handleCreateTimeline();
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting timeline",
+        description: error.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Clear timeline events mutation
+  const clearTimelineEventsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/timeline-events/timeline/${timeline?.id}`, null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline?.id}`] });
+      toast({
+        title: "Timeline cleared",
+        description: "All events have been removed from your timeline.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error clearing timeline",
+        description: error.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleTimelineSettingsUpdate = (data: any) => {
     updateTimelineMutation.mutate(data);
@@ -86,6 +143,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   const handleTimeRestrictionsUpdate = (data: any) => {
     updateTimeRestrictionsMutation.mutate(data);
+  };
+  
+  const handleDeleteTimeline = () => {
+    deleteTimelineMutation.mutate();
+  };
+  
+  const handleClearTimeline = () => {
+    clearTimelineEventsMutation.mutate();
   };
 
   const loadTemplate = async (templateType: string) => {
@@ -275,7 +340,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       {/* Timeline Settings */}
       <TimelineSettings 
         timeline={timeline} 
-        onUpdate={handleTimelineSettingsUpdate} 
+        onUpdate={handleTimelineSettingsUpdate}
+        onDeleteTimeline={user ? handleDeleteTimeline : undefined}
+        onClearTimeline={user ? handleClearTimeline : undefined}
+        isDeleting={deleteTimelineMutation.isPending}
+        isClearing={clearTimelineEventsMutation.isPending}
       />
       
       {/* Time Restrictions - Moved below Timeline Settings */}
