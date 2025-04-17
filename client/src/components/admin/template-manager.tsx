@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -279,9 +279,9 @@ export default function TemplateManager() {
   const templateForm = useForm<TemplateFormValues>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
-      name: selectedTemplate?.name || "",
-      description: selectedTemplate?.description || "",
-      isDefault: selectedTemplate?.isDefault || false,
+      name: "",
+      description: "",
+      isDefault: false,
     },
   });
 
@@ -297,6 +297,17 @@ export default function TemplateManager() {
       position: templateEvents ? templateEvents.length + 1 : 1,
     },
   });
+  
+  // Update form values when editing a template
+  useEffect(() => {
+    if (isEditingTemplate && selectedTemplate) {
+      templateForm.reset({
+        name: selectedTemplate.name,
+        description: selectedTemplate.description || "",
+        isDefault: selectedTemplate.isDefault,
+      });
+    }
+  }, [isEditingTemplate, selectedTemplate, templateForm]);
 
   const handleSelectTemplate = (template: TimelineTemplate) => {
     setSelectedTemplate(template);
