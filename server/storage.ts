@@ -14,6 +14,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   
   // Timeline Event operations
   getTimelineEvents(timelineId: number): Promise<TimelineEvent[]>;
@@ -62,6 +64,19 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+  
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
   
   // Timeline Event methods
@@ -224,6 +239,18 @@ async function initializeDefaultData() {
       const defaultUser = await storage.createUser({
         username: "demo",
         password: "password",
+        email: "demo@example.com",
+        name: "Demo User",
+        isAdmin: false,
+      });
+      
+      // Create admin user
+      await storage.createUser({
+        username: "admin",
+        password: "admin123",
+        email: "admin@example.com",
+        name: "Admin User",
+        isAdmin: true,
       });
       
       // Create default timeline
