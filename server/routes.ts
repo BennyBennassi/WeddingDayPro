@@ -13,6 +13,7 @@ import {
   venueRestrictions,
   weddingTimelines
 } from "@shared/schema";
+import { sendPasswordResetEmail } from "./email";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
@@ -922,6 +923,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error deleting timeline:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Password Reset Routes
+  app.post("/api/password-reset/request", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // For security reasons, don't reveal if the email exists or not
+        return res.status(200).json({ 
+          message: "If your email is registered, you will receive a password reset link shortly" 
+        });
+      }
+      
+      // Generate a secure random token
+      const crypto = await import('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+      
+      // Set expiry time to 1 hour from now
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      
+      // Save the token in the database
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token,
+        expiresAt,
+        used: false
+      });
+      
+      // Construct the reset URL
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password`;
+      
+      // Send the email
+      const emailSent = await sendPasswordResetEmail(email, token, resetUrl);
+      
+      if (!emailSent) {
+        console.error("Failed to send password reset email to:", email);
+        return res.status(500).json({ message: "Failed to send password reset email" });
+      }
+      
+      res.status(200).json({ 
+        message: "If your email is registered, you will receive a password reset link shortly" 
+      });
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/password-reset/reset", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+      
+      // Check if the token exists and is valid
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken || resetToken.used) {
+        return res.status(400).json({ message: "Invalid or expired token" });
+      }
+      
+      // Check if token is expired
+      const now = new Date();
+      if (now > resetToken.expiresAt) {
+        return res.status(400).json({ message: "Token has expired" });
+      }
+      
+      // Hash the new password
+      const crypto = await import('crypto');
+      const { promisify } = await import('util');
+      const scryptAsync = promisify(crypto.scrypt);
+      
+      const salt = crypto.randomBytes(16).toString('hex');
+      const buf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString('hex')}.${salt}`;
+      
+      // Update the user's password
+      await storage.updateUser(resetToken.userId, { password: hashedPassword });
+      
+      // Mark the token as used
+      await storage.invalidatePasswordResetToken(token);
+      
+      res.status(200).json({ message: "Password has been successfully reset" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

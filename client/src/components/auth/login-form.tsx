@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 import {
   Form,
   FormControl,
@@ -143,6 +144,14 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               "Log in"
             )}
           </Button>
+          
+          <div className="mt-4 text-center">
+            <Link href="/forgot-password">
+              <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
+                Forgot your password?
+              </span>
+            </Link>
+          </div>
         </form>
       </Form>
     </div>

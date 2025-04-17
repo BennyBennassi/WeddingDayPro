@@ -8,6 +8,8 @@ import Home from "@/pages/home";
 import AdminPage from "@/pages/admin-page";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import Layout from "@/components/layout/layout";
@@ -32,6 +34,14 @@ function Router() {
       <Switch>
         <Route path="/auth">
           <AuthPage />
+        </Route>
+        
+        <Route path="/forgot-password">
+          <ForgotPasswordPage />
+        </Route>
+        
+        <Route path="/reset-password">
+          <ResetPasswordPage />
         </Route>
         
         <Route>
