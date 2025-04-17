@@ -12,6 +12,7 @@ interface TimelineHeaderProps {
 
 const TimelineHeader = ({ 
   weddingDate, 
+  weddingOf,
   startHour = 6,
   venueRestrictions,
   showRestrictionLines = false
@@ -130,6 +131,9 @@ const TimelineHeader = ({
 
   return (
     <div className="mb-6">
+      {weddingOf && (
+        <h1 className="text-2xl font-bold text-primary mb-2">Wedding of {weddingOf}</h1>
+      )}
       <div className="flex justify-between items-center mb-2">
         <div>
           <h2 className="text-xl font-medium text-gray-800">{formattedDate}</h2>

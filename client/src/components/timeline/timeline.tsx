@@ -183,6 +183,7 @@ const Timeline: React.FC<TimelineProps> = ({
           {/* Enhanced timeline header with restriction markers */}
           <TimelineHeader 
             weddingDate={timeline?.weddingDate} 
+            weddingOf={timeline?.weddingOf}
             startHour={timeline?.startHour || 6}
             venueRestrictions={venueRestrictions}
             showRestrictionLines={venueRestrictions?.showRestrictionLines === true}
@@ -196,36 +197,45 @@ const Timeline: React.FC<TimelineProps> = ({
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                 >
-                  {sortedEvents.map((event, index) => {
-                    const startHour = timeline?.startHour || 6;
-                    const left = calculateTimePosition(event.startTime, startHour);
-                    const width = calculateTimeWidth(event.startTime, event.endTime);
-                    const conflict = checkForTimeConflicts(event);
-                    
-                    return (
-                      <div key={event.id} className="flex items-center mb-4">
-                        <div className="w-48 flex-shrink-0 pr-4">
-                          <h3 className="font-medium text-gray-700">{event.name}</h3>
+                  {sortedEvents.length > 0 ? (
+                    sortedEvents.map((event, index) => {
+                      const startHour = timeline?.startHour || 6;
+                      const left = calculateTimePosition(event.startTime, startHour);
+                      const width = calculateTimeWidth(event.startTime, event.endTime);
+                      const conflict = checkForTimeConflicts(event);
+                      
+                      return (
+                        <div key={event.id} className="flex items-center mb-4">
+                          <div className="w-48 flex-shrink-0 pr-4">
+                            <h3 className="font-medium text-gray-700">{event.name}</h3>
+                          </div>
+                          <div className="relative flex-grow h-14 bg-gray-100 rounded-md">
+                            <TimeBlock
+                              event={event}
+                              index={index}
+                              left={left}
+                              width={width}
+                              isSelected={selectedEventId === event.id}
+                              onSelect={() => setSelectedEventId(event.id)}
+                              onUpdate={handleTimeBlockUpdate}
+                              conflict={conflict}
+                              isResizing={isResizing}
+                              setIsResizing={setIsResizing}
+                              timeFormat={timeline?.timeFormat || '24h'}
+                              startHour={timeline?.startHour || 6}
+                            />
+                          </div>
                         </div>
-                        <div className="relative flex-grow h-14 bg-gray-100 rounded-md">
-                          <TimeBlock
-                            event={event}
-                            index={index}
-                            left={left}
-                            width={width}
-                            isSelected={selectedEventId === event.id}
-                            onSelect={() => setSelectedEventId(event.id)}
-                            onUpdate={handleTimeBlockUpdate}
-                            conflict={conflict}
-                            isResizing={isResizing}
-                            setIsResizing={setIsResizing}
-                            timeFormat={timeline?.timeFormat || '24h'}
-                            startHour={timeline?.startHour || 6}
-                          />
-                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg my-8">
+                      <div className="text-center p-6">
+                        <h3 className="text-lg font-medium text-gray-600 mb-2">Your Timeline will appear here</h3>
+                        <p className="text-sm text-gray-500">Add blocks of time using the controls panel or use a template to get started</p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                   {provided.placeholder}
                 </div>
               )}
