@@ -39,7 +39,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(1); // Default to 1 for now
+  const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(null); // Start with no timeline selected
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false);
@@ -61,16 +61,19 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   // Fetch the timeline data
   const { data: timeline, isLoading: isTimelineLoading } = useQuery({
     queryKey: [`/api/wedding-timelines/single/${selectedTimelineId}`],
+    enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
 
   // Fetch the timeline events
   const { data: events, isLoading: isEventsLoading } = useQuery({
     queryKey: [`/api/timeline-events/${selectedTimelineId}`],
+    enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
 
   // Fetch venue restrictions
   const { data: restrictions, isLoading: isRestrictionsLoading } = useQuery({
     queryKey: [`/api/venue-restrictions/${selectedTimelineId}`],
+    enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
   
   // Mutation to add new event
@@ -333,6 +336,18 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     loadDefaultTemplateEvents();
   }, [user, hasLoadedDefaultTemplate, timeline, selectedTimelineId, toast]);
   
+  // Set the correct timeline ID when user data or timelines change
+  useEffect(() => {
+    // For logged-in users, auto-select their first timeline if they have any
+    if (user && userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 && !selectedTimelineId) {
+      // Only set if not already set to avoid infinite loops
+      setSelectedTimelineId(userTimelines[0].id);
+    } else if (!user && !selectedTimelineId) {
+      // For non-logged in users, set to a default demo timeline (ID 1)
+      setSelectedTimelineId(1);
+    }
+  }, [user, userTimelines, selectedTimelineId]);
+
   // Provide save and share handlers to the parent component
   useEffect(() => {
     if (provideSaveHandler) {
