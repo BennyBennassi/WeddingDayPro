@@ -126,6 +126,32 @@ const TimelineHeader = ({
       );
     }
     
+    if (venueRestrictions.customRestrictionTime && venueRestrictions.customRestrictionName) {
+      const position = calculateTimePosition(venueRestrictions.customRestrictionTime, startHour);
+      markers.push(
+        <div 
+          key="custom-restriction"
+          className="absolute flex items-center z-10"
+          style={{ left: position }}
+        >
+          <div className="group">
+            <div className="w-4 h-4 bg-blue-500 rounded-full cursor-pointer flex items-center justify-center transform hover:scale-110 transition-transform">
+              <AlertTriangle className="h-2 w-2 text-white" />
+            </div>
+            <div className="invisible group-hover:visible absolute top-full mt-1 px-2 py-1 bg-blue-100 border border-blue-200 rounded-md shadow-sm flex items-center whitespace-nowrap transform -translate-x-1/2 left-1/2 z-20">
+              <AlertTriangle className="h-3 w-3 text-blue-500 mr-1" />
+              <span className="text-xs font-medium text-blue-600">{venueRestrictions.customRestrictionName}: {venueRestrictions.customRestrictionTime}</span>
+            </div>
+          </div>
+          
+          {/* Vertical line extending down (only shown when restriction lines are enabled) */}
+          {showRestrictionLines && (
+            <div className="absolute top-full w-0.5 h-screen bg-blue-400 opacity-50 dashed-line pointer-events-none"></div>
+          )}
+        </div>
+      );
+    }
+    
     return markers;
   };
 
@@ -159,7 +185,7 @@ const TimelineHeader = ({
           {showRestrictionLines && (
             <div className="absolute bottom-0 left-0 right-0 h-6 flex items-center border-t border-gray-200">
               <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-48 w-44 pl-2">
-                Venue Restrictions
+                Time Restrictions
               </div>
               {generateRestrictionMarkers()}
             </div>

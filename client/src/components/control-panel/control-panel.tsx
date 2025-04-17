@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import AddTimeBlockForm from './add-event-form';
 import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
-import VenueRestrictions from './venue-restrictions';
+import TimeRestrictions from './time-restrictions';
 import ExportOptions from './export-options';
 import AuthModal from '@/components/auth/auth-modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 interface ControlPanelProps {
   timeline: any;
   events: any[];
-  venueRestrictions: any;
+  venueRestrictions: any; // Keep this name for API compatibility
   selectedEventId: number | null;
   setSelectedEventId: (id: number | null) => void;
   handleExportPdf: () => void;
@@ -63,7 +63,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     }
   });
   
-  const updateVenueRestrictionsMutation = useMutation({
+  const updateTimeRestrictionsMutation = useMutation({
     mutationFn: async (data: any) => {
       if (venueRestrictions) {
         return apiRequest('PUT', `/api/venue-restrictions/${timeline?.id}`, data);
@@ -83,8 +83,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     updateTimelineMutation.mutate(data);
   };
 
-  const handleVenueRestrictionsUpdate = (data: any) => {
-    updateVenueRestrictionsMutation.mutate(data);
+  const handleTimeRestrictionsUpdate = (data: any) => {
+    updateTimeRestrictionsMutation.mutate(data);
   };
 
   const loadTemplate = async (templateType: string) => {
@@ -277,10 +277,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         onUpdate={handleTimelineSettingsUpdate} 
       />
       
-      {/* Venue Restrictions - Moved below Timeline Settings */}
-      <VenueRestrictions 
+      {/* Time Restrictions - Moved below Timeline Settings */}
+      <TimeRestrictions 
         restrictions={venueRestrictions} 
-        onUpdate={handleVenueRestrictionsUpdate} 
+        onUpdate={handleTimeRestrictionsUpdate} 
       />
       
       {/* Create New Block of Time */}
