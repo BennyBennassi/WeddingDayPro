@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,16 +7,38 @@ import ControlPanel from "@/components/control-panel/control-panel";
 import AuthModal from "@/components/auth/auth-modal";
 import ThingsToConsider from "@/components/timeline-questions/things-to-consider";
 import { Button } from "@/components/ui/button";
-import { Save, Share, UserCog } from "lucide-react";
+import { Save, Share, UserCog, PlusCircle } from "lucide-react";
 import { usePdfExport } from "@/lib/exportPdf";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function Home() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedTimelineId] = useState(1); // Use the default timeline for now
+  const [selectedTimelineId, setSelectedTimelineId] = useState<number | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false);
+  const [newTimelineName, setNewTimelineName] = useState("");
+  const [newTimelineDate, setNewTimelineDate] = useState("");
   const { generatePdf } = usePdfExport();
 
   // Fetch the timeline data

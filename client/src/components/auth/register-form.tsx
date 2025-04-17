@@ -18,17 +18,8 @@ import { Loader2 } from "lucide-react";
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  email: z.union([
-    z.string().email("Please enter a valid email"),
-    z.string().length(0) // Allow empty string
-  ]).optional(),
+  email: z.string().email("Please enter a valid email").min(1, "Email is required"),
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
-}).refine(data => {
-  // At least provide either email or name
-  return (data.email && data.email.length > 0) || (data.name && data.name.length > 0);
-}, {
-  message: "Please provide either your email or name",
-  path: ["name"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -107,12 +98,12 @@ export default function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Email <span className="text-xs text-muted-foreground">(optional)</span>
+                  Email <span className="text-xs text-muted-foreground">(required for password reset)</span>
                 </FormLabel>
                 <FormControl>
                   <Input 
                     type="email"
-                    placeholder="Enter your email or leave empty" 
+                    placeholder="Enter your email address" 
                     {...field} 
                     value={field.value || ''}
                     onChange={(e) => {
@@ -135,7 +126,7 @@ export default function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Full Name <span className="text-xs text-muted-foreground">(provide name or email)</span>
+                  Full Name <span className="text-xs text-muted-foreground">(optional)</span>
                 </FormLabel>
                 <FormControl>
                   <Input 
