@@ -35,8 +35,17 @@ async function runMigrations() {
     // Create user question responses table if not exists
     await createUserQuestionResponsesTable();
     
+    // Create timeline templates table if not exists
+    await createTimelineTemplatesTable();
+    
+    // Create template events table if not exists
+    await createTemplateEventsTable();
+    
     // Create sample timeline questions if needed
     await createSampleTimelineQuestions();
+    
+    // Create sample timeline templates if needed
+    await createSampleTimelineTemplates();
 
     // Update existing timeline questions to set all prompt fields to false
     await updateExistingQuestionsPromptFields();
@@ -266,6 +275,191 @@ async function updateExistingQuestionsPromptFields() {
     }
   } catch (error) {
     console.error("Error updating existing timeline questions:", error);
+  }
+}
+
+async function createTimelineTemplatesTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'timeline_templates'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE timeline_templates (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          is_default BOOLEAN NOT NULL DEFAULT false,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created timeline_templates table");
+    } else {
+      console.log("timeline_templates table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating timeline_templates table:", error);
+  }
+}
+
+async function createTemplateEventsTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'template_events'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE template_events (
+          id SERIAL PRIMARY KEY,
+          template_id INTEGER NOT NULL REFERENCES timeline_templates(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          category TEXT NOT NULL,
+          color TEXT NOT NULL,
+          notes TEXT,
+          position INTEGER NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created template_events table");
+    } else {
+      console.log("template_events table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating template_events table:", error);
+  }
+}
+
+async function createSampleTimelineTemplates() {
+  try {
+    // Check if we have any templates already
+    const countResult = await pool.query(`
+      SELECT COUNT(*) FROM timeline_templates;
+    `);
+    
+    const count = parseInt(countResult.rows[0].count);
+    
+    if (count === 0) {
+      // Add sample templates
+      const churchTemplate = await pool.query(`
+        INSERT INTO timeline_templates (name, description, is_default) 
+        VALUES ('Church Wedding', 'Traditional wedding with church ceremony and separate reception venue', true)
+        RETURNING id;
+      `);
+      
+      const singleVenueTemplate = await pool.query(`
+        INSERT INTO timeline_templates (name, description, is_default) 
+        VALUES ('Single Venue', 'Wedding where both ceremony and reception are at the same venue', true)
+        RETURNING id;
+      `);
+      
+      const morningTemplate = await pool.query(`
+        INSERT INTO timeline_templates (name, description, is_default) 
+        VALUES ('Morning Ceremony', 'Early ceremony with daytime reception', true)
+        RETURNING id;
+      `);
+      
+      const eveningTemplate = await pool.query(`
+        INSERT INTO timeline_templates (name, description, is_default) 
+        VALUES ('Evening Ceremony', 'Late afternoon or evening ceremony with evening reception', true)
+        RETURNING id;
+      `);
+      
+      // Add events for Church Wedding template
+      const churchTemplateId = churchTemplate.rows[0].id;
+      await pool.query(`
+        INSERT INTO template_events 
+          (template_id, name, start_time, end_time, category, color, notes, position)
+        VALUES
+          ($1, 'Hair & Makeup', '08:00', '12:00', 'morning_prep', 'bg-pink-100', NULL, 1),
+          ($1, 'Travel to Church', '12:15', '12:30', 'travel', 'bg-blue-100', NULL, 2),
+          ($1, 'Church Ceremony', '13:00', '14:00', 'ceremony', 'bg-primary-light', NULL, 3),
+          ($1, 'Photos at Church', '14:00', '14:30', 'photos', 'bg-green-100', NULL, 4),
+          ($1, 'Travel to Reception', '14:30', '15:00', 'travel', 'bg-blue-100', NULL, 5),
+          ($1, 'Drinks Reception', '15:30', '17:00', 'drinks_reception', 'bg-yellow-100', NULL, 6),
+          ($1, 'Bell Call', '17:00', '17:30', 'bell_call', 'bg-orange-100', NULL, 7),
+          ($1, 'Dinner Service', '17:30', '19:30', 'dining', 'bg-red-100', NULL, 8),
+          ($1, 'Speeches', '19:30', '20:00', 'speeches', 'bg-accent-light', NULL, 9),
+          ($1, 'Band', '21:00', '23:30', 'entertainment', 'bg-indigo-100', NULL, 10),
+          ($1, 'DJ', '23:30', '01:30', 'dancing', 'bg-indigo-100', NULL, 11);
+      `, [churchTemplateId]);
+      
+      // Add events for Single Venue template
+      const singleVenueTemplateId = singleVenueTemplate.rows[0].id;
+      await pool.query(`
+        INSERT INTO template_events 
+          (template_id, name, start_time, end_time, category, color, notes, position)
+        VALUES
+          ($1, 'Hair & Makeup', '10:00', '13:00', 'morning_prep', 'bg-pink-100', NULL, 1),
+          ($1, 'Ceremony', '14:00', '15:00', 'ceremony', 'bg-primary-light', NULL, 2),
+          ($1, 'Drinks Reception', '15:00', '17:00', 'drinks_reception', 'bg-yellow-100', NULL, 3),
+          ($1, 'Photos', '15:15', '16:30', 'photos', 'bg-green-100', NULL, 4),
+          ($1, 'Bell Call', '17:00', '17:30', 'bell_call', 'bg-orange-100', NULL, 5),
+          ($1, 'Dinner Service', '17:30', '19:30', 'dining', 'bg-red-100', NULL, 6),
+          ($1, 'Speeches', '19:30', '20:15', 'speeches', 'bg-accent-light', NULL, 7),
+          ($1, 'Band Setup', '20:15', '21:00', 'entertainment', 'bg-gray-200', NULL, 8),
+          ($1, 'First Dance', '21:00', '21:15', 'dancing', 'bg-purple-100', NULL, 9),
+          ($1, 'Band', '21:15', '23:45', 'entertainment', 'bg-indigo-100', NULL, 10),
+          ($1, 'DJ', '23:45', '01:30', 'dancing', 'bg-indigo-100', NULL, 11);
+      `, [singleVenueTemplateId]);
+      
+      // Add events for Morning Ceremony template
+      const morningTemplateId = morningTemplate.rows[0].id;
+      await pool.query(`
+        INSERT INTO template_events 
+          (template_id, name, start_time, end_time, category, color, notes, position)
+        VALUES
+          ($1, 'Hair & Makeup', '05:00', '08:00', 'morning_prep', 'bg-pink-100', NULL, 1),
+          ($1, 'Ceremony', '09:00', '10:00', 'ceremony', 'bg-primary-light', NULL, 2),
+          ($1, 'Photos', '10:00', '11:30', 'photos', 'bg-green-100', NULL, 3),
+          ($1, 'Brunch', '11:30', '13:30', 'dining', 'bg-red-100', NULL, 4),
+          ($1, 'Afternoon Activities', '13:30', '16:00', 'entertainment', 'bg-yellow-100', NULL, 5),
+          ($1, 'Bell Call', '17:00', '17:30', 'bell_call', 'bg-orange-100', NULL, 6),
+          ($1, 'Dinner Service', '17:30', '19:30', 'dining', 'bg-red-100', NULL, 7),
+          ($1, 'Evening Entertainment', '20:00', '00:00', 'dancing', 'bg-indigo-100', NULL, 8);
+      `, [morningTemplateId]);
+      
+      // Add events for Evening Ceremony template
+      const eveningTemplateId = eveningTemplate.rows[0].id;
+      await pool.query(`
+        INSERT INTO template_events 
+          (template_id, name, start_time, end_time, category, color, notes, position)
+        VALUES
+          ($1, 'Hair & Makeup', '13:00', '16:00', 'morning_prep', 'bg-pink-100', NULL, 1),
+          ($1, 'Ceremony', '17:00', '18:00', 'ceremony', 'bg-primary-light', NULL, 2),
+          ($1, 'Drinks Reception', '18:00', '19:00', 'drinks_reception', 'bg-yellow-100', NULL, 3),
+          ($1, 'Photos', '18:15', '19:00', 'photos', 'bg-green-100', NULL, 4),
+          ($1, 'Dinner Service', '19:00', '21:00', 'dining', 'bg-red-100', NULL, 5),
+          ($1, 'Speeches', '21:00', '21:30', 'speeches', 'bg-accent-light', NULL, 6),
+          ($1, 'Dancing', '21:30', '01:30', 'dancing', 'bg-indigo-100', NULL, 7),
+          ($1, 'Late Night Snacks', '23:00', '23:30', 'dining', 'bg-orange-100', NULL, 8);
+      `, [eveningTemplateId]);
+      
+      console.log("Created sample timeline templates and events");
+    } else {
+      console.log("Sample timeline templates not needed, records already exist");
+    }
+  } catch (error) {
+    console.error("Error creating sample timeline templates:", error);
   }
 }
 

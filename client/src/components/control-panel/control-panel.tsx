@@ -7,6 +7,7 @@ import AddTimeBlockForm from './add-event-form';
 import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
 import TimeRestrictions from './time-restrictions';
+import TemplateSelector from './template-selector';
 import ExportOptions from './export-options';
 import AuthModal from '@/components/auth/auth-modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -308,31 +309,41 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       {/* Template Options */}
       <div className="mb-6">
         <h3 className="text-md font-medium text-gray-700 mb-4">Templates</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-            onClick={() => loadTemplate('church')}
-          >
-            Church Wedding
-          </button>
-          <button 
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-            onClick={() => loadTemplate('single-venue')}
-          >
-            Single Venue
-          </button>
-          <button 
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-            onClick={() => loadTemplate('morning-ceremony')}
-          >
-            Morning Ceremony
-          </button>
-          <button 
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-            onClick={() => loadTemplate('evening-ceremony')}
-          >
-            Evening Ceremony
-          </button>
+        
+        {/* Dynamic Template Selector */}
+        {timeline && timeline.id && (
+          <TemplateSelector timelineId={timeline.id} />
+        )}
+        
+        {/* Legacy Template Options */}
+        <div className="mt-3">
+          <p className="text-xs text-gray-500 mb-2">Legacy Quick Templates:</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              onClick={() => loadTemplate('church')}
+            >
+              Church Wedding
+            </button>
+            <button 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              onClick={() => loadTemplate('single-venue')}
+            >
+              Single Venue
+            </button>
+            <button 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              onClick={() => loadTemplate('morning-ceremony')}
+            >
+              Morning Ceremony
+            </button>
+            <button 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              onClick={() => loadTemplate('evening-ceremony')}
+            >
+              Evening Ceremony
+            </button>
+          </div>
         </div>
       </div>
       
