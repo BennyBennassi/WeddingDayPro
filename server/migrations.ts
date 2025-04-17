@@ -28,6 +28,15 @@ async function runMigrations() {
     
     // Create admin user if not exists
     await createAdminUserIfNotExists();
+    
+    // Create timeline questions table if not exists
+    await createTimelineQuestionsTable();
+    
+    // Create user question responses table if not exists
+    await createUserQuestionResponsesTable();
+    
+    // Create sample timeline questions if needed
+    await createSampleTimelineQuestions();
 
   } catch (error) {
     console.error("Error running migrations:", error);
@@ -102,6 +111,126 @@ async function createAdminUserIfNotExists() {
     }
   } catch (error) {
     console.error("Error creating admin user:", error);
+  }
+}
+
+async function createTimelineQuestionsTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'timeline_questions'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE timeline_questions (
+          id SERIAL PRIMARY KEY,
+          question TEXT NOT NULL,
+          description TEXT,
+          active BOOLEAN NOT NULL DEFAULT true,
+          "order" INTEGER NOT NULL DEFAULT 0,
+          default_name TEXT,
+          default_category TEXT,
+          default_start_time TEXT,
+          default_end_time TEXT,
+          default_color TEXT,
+          default_notes TEXT,
+          prompt_name BOOLEAN NOT NULL DEFAULT true,
+          prompt_category BOOLEAN NOT NULL DEFAULT false,
+          prompt_start_time BOOLEAN NOT NULL DEFAULT true,
+          prompt_end_time BOOLEAN NOT NULL DEFAULT true,
+          prompt_color BOOLEAN NOT NULL DEFAULT false,
+          prompt_notes BOOLEAN NOT NULL DEFAULT false,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created timeline_questions table");
+    } else {
+      console.log("timeline_questions table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating timeline_questions table:", error);
+  }
+}
+
+async function createUserQuestionResponsesTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'user_question_responses'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE user_question_responses (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          timeline_id INTEGER NOT NULL REFERENCES wedding_timelines(id) ON DELETE CASCADE,
+          question_id INTEGER NOT NULL REFERENCES timeline_questions(id) ON DELETE CASCADE,
+          answer BOOLEAN NOT NULL,
+          completed BOOLEAN NOT NULL DEFAULT false,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          UNIQUE(user_id, timeline_id, question_id)
+        );
+      `);
+      console.log("Created user_question_responses table");
+    } else {
+      console.log("user_question_responses table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating user_question_responses table:", error);
+  }
+}
+
+async function createSampleTimelineQuestions() {
+  try {
+    // Check if we have any questions already
+    const countResult = await pool.query(`
+      SELECT COUNT(*) FROM timeline_questions;
+    `);
+    
+    const count = parseInt(countResult.rows[0].count);
+    
+    if (count === 0) {
+      // Add sample questions
+      await pool.query(`
+        INSERT INTO timeline_questions 
+          (question, description, active, "order", default_name, default_category, default_start_time, default_end_time, default_color, prompt_name, prompt_category, prompt_start_time, prompt_end_time, prompt_color, prompt_notes)
+        VALUES
+          ('Will you have hair and makeup professionals?', 'Professional hair and makeup usually takes 30-45 minutes per person', true, 10, 'Hair & Makeup', 'Getting Ready', '10:00', '12:00', '#f472b6', true, true, true, true, true, true),
+          
+          ('Are you having a first look?', 'A first look is a private moment for the couple to see each other before the ceremony', true, 20, 'First Look', 'Pre-Ceremony', '13:30', '14:00', '#a78bfa', true, true, true, true, true, true),
+          
+          ('Will you have a cocktail hour?', 'Typically happens between ceremony and reception while photos are being taken', true, 30, 'Cocktail Hour', 'Reception', '17:00', '18:00', '#60a5fa', true, true, true, true, true, true),
+          
+          ('Are you planning to have toasts/speeches?', 'Usually takes place during reception dinner', true, 40, 'Toasts & Speeches', 'Reception', '19:00', '19:30', '#34d399', true, true, true, true, true, true),
+          
+          ('Will you have a cake cutting?', 'Traditional part of the reception', true, 50, 'Cake Cutting', 'Reception', '20:00', '20:15', '#fbbf24', true, true, true, true, true, true),
+          
+          ('Are you planning a first dance?', 'Traditionally the first activity after dinner', true, 60, 'First Dance', 'Reception', '19:45', '19:55', '#f87171', true, true, true, true, true, true),
+          
+          ('Will there be parent dances?', 'Usually follows the first dance', true, 70, 'Parent Dances', 'Reception', '19:55', '20:10', '#fb923c', true, true, true, true, true, true);
+      `);
+      
+      console.log("Created sample timeline questions");
+    } else {
+      console.log("Sample timeline questions not needed, records already exist");
+    }
+  } catch (error) {
+    console.error("Error creating sample timeline questions:", error);
   }
 }
 

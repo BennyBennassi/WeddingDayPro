@@ -65,6 +65,27 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
     );
   }
   
+  // Show error message if there was an error loading the questions
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="flex-1">Things to Consider</div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              There was a problem loading the questionnaire. Please try again later or contact the administrator.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   // Toggle question accordion
   const toggleQuestion = (questionId: number) => {
     setExpandedQuestions({
@@ -202,15 +223,15 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
   };
   
   // Separate questions into two groups: unanswered and completed
-  const unansweredQuestions = questions.filter(q => {
+  const unansweredQuestions = questions?.filter(q => {
     const response = getResponseForQuestion(q.id);
     return !response || (response.answer && !response.completed);
-  });
+  }) || [];
   
-  const completedQuestions = questions.filter(q => {
+  const completedQuestions = questions?.filter(q => {
     const response = getResponseForQuestion(q.id);
     return response && (!response.answer || (response.answer && response.completed));
-  });
+  }) || [];
   
   return (
     <Card className="mb-8">

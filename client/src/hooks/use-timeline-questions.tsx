@@ -38,7 +38,11 @@ export type UserQuestionResponse = {
 
 // Hook for fetching timeline questions (user-facing)
 export function useTimelineQuestions() {
-  return useQuery<TimelineQuestion[]>({
+  const {
+    data: questions = [],
+    isLoading,
+    error,
+  } = useQuery<TimelineQuestion[]>({
     queryKey: ['/api/timeline-questions'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/timeline-questions');
@@ -48,6 +52,12 @@ export function useTimelineQuestions() {
       return await res.json();
     },
   });
+  
+  return {
+    questions,
+    isLoadingQuestions: isLoading,
+    questionsError: error,
+  };
 }
 
 // Hook for handling user question responses
