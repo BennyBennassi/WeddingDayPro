@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -29,6 +30,7 @@ interface LoginFormProps {
 export default function LoginForm({ onSuccess }: LoginFormProps) {
   const { loginMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -39,11 +41,17 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   });
 
   const onSubmit = (data: LoginFormData) => {
+    // Clear any previous error
+    setLoginError(null);
+    
     loginMutation.mutate(data, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess();
         }
+      },
+      onError: (error) => {
+        setLoginError(error.message || "Invalid username or password. Please check your credentials and try again.");
       }
     });
   };
@@ -52,6 +60,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {loginError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
           <FormField
             control={form.control}
             name="username"

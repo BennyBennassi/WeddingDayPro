@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -31,6 +32,7 @@ interface RegisterFormProps {
 export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   const { registerMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -43,11 +45,17 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   });
 
   const onSubmit = (data: RegisterFormData) => {
+    // Clear any previous error
+    setRegisterError(null);
+    
     registerMutation.mutate(data, {
       onSuccess: () => {
         if (onSuccess) {
           onSuccess();
         }
+      },
+      onError: (error) => {
+        setRegisterError(error.message || "Registration failed. The username may already be taken.");
       }
     });
   };
@@ -56,6 +64,12 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {registerError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>{registerError}</AlertDescription>
+            </Alert>
+          )}
           <FormField
             control={form.control}
             name="username"
