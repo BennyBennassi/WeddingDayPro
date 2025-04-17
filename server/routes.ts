@@ -91,6 +91,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete all events from a timeline
+  app.delete("/api/timeline-events/timeline/:timelineId", async (req, res) => {
+    try {
+      const timelineId = parseInt(req.params.timelineId);
+      if (isNaN(timelineId)) {
+        return res.status(400).json({ message: "Invalid timeline ID" });
+      }
+      
+      // Get all events for this timeline first
+      const events = await storage.getTimelineEvents(timelineId);
+      if (!events || events.length === 0) {
+        return res.status(200).json({ message: "No events to delete" });
+      }
+      
+      // Delete each event
+      for (const event of events) {
+        await storage.deleteTimelineEvent(event.id);
+      }
+      
+      res.status(200).json({ message: `Successfully deleted ${events.length} events` });
+    } catch (error) {
+      console.error("Error clearing timeline events:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // Wedding timelines
   app.get("/api/wedding-timelines", isAuthenticated, async (req, res) => {
     try {
