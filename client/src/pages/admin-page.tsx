@@ -42,7 +42,7 @@ import {
   UserCog,
   HelpCircle,
   Users,
-  FileTemplate,
+  LayoutTemplate,
 } from "lucide-react";
 import { format } from "date-fns";
 import TimelineQuestionsManager from "@/components/admin/timeline-questions-manager";
@@ -177,6 +177,10 @@ export default function AdminPage() {
             <HelpCircle className="h-4 w-4" />
             Timeline Questions
           </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center gap-1">
+            <LayoutTemplate className="h-4 w-4" />
+            Timeline Templates
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="users" className="border rounded-lg shadow-sm bg-card p-6">
@@ -245,6 +249,10 @@ export default function AdminPage() {
         
         <TabsContent value="questions" className="border rounded-lg shadow-sm bg-card">
           <TimelineQuestionsManager />
+        </TabsContent>
+        
+        <TabsContent value="templates" className="border rounded-lg shadow-sm bg-card">
+          <TemplateManager />
         </TabsContent>
       </Tabs>
       

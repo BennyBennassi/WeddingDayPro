@@ -622,6 +622,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Route to apply a template to a timeline
+  app.post("/api/timelines/:timelineId/apply-template", isAuthenticated, async (req, res) => {
+    try {
+      const timelineId = parseInt(req.params.timelineId);
+      const templateId = parseInt(req.body.templateId);
+      
+      if (isNaN(timelineId) || isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid timeline or template ID" });
+      }
+      
+      // Check if timeline exists and belongs to user
+      const timeline = await storage.getWeddingTimeline(timelineId);
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
+      }
+      
+      if (timeline.userId !== req.user!.id && !req.user!.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to modify this timeline" });
+      }
+      
+      // Get template events
+      const templateEvents = await storage.getTemplateEvents(templateId);
+      if (!templateEvents || templateEvents.length === 0) {
+        return res.status(404).json({ message: "Template has no events" });
+      }
+      
+      // Convert template events to timeline events
+      const timelineEvents = await Promise.all(
+        templateEvents.map(async (event) => {
+          return await storage.createTimelineEvent({
+            userId: req.user!.id,
+            timelineId,
+            name: event.name,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            category: event.category,
+            color: event.color,
+            notes: event.notes,
+            position: event.position,
+          });
+        })
+      );
+      
+      res.status(200).json(timelineEvents);
+    } catch (error) {
+      console.error("Error applying template to timeline:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
