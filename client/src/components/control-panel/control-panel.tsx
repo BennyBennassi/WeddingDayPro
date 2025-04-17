@@ -5,6 +5,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useWeddingTimeline } from '@/hooks/use-wedding-timeline';
+import { debounce } from '@/lib/utils';
 import AddTimeBlockForm from './add-event-form';
 import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
@@ -46,6 +47,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const selectedEvent = events?.find(event => event.id === selectedEventId);
   const selectedBlockRef = useRef<HTMLDivElement>(null);
   const [weddingOfValue, setWeddingOfValue] = useState(timeline?.weddingOf || '');
+  const [weddingDateValue, setWeddingDateValue] = useState(timeline?.weddingDate || '');
   
   // Scroll to the selected block section when a block is selected
   useEffect(() => {
@@ -73,6 +75,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       queryClient.invalidateQueries({ queryKey: [`/api/wedding-timelines/single/${timeline?.id}`] });
     }
   });
+  
+  // Create debounced handler for wedding of field
+  const debouncedUpdateWeddingOf = useCallback(
+    debounce((value: string) => {
+      updateTimelineMutation.mutate({ weddingOf: value });
+    }, 500),
+    [updateTimelineMutation]
+  );
   
   const updateTimeRestrictionsMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -267,8 +277,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                 placeholder="Enter couple's names"
-                value={timeline.weddingOf || ''}
-                onChange={(e) => updateTimelineMutation.mutate({ weddingOf: e.target.value })}
+                value={weddingOfValue}
+                onChange={(e) => {
+                  setWeddingOfValue(e.target.value);
+                  debouncedUpdateWeddingOf(e.target.value);
+                }}
               />
             </div>
             <div>
