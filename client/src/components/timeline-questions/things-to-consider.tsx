@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Check, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -317,11 +318,28 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                             {question.promptCategory && (
                               <div className="space-y-2">
                                 <label className="text-sm font-medium">Category</label>
-                                <Input
-                                  placeholder={question.defaultCategory || "Enter category"}
+                                <Select
                                   value={questionData.category || ""}
-                                  onChange={(e) => handleFollowUpChange(question.id, "category", e.target.value)}
-                                />
+                                  onValueChange={(value) => handleFollowUpChange(question.id, "category", value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={question.defaultCategory || "Select category"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="morning_prep">Morning Prep</SelectItem>
+                                    <SelectItem value="travel">Travel</SelectItem>
+                                    <SelectItem value="ceremony">Ceremony</SelectItem>
+                                    <SelectItem value="photos">Photos</SelectItem>
+                                    <SelectItem value="drinks_reception">Drinks Reception</SelectItem>
+                                    <SelectItem value="bell_call">Bell Call</SelectItem>
+                                    <SelectItem value="entrance">Entrance</SelectItem>
+                                    <SelectItem value="dining">Dining</SelectItem>
+                                    <SelectItem value="speeches">Speeches</SelectItem>
+                                    <SelectItem value="entertainment">Entertainment</SelectItem>
+                                    <SelectItem value="dancing">Dancing</SelectItem>
+                                    <SelectItem value="residence">Residence</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                             )}
                             
