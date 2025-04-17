@@ -33,9 +33,9 @@ export default function Header() {
         <div className="flex items-center space-x-2">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white font-bold">
-              WT
+              WDT
             </div>
-            <span className="text-xl font-bold">Wedding Timeline</span>
+            <span className="text-xl font-bold">Wedding Day Timeline</span>
           </Link>
         </div>
         
