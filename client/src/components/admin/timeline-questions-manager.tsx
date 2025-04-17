@@ -89,7 +89,7 @@ export default function TimelineQuestionsManager() {
       defaultCategory: "",
       defaultStartTime: "",
       defaultEndTime: "",
-      defaultColor: "#4f46e5",
+      defaultColor: "bg-primary-light",
       defaultNotes: "",
       promptName: true,
       promptCategory: false,
@@ -137,7 +137,7 @@ export default function TimelineQuestionsManager() {
       defaultCategory: "",
       defaultStartTime: "",
       defaultEndTime: "",
-      defaultColor: "#4f46e5",
+      defaultColor: "bg-primary-light",
       defaultNotes: "",
       promptName: false,
       promptCategory: false,
@@ -562,18 +562,10 @@ export default function TimelineQuestionsManager() {
                               <FormItem>
                                 <FormLabel>Default Color</FormLabel>
                                 <FormControl>
-                                  <div className="flex gap-2">
-                                    <div
-                                      className="w-10 h-10 rounded border"
-                                      style={{ backgroundColor: field.value || "#4f46e5" }}
-                                    />
-                                    <Input
-                                      placeholder="CSS color or hex code"
-                                      {...field}
-                                      value={field.value || ""}
-                                      className="flex-1"
-                                    />
-                                  </div>
+                                  <ColorPicker
+                                    value={field.value || "bg-primary-light"}
+                                    onChange={(color) => field.onChange(color)}
+                                  />
                                 </FormControl>
                                 <FormDescription>
                                   If "Prompt user" is OFF, this color will be used automatically. If ON, it will be shown as a suggestion.
