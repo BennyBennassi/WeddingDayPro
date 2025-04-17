@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, User, Settings, Home } from "lucide-react";
+import { LogOut, User, Settings, Home, Save, Share } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,13 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AuthModal from "@/components/auth/auth-modal";
 
-export default function Header() {
+interface HeaderProps {
+  onSave?: () => void;
+  onShare?: () => void;
+  showActionButtons?: boolean;
+}
+
+export default function Header({ onSave, onShare, showActionButtons = false }: HeaderProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   
@@ -69,6 +75,33 @@ export default function Header() {
                 </Link>
               )}
             </nav>
+            
+            {/* Action Buttons - Only show on home page */}
+            {showActionButtons && (
+              <div className="flex items-center space-x-3 mr-4">
+                {onSave && (
+                  <Button 
+                    variant="default" 
+                    className="bg-primary hover:bg-primary-dark text-white" 
+                    onClick={onSave}
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    Save
+                  </Button>
+                )}
+                
+                {onShare && (
+                  <Button 
+                    variant="secondary"
+                    className="bg-secondary hover:bg-secondary-dark text-white"
+                    onClick={onShare}
+                  >
+                    <Share className="h-4 w-4 mr-1" />
+                    Share
+                  </Button>
+                )}
+              </div>
+            )}
             
             {/* User Actions */}
             <div className="flex items-center space-x-4">

@@ -278,30 +278,6 @@ function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Action buttons */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-end items-center">
-          <div className="flex items-center space-x-3">
-            <Button 
-              variant="default" 
-              className="bg-primary hover:bg-primary-dark text-white" 
-              onClick={handleSave}
-            >
-              <Save className="h-4 w-4 mr-1" />
-              Save
-            </Button>
-            
-            <Button 
-              variant="secondary"
-              className="bg-secondary hover:bg-secondary-dark text-white"
-              onClick={handleShare}
-            >
-              <Share className="h-4 w-4 mr-1" />
-              Share
-            </Button>
-          </div>
-        </div>
-      </div>
       
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-4 pb-8">

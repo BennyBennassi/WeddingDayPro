@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,10 +11,31 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import Layout from "@/components/layout/layout";
 
 function Router() {
+  // State for save/share handlers to be passed to the Home component
+  const [saveHandler, setSaveHandler] = useState<(() => void) | undefined>(undefined);
+  const [shareHandler, setShareHandler] = useState<(() => void) | undefined>(undefined);
+  
+  // Callback to capture save handler from Home component
+  const captureSaveHandler = useCallback((handler: () => void) => {
+    setSaveHandler(() => handler);
+  }, []);
+  
+  // Callback to capture share handler from Home component
+  const captureShareHandler = useCallback((handler: () => void) => {
+    setShareHandler(() => handler);
+  }, []);
+  
   return (
-    <Layout>
+    <Layout onSave={saveHandler} onShare={shareHandler}>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/">
+          {() => (
+            <Home 
+              provideSaveHandler={captureSaveHandler}
+              provideShareHandler={captureShareHandler}
+            />
+          )}
+        </Route>
         <ProtectedRoute path="/admin" adminOnly={true}>
           <AdminPage />
         </ProtectedRoute>
