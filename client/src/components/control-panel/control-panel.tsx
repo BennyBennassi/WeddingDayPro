@@ -8,6 +8,7 @@ import EditTimeBlockForm from './edit-event-form';
 import TimelineSettings from './timeline-settings';
 import VenueRestrictions from './venue-restrictions';
 import ExportOptions from './export-options';
+import AuthModal from '@/components/auth/auth-modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -169,49 +170,73 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
-      {/* Debug info - remove after fixing */}
+      {/* Timeline Management Section */}
       {user ? (
-        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Logged in as: {user.username}</p>
-          <p>Has timelines: {userTimelines ? `Yes (${userTimelines.length})` : 'No'}</p>
-        </div>
-      ) : (
-        <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Not logged in</p>
-        </div>
-      )}
-      
-      {/* Timeline Selector */}
-      {user && userTimelines && userTimelines.length > 0 && (
         <div className="mb-6">
           <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
-          <div className="flex gap-2 items-center">
-            <Select
-              value={selectedTimelineId?.toString()}
-              onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
-              disabled={!setSelectedTimelineId}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a timeline" />
-              </SelectTrigger>
-              <SelectContent>
-                {userTimelines.map((t: any) => (
-                  <SelectItem key={t.id} value={t.id.toString()}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {handleCreateTimeline && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCreateTimeline}
-                title="Create new timeline"
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            )}
+          
+          {/* Timeline Selector - only shows when user has timelines */}
+          {userTimelines && userTimelines.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex gap-2 items-center">
+                <Select
+                  value={selectedTimelineId?.toString()}
+                  onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
+                  disabled={!setSelectedTimelineId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a timeline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userTimelines.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {handleCreateTimeline && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCreateTimeline}
+                    title="Create new timeline"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* New Timeline Form - shows when user has no timelines */
+            <div className="space-y-3 p-4 bg-gray-50 rounded border border-gray-200">
+              <p className="text-sm text-gray-500">You don't have any timelines yet. Create your first timeline:</p>
+              {handleCreateTimeline && (
+                <Button
+                  variant="default"
+                  onClick={handleCreateTimeline}
+                  className="w-full"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create New Timeline
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Not logged in message */
+        <div className="mb-6">
+          <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
+          <div className="p-4 bg-gray-50 rounded border border-gray-200">
+            <p className="text-sm text-gray-500 mb-3">You need to be logged in to create and manage timelines</p>
+            <AuthModal 
+              triggerButton={
+                <Button variant="default" className="w-full">
+                  Login / Register
+                </Button>
+              }
+            />
           </div>
         </div>
       )}

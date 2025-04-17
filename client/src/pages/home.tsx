@@ -39,6 +39,10 @@ function Home() {
   const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false);
   const [newTimelineName, setNewTimelineName] = useState("");
   const [newTimelineDate, setNewTimelineDate] = useState("");
+  
+  // State for timeline switching
+  const [showSaveChangesDialog, setShowSaveChangesDialog] = useState(false);
+  const [pendingTimelineId, setPendingTimelineId] = useState<number | null>(null);
   const { generatePdf } = usePdfExport();
   
   // Fetch user's timelines
@@ -130,6 +134,23 @@ function Home() {
       title: "Timeline Saved",
       description: "Your wedding timeline has been saved successfully.",
     });
+    
+    // If there's a pending timeline switch after saving, perform it now
+    if (pendingTimelineId !== null) {
+      const timelineToSwitch = pendingTimelineId;
+      setPendingTimelineId(null);
+      setSelectedTimelineId(timelineToSwitch);
+    }
+  };
+  
+  // Override the setSelectedTimelineId from useState to add saving confirmation
+  const handleTimelineChange = (newTimelineId: number) => {
+    // Don't do anything if trying to switch to the current timeline
+    if (newTimelineId === selectedTimelineId) return;
+    
+    // Show save changes dialog
+    setPendingTimelineId(newTimelineId);
+    setShowSaveChangesDialog(true);
   };
   
   // Handle creating a new timeline
@@ -305,7 +326,7 @@ function Home() {
               handleExportPdf={handleExportPdf}
               userTimelines={userTimelines}
               selectedTimelineId={selectedTimelineId}
-              setSelectedTimelineId={setSelectedTimelineId}
+              setSelectedTimelineId={handleTimelineChange}
               handleCreateTimeline={handleCreateTimeline}
             />
           </div>
@@ -386,6 +407,42 @@ function Home() {
         </DialogContent>
       </Dialog>
 
+      {/* Save Changes Dialog */}
+      <Dialog open={showSaveChangesDialog} onOpenChange={setShowSaveChangesDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Changes?</DialogTitle>
+            <DialogDescription>
+              Would you like to save changes to your current timeline before switching?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Discard changes
+                setShowSaveChangesDialog(false);
+                if (pendingTimelineId !== null) {
+                  const timelineToSwitch = pendingTimelineId;
+                  setPendingTimelineId(null);
+                  setSelectedTimelineId(timelineToSwitch);
+                }
+              }}
+            >
+              Don't Save
+            </Button>
+            <Button
+              onClick={() => {
+                // Save changes
+                handleSave();
+                setShowSaveChangesDialog(false);
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
     </div>
