@@ -4,8 +4,12 @@ import { storage } from "./storage";
 import { insertTimelineEventSchema, insertWeddingTimelineSchema, insertVenueRestrictionSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
   // Define API routes
   const apiRouter = app.route("/api");
   
@@ -218,6 +222,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedRestriction);
     } catch (error) {
       console.error("Error updating venue restriction:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Admin routes
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove passwords before sending to client
+      const sanitizedUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.json(sanitizedUsers);
+    } catch (error) {
+      console.error("Error getting users:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.put("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't allow password updates through this endpoint
+      const { password, ...updateData } = req.body;
+      
+      const updatedUser = await storage.updateUser(id, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password before sending response
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

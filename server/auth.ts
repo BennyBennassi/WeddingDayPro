@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -8,9 +8,23 @@ import { storage } from "./storage";
 import { User } from "@shared/schema";
 import MemoryStore from "memorystore";
 
+// Extend Express.Request type to include custom properties
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface Request {
+      isAdmin(): boolean;
+    }
+    
+    // Augment the User interface
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email?: string;
+      name?: string;
+      isAdmin: boolean;
+      createdAt?: Date;
+    }
   }
 }
 
