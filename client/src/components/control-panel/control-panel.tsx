@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
@@ -45,6 +45,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const { user } = useAuth();
   const selectedEvent = events?.find(event => event.id === selectedEventId);
   const selectedBlockRef = useRef<HTMLDivElement>(null);
+  const [weddingOfValue, setWeddingOfValue] = useState(timeline?.weddingOf || '');
   
   // Scroll to the selected block section when a block is selected
   useEffect(() => {
@@ -56,6 +57,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       });
     }
   }, [selectedEventId]);
+  
+  // Update local state when timeline changes
+  useEffect(() => {
+    if (timeline) {
+      setWeddingOfValue(timeline.weddingOf || '');
+    }
+  }, [timeline]);
   
   const updateTimelineMutation = useMutation({
     mutationFn: async (data: any) => {
