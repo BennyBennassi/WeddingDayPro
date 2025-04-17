@@ -43,7 +43,13 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   });
 
   const onSubmit = (data: RegisterFormData) => {
-    registerMutation.mutate(data);
+    registerMutation.mutate(data, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
+    });
   };
 
   return (
