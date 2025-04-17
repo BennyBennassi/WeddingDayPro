@@ -52,6 +52,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       },
       onError: (error) => {
         setLoginError(error.message || "Invalid username or password. Please check your credentials and try again.");
+        
+        // Focus the username field after error for better UX
+        setTimeout(() => {
+          form.setFocus("username");
+        }, 100);
       }
     });
   };
@@ -61,12 +66,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {loginError && (
-            <Alert variant="destructive" className="mb-6 animate-fadeIn">
+            <Alert variant="destructive" className="mb-6 animate-fadeIn border-2 animate-shake">
               <ShieldAlert className="h-5 w-5" />
-              <AlertTitle className="font-semibold ml-2">Login failed</AlertTitle>
+              <AlertTitle className="font-semibold ml-2">Unable to sign in</AlertTitle>
               <AlertDescription className="mt-2 ml-7">
                 <p className="text-sm">{loginError.includes("Invalid username or password") ? 
-                  "The username or password you entered is incorrect. Please try again." : 
+                  "The username or password you entered is incorrect. Please check your credentials and try again." : 
                   loginError}
                 </p>
               </AlertDescription>
@@ -83,6 +88,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                     placeholder="Enter your username" 
                     {...field} 
                     disabled={loginMutation.isPending}
+                    className={loginError ? "border-destructive focus:border-destructive" : ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -103,6 +109,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                       placeholder="Enter your password"
                       {...field}
                       disabled={loginMutation.isPending}
+                      className={loginError ? "border-destructive focus:border-destructive" : ""}
                     />
                     <button
                       type="button"
