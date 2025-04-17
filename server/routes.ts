@@ -8,11 +8,14 @@ import {
   insertTimelineQuestionSchema,
   insertUserQuestionResponseSchema,
   insertTimelineTemplateSchema,
-  insertTemplateEventSchema
+  insertTemplateEventSchema,
+  timelineEvents
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -110,27 +113,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid timeline ID" });
       }
       
-      // Get all events for this timeline first
-      const events = await storage.getTimelineEvents(timelineId);
-      console.log(`Found ${events.length} events to delete for timeline ${timelineId}`);
-      
-      if (!events || events.length === 0) {
-        return res.status(200).json({ message: "No events to delete" });
+      // Get the timeline to retrieve the userId
+      const timeline = await storage.getWeddingTimeline(timelineId);
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
       }
       
-      // Delete each event
-      let deletedCount = 0;
-      for (const event of events) {
-        const success = await storage.deleteTimelineEvent(event.id);
-        if (success) deletedCount++;
-      }
+      // First, directly get events for this specific timelineId
+      const events = await db.select()
+        .from(timelineEvents)
+        .where(eq(timelineEvents.timelineId, timelineId));
       
-      // Return a success response
-      res.status(200).json({ 
-        message: `Successfully deleted ${deletedCount} events`,
-        deletedCount,
-        timelineId
-      });
+      console.log(`Found ${events.length} events directly linked to timeline ${timelineId}`);
+      
+      if (events.length === 0) {
+        // If no events are directly linked to this timeline, fall back to getting events by userId
+        // This is a backwards compatibility approach
+        const userEvents = await db.select()
+          .from(timelineEvents)
+          .where(eq(timelineEvents.userId, timeline.userId));
+        
+        console.log(`Found ${userEvents.length} events for user ${timeline.userId}`);
+        
+        if (userEvents.length === 0) {
+          return res.status(200).json({ message: "No events to delete" });
+        }
+        
+        // Delete each event from this user
+        let deletedCount = 0;
+        for (const event of userEvents) {
+          const success = await storage.deleteTimelineEvent(event.id);
+          if (success) deletedCount++;
+        }
+        
+        // Return a success response
+        return res.status(200).json({ 
+          message: `Successfully deleted ${deletedCount} user events`,
+          deletedCount,
+          timelineId
+        });
+      } else {
+        // Delete each event from this timeline
+        let deletedCount = 0;
+        for (const event of events) {
+          const success = await storage.deleteTimelineEvent(event.id);
+          if (success) deletedCount++;
+        }
+        
+        // Return a success response
+        return res.status(200).json({ 
+          message: `Successfully deleted ${deletedCount} timeline events`,
+          deletedCount,
+          timelineId
+        });
+      }
     } catch (error) {
       console.error("Error clearing timeline events:", error);
       res.status(500).json({ message: "Internal server error" });
