@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -421,13 +422,30 @@ export default function TimelineQuestionsManager() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Default Value</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Block of Time category"
-                                    {...field}
-                                    value={field.value || ""}
-                                  />
-                                </FormControl>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value || ""}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="morning_prep">Morning Prep</SelectItem>
+                                    <SelectItem value="travel">Travel</SelectItem>
+                                    <SelectItem value="ceremony">Ceremony</SelectItem>
+                                    <SelectItem value="photos">Photos</SelectItem>
+                                    <SelectItem value="drinks_reception">Drinks Reception</SelectItem>
+                                    <SelectItem value="bell_call">Bell Call</SelectItem>
+                                    <SelectItem value="entrance">Entrance</SelectItem>
+                                    <SelectItem value="dining">Dining</SelectItem>
+                                    <SelectItem value="speeches">Speeches</SelectItem>
+                                    <SelectItem value="entertainment">Entertainment</SelectItem>
+                                    <SelectItem value="dancing">Dancing</SelectItem>
+                                    <SelectItem value="residence">Residence</SelectItem>
+                                  </SelectContent>
+                                </Select>
                                 <FormDescription>
                                   If "Prompt user" is OFF, this value will be used automatically. If ON, it will be shown as a suggestion.
                                 </FormDescription>
