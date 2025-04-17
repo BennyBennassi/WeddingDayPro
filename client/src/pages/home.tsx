@@ -162,7 +162,8 @@ function Home() {
     
     // Generate a timeline name with TL prefix and number
     const timelineCount = userTimelines?.length || 0;
-    const defaultName = `TL${timelineCount + 1} - New Timeline`;
+    const timelinePrefix = `TL${timelineCount + 1} - `;
+    const defaultName = "New Timeline";
     
     // Set default values
     setNewTimelineName(defaultName);
@@ -177,9 +178,14 @@ function Home() {
   const handleSubmitNewTimeline = () => {
     if (!user) return;
     
+    // Generate the timeline name with the prefix
+    const timelineCount = userTimelines?.length || 0;
+    const timelinePrefix = `TL${timelineCount + 1} - `;
+    const fullTimelineName = timelinePrefix + newTimelineName;
+    
     createTimelineMutation.mutate({
       userId: user.id,
-      name: newTimelineName,
+      name: fullTimelineName,
       weddingDate: newTimelineDate,
       startHour: 6,
       timeFormat: "24h"
@@ -376,12 +382,18 @@ function Home() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="timeline-name">Timeline Name</Label>
-              <Input
-                id="timeline-name"
-                placeholder="Enter a name for your timeline"
-                value={newTimelineName}
-                onChange={(e) => setNewTimelineName(e.target.value)}
-              />
+              <div className="flex items-center">
+                <div className="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 border-input text-muted-foreground">
+                  {`TL${(userTimelines?.length || 0) + 1} - `}
+                </div>
+                <Input
+                  id="timeline-name"
+                  className="rounded-l-none"
+                  placeholder="Enter a name for your timeline"
+                  value={newTimelineName}
+                  onChange={(e) => setNewTimelineName(e.target.value)}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="wedding-date">Wedding Date</Label>

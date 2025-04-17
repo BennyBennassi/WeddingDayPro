@@ -12,14 +12,30 @@ interface TimelineSettingsProps {
 }
 
 const formSchema = z.object({
+  name: z.string().min(1, 'Timeline name is required'),
   weddingDate: z.string().min(1, 'Wedding date is required'),
   startHour: z.string().min(1, 'Start hour is required')
 });
 
 const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate }) => {
+  // Extract the editable part of the timeline name (after "TL# - ")
+  const getEditableTimelineName = (fullName: string) => {
+    if (!fullName) return '';
+    const prefixMatch = fullName.match(/^TL\d+ - (.*)/);
+    return prefixMatch ? prefixMatch[1] : fullName;
+  };
+  
+  // Get the non-editable prefix part of the timeline name
+  const getTimelinePrefix = (fullName: string) => {
+    if (!fullName) return '';
+    const prefixMatch = fullName.match(/^(TL\d+ - ).*/);
+    return prefixMatch ? prefixMatch[1] : '';
+  };
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: getEditableTimelineName(timeline?.name) || '',
       weddingDate: timeline?.weddingDate || new Date().toISOString().split('T')[0],
       startHour: timeline?.startHour?.toString() || '6'
     }
@@ -28,6 +44,7 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
   React.useEffect(() => {
     if (timeline) {
       form.reset({
+        name: getEditableTimelineName(timeline.name),
         weddingDate: timeline.weddingDate,
         startHour: timeline.startHour.toString()
       });
@@ -35,7 +52,12 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
   }, [timeline]);
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Combine the prefix with the editable part of the name
+    const timelinePrefix = getTimelinePrefix(timeline?.name || '');
+    const fullName = timelinePrefix + data.name;
+    
     onUpdate({
+      name: fullName,
       weddingDate: data.weddingDate,
       startHour: parseInt(data.startHour)
     });
@@ -46,6 +68,32 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
       <h3 className="text-md font-medium text-primary-800 mb-4">Timeline Settings</h3>
       <Form {...form}>
         <form onChange={form.handleSubmit(onSubmit)} className="space-y-3">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <FormLabel className="text-sm text-gray-700 mb-2 md:mb-0">Timeline Name</FormLabel>
+                <div className="w-full md:max-w-[220px]">
+                  <div className="flex items-center">
+                    {timeline?.name && (
+                      <div className="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 border-input text-muted-foreground text-xs md:text-sm">
+                        {getTimelinePrefix(timeline.name)}
+                      </div>
+                    )}
+                    <FormControl>
+                      <Input
+                        className={timeline?.name ? "rounded-l-none" : ""}
+                        placeholder="Timeline name"
+                        {...field}
+                      />
+                    </FormControl>
+                  </div>
+                </div>
+              </FormItem>
+            )}
+          />
+          
           <FormField
             control={form.control}
             name="weddingDate"
