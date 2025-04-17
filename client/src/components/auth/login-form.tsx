@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, AlertCircle, UserX, KeyRound, ShieldAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -61,9 +61,15 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {loginError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              <AlertDescription>{loginError}</AlertDescription>
+            <Alert variant="destructive" className="mb-6 animate-fadeIn">
+              <ShieldAlert className="h-5 w-5" />
+              <AlertTitle className="font-semibold ml-2">Login failed</AlertTitle>
+              <AlertDescription className="mt-2 ml-7">
+                <p className="text-sm">{loginError.includes("Invalid username or password") ? 
+                  "The username or password you entered is incorrect. Please try again." : 
+                  loginError}
+                </p>
+              </AlertDescription>
             </Alert>
           )}
           <FormField
