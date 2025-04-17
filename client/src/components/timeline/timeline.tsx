@@ -194,7 +194,7 @@ const Timeline: React.FC<TimelineProps> = ({
   return (
     <div>
       <div className="timeline-container min-w-max">
-        <div className="bg-white rounded-xl shadow-md p-6 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-md p-2 sm:p-4 md:p-6 overflow-x-auto">
           {/* Enhanced timeline header with restriction markers */}
           <TimelineHeader 
             weddingDate={timeline?.weddingDate} 
@@ -221,11 +221,14 @@ const Timeline: React.FC<TimelineProps> = ({
                       const conflict = checkForTimeConflicts(event);
                       
                       return (
-                        <div key={event.id} className="flex items-center mb-4">
-                          <div className="w-48 flex-shrink-0 pr-4">
-                            <h3 className="font-medium text-gray-700">{event.name}</h3>
+                        <div key={event.id} className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
+                          <div className="w-full sm:w-48 flex-shrink-0 pr-0 sm:pr-4 mb-1 sm:mb-0">
+                            <h3 className="font-medium text-gray-700 text-sm sm:text-base">{event.name}</h3>
+                            <div className="sm:hidden text-xs text-gray-500">
+                              {formatTime(event.startTime, timeline?.timeFormat || '24h')} - {formatTime(event.endTime, timeline?.timeFormat || '24h')}
+                            </div>
                           </div>
-                          <div className="relative flex-grow h-14 bg-gray-100 rounded-md">
+                          <div className="relative w-full flex-grow h-14 bg-gray-100 rounded-md">
                             <TimeBlock
                               event={event}
                               index={index}
@@ -245,10 +248,10 @@ const Timeline: React.FC<TimelineProps> = ({
                       );
                     })
                   ) : (
-                    <div className="flex items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg my-8">
-                      <div className="text-center p-6">
-                        <h3 className="text-lg font-medium text-gray-600 mb-2">Your Timeline will appear here</h3>
-                        <p className="text-sm text-gray-500">Add blocks of time using the controls panel or use a template to get started</p>
+                    <div className="flex items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-lg my-4 sm:my-8">
+                      <div className="text-center p-3 sm:p-6">
+                        <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">Your Timeline will appear here</h3>
+                        <p className="text-xs sm:text-sm text-gray-500">Add blocks of time using the controls panel or use a template</p>
                       </div>
                     </div>
                   )}
@@ -257,6 +260,11 @@ const Timeline: React.FC<TimelineProps> = ({
               )}
             </Droppable>
           </DragDropContext>
+          
+          {/* Mobile instructions - only visible on small screens */}
+          <div className="mt-4 sm:hidden text-center text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            <p>Tap on blocks to select and edit. Use the gear icon to access more options.</p>
+          </div>
         </div>
       </div>
     </div>

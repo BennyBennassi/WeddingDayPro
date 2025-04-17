@@ -371,12 +371,12 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     <div className="min-h-screen flex flex-col">
       
       {/* Main Content */}
-      <div className="flex-grow container mx-auto px-4 pb-8">
-        <div className="flex flex-col lg:flex-row mt-8">
+      <div className="flex-grow container mx-auto px-2 sm:px-4 pb-8">
+        <div className="flex flex-col lg:flex-row mt-4 lg:mt-8">
           {/* Left Column: Timeline and Things to Consider */}
           <div className="flex-grow lg:pr-6">
             {/* Timeline View Container */}
-            <div className="p-4 md:p-6 lg:p-8 overflow-x-auto bg-white rounded-lg shadow-sm">
+            <div className="p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-auto bg-white rounded-lg shadow-sm">
               {isLoading ? (
                 <div className="flex justify-center items-center h-64">
                   <p>Loading timeline...</p>
@@ -394,7 +394,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             
             {/* Things to Consider - Now below timeline */}
             {user && (
-              <div className="mt-8">
+              <div className="mt-6 lg:mt-8">
                 <ThingsToConsider
                   timelineId={selectedTimelineId}
                   onAddEvent={handleAddEvent}
@@ -403,8 +403,24 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             )}
           </div>
           
-          {/* Right Column: Control Panel */}
-          <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto mt-6 lg:mt-0">
+          {/* Right Column: Control Panel - Hidden on mobile by default */}
+          <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto mt-6 lg:mt-0 
+                         fixed lg:static inset-0 z-40 transform transition-transform duration-300 ease-in-out 
+                         translate-x-full lg:translate-x-0" 
+               id="mobile-control-panel">
+            {/* Close button for mobile - only visible on small screens */}
+            <button 
+              className="lg:hidden absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+              onClick={() => {
+                const panel = document.getElementById('mobile-control-panel');
+                if (panel) panel.classList.add('translate-x-full');
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             <ControlPanel 
               timeline={timeline}
               events={events}
@@ -422,9 +438,17 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
       </div>
       
       {/* Mobile Controls Toggle Button (visible only on mobile) */}
-      <button id="mobile-controls-toggle" className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-20">
+      <button 
+        id="mobile-controls-toggle" 
+        className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-50"
+        onClick={() => {
+          const panel = document.getElementById('mobile-control-panel');
+          if (panel) panel.classList.remove('translate-x-full');
+        }}
+      >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
 

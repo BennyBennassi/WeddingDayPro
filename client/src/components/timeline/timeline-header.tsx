@@ -176,26 +176,26 @@ const TimelineHeader = ({
   };
 
   return (
-    <div className="mb-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+    <div className="mb-4 sm:mb-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 sm:mb-4">
         <div>
           {weddingOf ? (
-            <h1 className="text-2xl font-bold text-primary">Wedding of {weddingOf}</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding of {weddingOf}</h1>
           ) : (
-            <h1 className="text-2xl font-bold text-primary">Wedding Day Timeline</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding Day Timeline</h1>
           )}
-          <h2 className="text-xl font-medium text-gray-700 mt-1">{formattedDate}</h2>
-          <p className="text-gray-500 text-sm mt-1">Drag blocks to reorganize your timeline</p>
+          <h2 className="text-base sm:text-lg md:text-xl font-medium text-gray-700 mt-1">{formattedDate}</h2>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 hidden sm:block">Drag blocks to reorganize your timeline</p>
         </div>
-        <div className="flex items-center text-gray-500 text-sm mt-2 md:mt-0">
-          <Clock className="h-4 w-4 mr-1" />
+        <div className="flex items-center text-gray-500 text-xs sm:text-sm mt-2 md:mt-0">
+          <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span>24-hour format</span>
         </div>
       </div>
       
       {/* Time ruler with hour markings and restrictions */}
-      <div className="pl-48 relative">
-        <div className={`relative ${showRestrictionLines ? 'h-12' : 'h-8'} bg-gray-50 border-t border-b border-gray-200 mb-4 rounded-md`}>
+      <div className="pl-16 sm:pl-32 md:pl-48 relative">
+        <div className={`relative ${showRestrictionLines ? 'h-10 sm:h-12' : 'h-6 sm:h-8'} bg-gray-50 border-t border-b border-gray-200 mb-2 sm:mb-4 rounded-md`}>
           {/* Hour markers at the top */}
           <div className="absolute top-0 left-0 right-0 h-6 flex items-center">
             {generateHourMarks()}
@@ -204,14 +204,20 @@ const TimelineHeader = ({
           {/* Restriction markers in the bottom half of the header */}
           {showRestrictionLines && (
             <div className="absolute bottom-0 left-0 right-0 h-6 flex items-center border-t border-gray-200">
-              <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-48 w-44 pl-2">
-                Time Restrictions
+              <div className="absolute left-0 text-xs font-medium text-gray-700 -ml-16 sm:-ml-32 md:-ml-48 w-14 sm:w-28 md:w-44 pl-1 sm:pl-2 truncate">
+                <span className="hidden sm:inline">Time Restrictions</span>
+                <span className="sm:hidden">Limits</span>
               </div>
               {generateRestrictionMarkers()}
             </div>
           )}
         </div>
       </div>
+      
+      {/* Mobile-only reminder */}
+      <p className="text-gray-500 text-xs mt-1 sm:hidden text-center">
+        Tap blocks to select and edit
+      </p>
     </div>
   );
 };
