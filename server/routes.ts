@@ -6,7 +6,9 @@ import {
   insertWeddingTimelineSchema, 
   insertVenueRestrictionSchema,
   insertTimelineQuestionSchema,
-  insertUserQuestionResponseSchema
+  insertUserQuestionResponseSchema,
+  insertTimelineTemplateSchema,
+  insertTemplateEventSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -450,6 +452,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedResponse);
     } catch (error) {
       console.error("Error updating user question response:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Timeline Templates - Admin Only Routes
+  app.get("/api/admin/timeline-templates", isAdmin, async (req, res) => {
+    try {
+      const templates = await storage.getTimelineTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error getting timeline templates:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.get("/api/admin/timeline-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const template = await storage.getTimelineTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error getting timeline template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/admin/timeline-templates", isAdmin, async (req, res) => {
+    try {
+      const templateData = insertTimelineTemplateSchema.parse(req.body);
+      const newTemplate = await storage.createTimelineTemplate(templateData);
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating timeline template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.put("/api/admin/timeline-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const template = await storage.getTimelineTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateTimelineTemplate(id, req.body);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating timeline template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.delete("/api/admin/timeline-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const success = await storage.deleteTimelineTemplate(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting timeline template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Template Events
+  app.get("/api/admin/template-events/:templateId", isAdmin, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.templateId);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const events = await storage.getTemplateEvents(templateId);
+      res.json(events);
+    } catch (error) {
+      console.error("Error getting template events:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/admin/template-events", isAdmin, async (req, res) => {
+    try {
+      const eventData = insertTemplateEventSchema.parse(req.body);
+      const newEvent = await storage.createTemplateEvent(eventData);
+      res.status(201).json(newEvent);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating template event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.put("/api/admin/template-events/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+      
+      const event = await storage.getTemplateEvent(id);
+      if (!event) {
+        return res.status(404).json({ message: "Template event not found" });
+      }
+      
+      const updatedEvent = await storage.updateTemplateEvent(id, req.body);
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error("Error updating template event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  app.delete("/api/admin/template-events/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+      
+      const success = await storage.deleteTemplateEvent(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template event not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting template event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // User-facing template routes
+  app.get("/api/timeline-templates", async (req, res) => {
+    try {
+      // Allow non-admin users to see templates
+      const templates = await storage.getTimelineTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error getting timeline templates:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

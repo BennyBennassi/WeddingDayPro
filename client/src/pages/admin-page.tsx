@@ -42,9 +42,11 @@ import {
   UserCog,
   HelpCircle,
   Users,
+  FileTemplate,
 } from "lucide-react";
 import { format } from "date-fns";
 import TimelineQuestionsManager from "@/components/admin/timeline-questions-manager";
+import TemplateManager from "@/components/admin/template-manager";
 
 // Type for user without password
 type UserWithoutPassword = Omit<User, 'password'>;

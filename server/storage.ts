@@ -359,6 +359,122 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedResponse;
   }
+  
+  // Timeline Template methods
+  async getTimelineTemplates(): Promise<TimelineTemplate[]> {
+    return db
+      .select()
+      .from(timelineTemplates)
+      .orderBy(timelineTemplates.name);
+  }
+  
+  async getTimelineTemplate(id: number): Promise<TimelineTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(timelineTemplates)
+      .where(eq(timelineTemplates.id, id));
+    return template;
+  }
+  
+  async createTimelineTemplate(template: InsertTimelineTemplate): Promise<TimelineTemplate> {
+    // If this template is set as default, unset any previously default template
+    if (template.isDefault) {
+      await db
+        .update(timelineTemplates)
+        .set({ isDefault: false })
+        .where(eq(timelineTemplates.isDefault, true));
+    }
+    
+    const [newTemplate] = await db
+      .insert(timelineTemplates)
+      .values({
+        ...template,
+        description: template.description ?? null,
+      })
+      .returning();
+    return newTemplate;
+  }
+  
+  async updateTimelineTemplate(id: number, template: Partial<InsertTimelineTemplate>): Promise<TimelineTemplate | undefined> {
+    // If this template is being set as default, unset any previously default template
+    if (template.isDefault) {
+      await db
+        .update(timelineTemplates)
+        .set({ isDefault: false })
+        .where(eq(timelineTemplates.isDefault, true));
+    }
+    
+    const [updatedTemplate] = await db
+      .update(timelineTemplates)
+      .set({
+        ...template,
+        description: template.description !== undefined ? (template.description ?? null) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(timelineTemplates.id, id))
+      .returning();
+    return updatedTemplate;
+  }
+  
+  async deleteTimelineTemplate(id: number): Promise<boolean> {
+    // First delete all associated template events
+    await db
+      .delete(templateEvents)
+      .where(eq(templateEvents.templateId, id));
+      
+    // Then delete the template
+    await db
+      .delete(timelineTemplates)
+      .where(eq(timelineTemplates.id, id));
+    return true;
+  }
+  
+  // Template Event methods
+  async getTemplateEvents(templateId: number): Promise<TemplateEvent[]> {
+    return db
+      .select()
+      .from(templateEvents)
+      .where(eq(templateEvents.templateId, templateId))
+      .orderBy(templateEvents.position);
+  }
+  
+  async getTemplateEvent(id: number): Promise<TemplateEvent | undefined> {
+    const [event] = await db
+      .select()
+      .from(templateEvents)
+      .where(eq(templateEvents.id, id));
+    return event;
+  }
+  
+  async createTemplateEvent(event: InsertTemplateEvent): Promise<TemplateEvent> {
+    const [templateEvent] = await db
+      .insert(templateEvents)
+      .values({
+        ...event,
+        notes: event.notes ?? null,
+      })
+      .returning();
+    return templateEvent;
+  }
+  
+  async updateTemplateEvent(id: number, event: Partial<InsertTemplateEvent>): Promise<TemplateEvent | undefined> {
+    const [updatedEvent] = await db
+      .update(templateEvents)
+      .set({
+        ...event,
+        notes: event.notes !== undefined ? (event.notes ?? null) : undefined,
+      })
+      .where(eq(templateEvents.id, id))
+      .returning();
+    return updatedEvent;
+  }
+  
+  async deleteTemplateEvent(id: number): Promise<boolean> {
+    await db
+      .delete(templateEvents)
+      .where(eq(templateEvents.id, id));
+    return true;
+  }
 }
 
 // Initialize the storage with the database implementation
