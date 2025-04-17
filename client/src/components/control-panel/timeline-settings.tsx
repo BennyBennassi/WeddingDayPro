@@ -13,7 +13,6 @@ interface TimelineSettingsProps {
 
 const formSchema = z.object({
   name: z.string().min(1, 'Timeline name is required'),
-  weddingDate: z.string().min(1, 'Wedding date is required'),
   startHour: z.string().min(1, 'Start hour is required')
 });
 
@@ -36,7 +35,6 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: getEditableTimelineName(timeline?.name) || '',
-      weddingDate: timeline?.weddingDate || new Date().toISOString().split('T')[0],
       startHour: timeline?.startHour?.toString() || '6'
     }
   });
@@ -45,7 +43,6 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
     if (timeline) {
       form.reset({
         name: getEditableTimelineName(timeline.name),
-        weddingDate: timeline.weddingDate,
         startHour: timeline.startHour.toString()
       });
     }
@@ -58,7 +55,6 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
     
     onUpdate({
       name: fullName,
-      weddingDate: data.weddingDate,
       startHour: parseInt(data.startHour)
     });
   };
@@ -90,23 +86,6 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({ timeline, onUpdate 
                     </FormControl>
                   </div>
                 </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="weddingDate"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between">
-                <FormLabel className="text-sm text-gray-700">Wedding Date</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    className="px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary max-w-[160px]"
-                    {...field}
-                  />
-                </FormControl>
               </FormItem>
             )}
           />
