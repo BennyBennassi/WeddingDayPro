@@ -8,6 +8,7 @@ interface TimelineHeaderProps {
   startHour?: number;
   venueRestrictions?: any;
   showRestrictionLines?: boolean;
+  eventCount?: number;
 }
 
 const TimelineHeader = ({ 
@@ -15,7 +16,8 @@ const TimelineHeader = ({
   weddingOf,
   startHour = 6,
   venueRestrictions,
-  showRestrictionLines = false
+  showRestrictionLines = false,
+  eventCount = 0
 }: TimelineHeaderProps) => {
   // Format the wedding date nicely if it exists
   const formattedDate = weddingDate ? 
@@ -46,6 +48,12 @@ const TimelineHeader = ({
   const generateRestrictionMarkers = () => {
     if (!venueRestrictions) return null;
     
+    // Calculate line height based on event count
+    // Fixed minimum height for empty timelines and additional height per event
+    const lineHeight = eventCount === 0 
+      ? '60px'  // Minimum height for empty timeline
+      : `${Math.max(80, eventCount * 60)}px`;  // Height scales with events (minimum 80px)
+      
     const markers = [];
     
     if (venueRestrictions.musicEndTime) {
@@ -70,7 +78,7 @@ const TimelineHeader = ({
           {showRestrictionLines && (
             <div 
               className="absolute top-full w-0.5 bg-red-400 opacity-50 dashed-line pointer-events-none"
-              style={{ height: 'calc(100vh - 300px)' }}
+              style={{ height: lineHeight }}
             ></div>
           )}
         </div>
@@ -99,7 +107,7 @@ const TimelineHeader = ({
           {showRestrictionLines && (
             <div 
               className="absolute top-full w-0.5 bg-purple-400 opacity-50 dashed-line pointer-events-none"
-              style={{ height: 'calc(100vh - 300px)' }}
+              style={{ height: lineHeight }}
             ></div>
           )}
         </div>
@@ -128,7 +136,7 @@ const TimelineHeader = ({
           {showRestrictionLines && (
             <div 
               className="absolute top-full w-0.5 bg-amber-400 opacity-50 dashed-line pointer-events-none"
-              style={{ height: 'calc(100vh - 300px)' }}
+              style={{ height: lineHeight }}
             ></div>
           )}
         </div>
@@ -157,7 +165,7 @@ const TimelineHeader = ({
           {showRestrictionLines && (
             <div 
               className="absolute top-full w-0.5 bg-blue-400 opacity-50 dashed-line pointer-events-none"
-              style={{ height: 'calc(100vh - 300px)' }}
+              style={{ height: lineHeight }}
             ></div>
           )}
         </div>

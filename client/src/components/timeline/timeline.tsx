@@ -202,6 +202,7 @@ const Timeline: React.FC<TimelineProps> = ({
             startHour={timeline?.startHour || 6}
             venueRestrictions={venueRestrictions}
             showRestrictionLines={venueRestrictions?.showRestrictionLines === true}
+            eventCount={sortedEvents.length}
           />
           
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
