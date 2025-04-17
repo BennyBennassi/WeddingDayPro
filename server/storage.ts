@@ -6,7 +6,15 @@ import {
   type WeddingTimeline,
   type InsertWeddingTimeline,
   type VenueRestriction,
-  type InsertVenueRestriction
+  type InsertVenueRestriction,
+  type TimelineQuestion,
+  type InsertTimelineQuestion,
+  type UserQuestionResponse,
+  type InsertUserQuestionResponse,
+  type TimelineTemplate,
+  type InsertTimelineTemplate,
+  type TemplateEvent,
+  type InsertTemplateEvent
 } from "@shared/schema";
 
 export interface IStorage {
@@ -47,6 +55,20 @@ export interface IStorage {
   getUserQuestionResponses(userId: number, timelineId: number): Promise<UserQuestionResponse[]>;
   createUserQuestionResponse(response: InsertUserQuestionResponse): Promise<UserQuestionResponse>;
   updateUserQuestionResponse(id: number, response: Partial<InsertUserQuestionResponse>): Promise<UserQuestionResponse | undefined>;
+  
+  // Timeline Template operations
+  getTimelineTemplates(): Promise<TimelineTemplate[]>;
+  getTimelineTemplate(id: number): Promise<TimelineTemplate | undefined>;
+  createTimelineTemplate(template: InsertTimelineTemplate): Promise<TimelineTemplate>;
+  updateTimelineTemplate(id: number, template: Partial<InsertTimelineTemplate>): Promise<TimelineTemplate | undefined>;
+  deleteTimelineTemplate(id: number): Promise<boolean>;
+  
+  // Template Event operations
+  getTemplateEvents(templateId: number): Promise<TemplateEvent[]>;
+  getTemplateEvent(id: number): Promise<TemplateEvent | undefined>;
+  createTemplateEvent(event: InsertTemplateEvent): Promise<TemplateEvent>;
+  updateTemplateEvent(id: number, event: Partial<InsertTemplateEvent>): Promise<TemplateEvent | undefined>;
+  deleteTemplateEvent(id: number): Promise<boolean>;
 }
 
 import { db } from "./db";
@@ -57,10 +79,8 @@ import {
   venueRestrictions,
   timelineQuestions,
   userQuestionResponses,
-  type TimelineQuestion,
-  type InsertTimelineQuestion,
-  type UserQuestionResponse,
-  type InsertUserQuestionResponse,
+  timelineTemplates,
+  templateEvents
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 

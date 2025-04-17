@@ -177,3 +177,53 @@ export const insertUserQuestionResponseSchema = createInsertSchema(userQuestionR
 
 export type InsertUserQuestionResponse = z.infer<typeof insertUserQuestionResponseSchema>;
 export type UserQuestionResponse = typeof userQuestionResponses.$inferSelect;
+
+// Timeline Templates Table (for admins to create reusable timeline templates)
+export const timelineTemplates = pgTable("timeline_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTimelineTemplateSchema = createInsertSchema(timelineTemplates)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .pick({
+    name: true,
+    description: true,
+    isDefault: true,
+  });
+
+export type InsertTimelineTemplate = z.infer<typeof insertTimelineTemplateSchema>;
+export type TimelineTemplate = typeof timelineTemplates.$inferSelect;
+
+// Timeline Template Events (events associated with a template)
+export const templateEvents = pgTable("template_events", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => timelineTemplates.id).notNull(),
+  name: text("name").notNull(),
+  startTime: text("start_time").notNull(), // Format HH:MM
+  endTime: text("end_time").notNull(), // Format HH:MM
+  category: text("category").notNull(),
+  color: text("color").notNull(),
+  notes: text("notes"),
+  position: integer("position").notNull(),
+});
+
+export const insertTemplateEventSchema = createInsertSchema(templateEvents)
+  .omit({ id: true })
+  .pick({
+    templateId: true,
+    name: true,
+    startTime: true,
+    endTime: true,
+    category: true,
+    color: true,
+    notes: true,
+    position: true,
+  });
+
+export type InsertTemplateEvent = z.infer<typeof insertTemplateEventSchema>;
+export type TemplateEvent = typeof templateEvents.$inferSelect;
