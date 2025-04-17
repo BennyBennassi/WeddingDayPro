@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { getQueryFn, apiRequest } from "@/lib/queryClient";
 
+// Types for timeline questions
 export type TimelineQuestion = {
   id: number;
   question: string;
@@ -24,6 +24,7 @@ export type TimelineQuestion = {
   createdAt: string;
 };
 
+// Types for user question responses
 export type UserQuestionResponse = {
   id: number;
   userId: number;
@@ -35,187 +36,222 @@ export type UserQuestionResponse = {
   updatedAt: string;
 };
 
+// Hook for fetching timeline questions (user-facing)
 export function useTimelineQuestions() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const {
-    data: questions = [],
-    isLoading: isLoadingQuestions,
-    error: questionsError,
-  } = useQuery<TimelineQuestion[]>({
-    queryKey: ["/api/timeline-questions"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+  return useQuery<TimelineQuestion[]>({
+    queryKey: ['/api/timeline-questions'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/timeline-questions');
+      if (!res.ok) {
+        throw new Error('Failed to fetch timeline questions');
+      }
+      return await res.json();
+    },
   });
-
-  return {
-    questions,
-    isLoadingQuestions,
-    questionsError,
-  };
 }
 
+// Hook for handling user question responses
 export function useUserQuestionResponses(userId: number, timelineId: number) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
+  
   const {
     data: responses = [],
-    isLoading: isLoadingResponses,
-    error: responsesError,
+    isLoading,
+    error,
   } = useQuery<UserQuestionResponse[]>({
     queryKey: [`/api/user-question-responses/${userId}/${timelineId}`],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    // Only fetch if user is authenticated and the userId matches the current user (or is admin)
-    enabled: !!user && (user.id === userId || user.isAdmin),
+    queryFn: async () => {
+      if (!userId || !timelineId) return [];
+      
+      const res = await apiRequest(
+        'GET',
+        `/api/user-question-responses/${userId}/${timelineId}`
+      );
+      if (!res.ok) {
+        throw new Error('Failed to fetch user responses');
+      }
+      return await res.json();
+    },
+    enabled: !!userId && !!timelineId,
   });
-
+  
+  // Create response mutation
   const createResponseMutation = useMutation({
-    mutationFn: async (responseData: {
-      userId: number;
-      timelineId: number;
-      questionId: number;
-      answer: boolean;
-      completed: boolean;
-    }) => {
-      const res = await apiRequest("POST", "/api/user-question-responses", responseData);
+    mutationFn: async (data: Omit<UserQuestionResponse, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const res = await apiRequest('POST', '/api/user-question-responses', data);
+      if (!res.ok) {
+        throw new Error('Failed to save response');
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user-question-responses/${userId}/${timelineId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/user-question-responses/${userId}/${timelineId}`],
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error saving response",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
-
+  
+  // Update response mutation
   const updateResponseMutation = useMutation({
     mutationFn: async ({
       id,
       data,
     }: {
       id: number;
-      data: Partial<Omit<UserQuestionResponse, "id" | "createdAt" | "updatedAt">>;
+      data: Partial<Omit<UserQuestionResponse, 'id' | 'createdAt' | 'updatedAt'>>;
     }) => {
-      const res = await apiRequest("PUT", `/api/user-question-responses/${id}`, data);
+      const res = await apiRequest('PUT', `/api/user-question-responses/${id}`, data);
+      if (!res.ok) {
+        throw new Error('Failed to update response');
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user-question-responses/${userId}/${timelineId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/user-question-responses/${userId}/${timelineId}`],
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error updating response",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
-
+  
+  // Helper to get response for a specific question
   const getResponseForQuestion = (questionId: number) => {
     return responses.find((response) => response.questionId === questionId);
   };
-
+  
   return {
     responses,
-    isLoadingResponses,
-    responsesError,
+    isLoadingResponses: isLoading,
+    responsesError: error,
     createResponseMutation,
     updateResponseMutation,
     getResponseForQuestion,
   };
 }
 
+// Hook for admin timeline questions management
 export function useAdminTimelineQuestions() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
+  
   const {
     data: questions = [],
-    isLoading: isLoadingQuestions,
-    error: questionsError,
+    isLoading,
+    error,
   } = useQuery<TimelineQuestion[]>({
-    queryKey: ["/api/admin/timeline-questions"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryKey: ['/api/admin/timeline-questions'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/timeline-questions');
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error('You do not have permission to access this resource');
+        }
+        throw new Error('Failed to fetch timeline questions');
+      }
+      return await res.json();
+    },
   });
-
+  
+  // Create question mutation
   const createQuestionMutation = useMutation({
-    mutationFn: async (questionData: Omit<TimelineQuestion, "id" | "createdAt">) => {
-      const res = await apiRequest("POST", "/api/admin/timeline-questions", questionData);
+    mutationFn: async (data: Omit<TimelineQuestion, 'id' | 'createdAt'>) => {
+      const res = await apiRequest('POST', '/api/admin/timeline-questions', data);
+      if (!res.ok) {
+        throw new Error('Failed to create question');
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/timeline-questions"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/timeline-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeline-questions'] });
       toast({
-        title: "Question created",
-        description: "The timeline question has been created successfully.",
+        title: 'Success',
+        description: 'Question created successfully',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error creating question",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
-
+  
+  // Update question mutation
   const updateQuestionMutation = useMutation({
     mutationFn: async ({
       id,
       data,
     }: {
       id: number;
-      data: Partial<Omit<TimelineQuestion, "id" | "createdAt">>;
+      data: Partial<Omit<TimelineQuestion, 'id' | 'createdAt'>>;
     }) => {
-      const res = await apiRequest("PUT", `/api/admin/timeline-questions/${id}`, data);
+      const res = await apiRequest('PUT', `/api/admin/timeline-questions/${id}`, data);
+      if (!res.ok) {
+        throw new Error('Failed to update question');
+      }
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/timeline-questions"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/timeline-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeline-questions'] });
       toast({
-        title: "Question updated",
-        description: "The timeline question has been updated successfully.",
+        title: 'Success',
+        description: 'Question updated successfully',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error updating question",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
-
+  
+  // Delete question mutation
   const deleteQuestionMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/admin/timeline-questions/${id}`);
+      const res = await apiRequest('DELETE', `/api/admin/timeline-questions/${id}`);
+      if (!res.ok) {
+        throw new Error('Failed to delete question');
+      }
+      return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/timeline-questions"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/timeline-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeline-questions'] });
       toast({
-        title: "Question deleted",
-        description: "The timeline question has been deleted successfully.",
+        title: 'Success',
+        description: 'Question deleted successfully',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error deleting question",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
-
+  
   return {
     questions,
-    isLoadingQuestions,
-    questionsError,
+    isLoadingQuestions: isLoading,
+    questionsError: error,
     createQuestionMutation,
     updateQuestionMutation,
     deleteQuestionMutation,

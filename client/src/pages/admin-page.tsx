@@ -34,13 +34,17 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   User as UserIcon, 
   Loader2, 
   Edit, 
-  UserCog 
+  UserCog,
+  HelpCircle,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
+import TimelineQuestionsManager from "@/components/admin/timeline-questions-manager";
 
 // Type for user without password
 type UserWithoutPassword = Omit<User, 'password'>;
@@ -161,69 +165,86 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold">Administrator Panel</h1>
       </div>
       
-      <div className="bg-card rounded-lg shadow-sm border p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">User Management</h2>
+      <Tabs defaultValue="users" className="mb-6">
+        <TabsList className="mb-6">
+          <TabsTrigger value="users" className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            User Management
+          </TabsTrigger>
+          <TabsTrigger value="questions" className="flex items-center gap-1">
+            <HelpCircle className="h-4 w-4" />
+            Timeline Questions
+          </TabsTrigger>
+        </TabsList>
         
-        {users && users.length > 0 ? (
-          <Table>
-            <TableCaption>List of all users in the system</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Admin</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="h-4 w-4 text-muted-foreground" />
-                      {user.username}
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.name || '-'}</TableCell>
-                  <TableCell>{user.email || '-'}</TableCell>
-                  <TableCell>
-                    {user.isAdmin ? (
-                      <span className="bg-primary/10 text-primary text-xs py-0.5 px-2 rounded-full">
-                        Admin
-                      </span>
-                    ) : (
-                      <span className="bg-muted text-muted-foreground text-xs py-0.5 px-2 rounded-full">
-                        User
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </TableCell>
+        <TabsContent value="users" className="border rounded-lg shadow-sm bg-card p-6">
+          <h2 className="text-xl font-semibold mb-4">User Management</h2>
+          
+          {users && users.length > 0 ? (
+            <Table>
+              <TableCaption>List of all users in the system</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Admin</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No users found
-          </div>
-        )}
-      </div>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4 text-muted-foreground" />
+                        {user.username}
+                      </div>
+                    </TableCell>
+                    <TableCell>{user.name || '-'}</TableCell>
+                    <TableCell>{user.email || '-'}</TableCell>
+                    <TableCell>
+                      {user.isAdmin ? (
+                        <span className="bg-primary/10 text-primary text-xs py-0.5 px-2 rounded-full">
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="bg-muted text-muted-foreground text-xs py-0.5 px-2 rounded-full">
+                          User
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No users found
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="questions" className="border rounded-lg shadow-sm bg-card">
+          <TimelineQuestionsManager />
+        </TabsContent>
+      </Tabs>
       
       {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>

@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import Timeline from "@/components/timeline/timeline";
 import ControlPanel from "@/components/control-panel/control-panel";
 import AuthModal from "@/components/auth/auth-modal";
+import ThingsToConsider from "@/components/timeline-questions/things-to-consider";
 import { Button } from "@/components/ui/button";
 import { Save, Share, UserCog } from "lucide-react";
 import { usePdfExport } from "@/lib/exportPdf";
 import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 function Home() {
   const { toast } = useToast();
@@ -30,6 +32,33 @@ function Home() {
   // Fetch venue restrictions
   const { data: restrictions, isLoading: isRestrictionsLoading } = useQuery({
     queryKey: [`/api/venue-restrictions/${selectedTimelineId}`],
+  });
+  
+  // Mutation to add new event
+  const addEventMutation = useMutation({
+    mutationFn: async (eventData: any) => {
+      const res = await apiRequest('POST', '/api/timeline-events', eventData);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Failed to add event' }));
+        throw new Error(errorData.message || 'Failed to add event');
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      // Invalidate events query to refresh the list
+      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${selectedTimelineId}`] });
+      toast({
+        title: 'Event Added',
+        description: 'The event has been added to your timeline.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to add event',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
   });
 
   const handleSave = () => {
@@ -83,6 +112,14 @@ function Home() {
 
   const isLoading = isTimelineLoading || isEventsLoading || isRestrictionsLoading;
   
+  // Handler for adding new events from Things to Consider
+  const handleAddEvent = (eventData: any) => {
+    addEventMutation.mutate({
+      ...eventData,
+      timelineId: selectedTimelineId,
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -128,36 +165,47 @@ function Home() {
       </header>
       
       {/* Main Content */}
-      <main className="flex-grow flex flex-col lg:flex-row">
-        {/* Timeline View Container */}
-        <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-x-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <p>Loading timeline...</p>
-            </div>
-          ) : (
-            <Timeline 
-              timeline={timeline} 
-              events={events} 
+      <div className="flex-grow container mx-auto px-4 pb-8">
+        {user && (
+          <div className="mt-8">
+            <ThingsToConsider
+              timelineId={selectedTimelineId}
+              onAddEvent={handleAddEvent}
+            />
+          </div>
+        )}
+        
+        <div className="flex flex-col lg:flex-row mt-8">
+          {/* Timeline View Container */}
+          <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-x-auto bg-white rounded-lg shadow-sm">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <p>Loading timeline...</p>
+              </div>
+            ) : (
+              <Timeline 
+                timeline={timeline} 
+                events={events} 
+                venueRestrictions={restrictions}
+                selectedEventId={selectedEventId}
+                setSelectedEventId={setSelectedEventId}
+              />
+            )}
+          </div>
+          
+          {/* Control Panel */}
+          <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto mt-6 lg:mt-0">
+            <ControlPanel 
+              timeline={timeline}
+              events={events}
               venueRestrictions={restrictions}
               selectedEventId={selectedEventId}
               setSelectedEventId={setSelectedEventId}
+              handleExportPdf={handleExportPdf}
             />
-          )}
+          </div>
         </div>
-        
-        {/* Control Panel */}
-        <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto">
-          <ControlPanel 
-            timeline={timeline}
-            events={events}
-            venueRestrictions={restrictions}
-            selectedEventId={selectedEventId}
-            setSelectedEventId={setSelectedEventId}
-            handleExportPdf={handleExportPdf}
-          />
-        </div>
-      </main>
+      </div>
       
       {/* Mobile Controls Toggle Button (visible only on mobile) */}
       <button id="mobile-controls-toggle" className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-20">
