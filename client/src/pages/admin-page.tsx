@@ -127,7 +127,7 @@ export default function AdminPage() {
       username: user.username,
       email: user.email || null,
       name: user.name || null,
-      isAdmin: user.isAdmin,
+      isAdmin: user.isAdmin, // Keep this value, but it's not editable in the form
     });
   };
   
@@ -315,27 +315,7 @@ export default function AdminPage() {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="isAdmin"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={updateUserMutation.isPending}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Administrator Role</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Grant this user admin privileges for the entire system.
-                      </p>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              {/* Administrator role option removed as requested */}
               
               <DialogFooter>
                 <Button
