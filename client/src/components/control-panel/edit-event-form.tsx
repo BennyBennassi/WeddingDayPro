@@ -48,7 +48,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
         title: 'Block of Time Updated',
         description: 'Your block of time has been updated successfully.'
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.timelineId}`] });
     },
     onError: (error) => {
       toast({
@@ -69,7 +69,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
         title: 'Block of Time Deleted',
         description: 'Your block of time has been removed from the timeline.'
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.userId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${event.timelineId}`] });
       onClose();
     },
     onError: (error) => {
