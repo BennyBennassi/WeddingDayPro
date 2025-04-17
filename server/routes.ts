@@ -757,6 +757,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Public endpoint for template events
+  app.get("/api/template-events/:templateId", async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.templateId);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const events = await storage.getTemplateEvents(templateId);
+      res.json(events);
+    } catch (error) {
+      console.error("Error getting template events:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // Route to apply a template to a timeline
   app.post("/api/timelines/:timelineId/apply-template", async (req, res) => {
     try {

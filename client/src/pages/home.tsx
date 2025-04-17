@@ -300,9 +300,9 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
               t.name.toLowerCase().includes("church")
             ) || templates[0];
             
-            // Fetch template events
+            // Fetch template events using the public endpoint
             const { data: templateEvents } = await queryClient.fetchQuery({ 
-              queryKey: [`/api/admin/template-events/${defaultTemplate.id}`] 
+              queryKey: [`/api/template-events/${defaultTemplate.id}`] 
             });
             
             if (templateEvents && templateEvents.length > 0) {
