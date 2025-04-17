@@ -170,6 +170,22 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <div className="control-panel">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
       
+      {/* Wedding Of Field */}
+      {timeline && (
+        <div className="mb-6">
+          <h3 className="text-md font-medium text-gray-700 mb-3">Wedding of</h3>
+          <div className="flex gap-2 items-center">
+            <input 
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              placeholder="Enter couple's names"
+              value={timeline.weddingOf || ''}
+              onChange={(e) => updateTimelineMutation.mutate({ weddingOf: e.target.value })}
+            />
+          </div>
+        </div>
+      )}
+      
       {/* Timeline Management Section */}
       {user ? (
         <div className="mb-6">

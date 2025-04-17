@@ -4,6 +4,7 @@ import { calculateTimePosition } from '@/lib/helpers';
 
 interface TimelineHeaderProps {
   weddingDate?: string;
+  weddingOf?: string;
   startHour?: number;
   venueRestrictions?: any;
   showRestrictionLines?: boolean;

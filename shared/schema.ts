@@ -57,6 +57,7 @@ export const weddingTimelines = pgTable("wedding_timelines", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
+  weddingOf: text("wedding_of"),
   weddingDate: text("wedding_date").notNull(),
   startHour: integer("start_hour").notNull(),
   timeFormat: text("time_format").notNull(),
@@ -69,6 +70,7 @@ export const insertWeddingTimelineSchema = createInsertSchema(weddingTimelines)
   .pick({
     userId: true,
     name: true,
+    weddingOf: true,
     weddingDate: true,
     startHour: true,
     timeFormat: true,
