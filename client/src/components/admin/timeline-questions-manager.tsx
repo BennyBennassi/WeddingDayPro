@@ -356,7 +356,7 @@ export default function TimelineQuestionsManager() {
                         {/* Name field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-medium">Event Name</h3>
+                            <h3 className="text-lg font-medium">Block of Time Name</h3>
                             <FormField
                               control={form.control}
                               name="promptName"
@@ -381,7 +381,7 @@ export default function TimelineQuestionsManager() {
                                 <FormLabel>Default Value</FormLabel>
                                 <FormControl>
                                   <Input
-                                    placeholder="Event name"
+                                    placeholder="Block of Time name"
                                     {...field}
                                     value={field.value || ""}
                                   />
@@ -398,7 +398,7 @@ export default function TimelineQuestionsManager() {
                         {/* Category field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-medium">Event Category</h3>
+                            <h3 className="text-lg font-medium">Block of Time Category</h3>
                             <FormField
                               control={form.control}
                               name="promptCategory"
@@ -423,7 +423,7 @@ export default function TimelineQuestionsManager() {
                                 <FormLabel>Default Value</FormLabel>
                                 <FormControl>
                                   <Input
-                                    placeholder="Event category"
+                                    placeholder="Block of Time category"
                                     {...field}
                                     value={field.value || ""}
                                   />
@@ -440,7 +440,7 @@ export default function TimelineQuestionsManager() {
                         {/* Time field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-medium">Event Timing</h3>
+                            <h3 className="text-lg font-medium">Block of Time Timing</h3>
                             <div className="flex items-center space-x-4">
                               <FormField
                                 control={form.control}
@@ -519,7 +519,7 @@ export default function TimelineQuestionsManager() {
                         {/* Color field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-medium">Event Color</h3>
+                            <h3 className="text-lg font-medium">Block of Time Color</h3>
                             <FormField
                               control={form.control}
                               name="promptColor"
@@ -568,7 +568,7 @@ export default function TimelineQuestionsManager() {
                         {/* Notes field settings */}
                         <div className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-medium">Event Notes</h3>
+                            <h3 className="text-lg font-medium">Block of Time Notes</h3>
                             <FormField
                               control={form.control}
                               name="promptNotes"
@@ -593,7 +593,7 @@ export default function TimelineQuestionsManager() {
                                 <FormLabel>Default Notes</FormLabel>
                                 <FormControl>
                                   <Textarea
-                                    placeholder="Default notes for this event (optional)"
+                                    placeholder="Default notes for this Block of Time (optional)"
                                     {...field}
                                     value={field.value || ""}
                                   />
