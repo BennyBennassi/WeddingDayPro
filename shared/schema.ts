@@ -28,6 +28,7 @@ export type User = typeof users.$inferSelect;
 export const timelineEvents = pgTable("timeline_events", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
+  timelineId: integer("timeline_id").references(() => weddingTimelines.id),
   name: text("name").notNull(),
   startTime: text("start_time").notNull(), // Format HH:MM
   endTime: text("end_time").notNull(), // Format HH:MM
@@ -41,6 +42,7 @@ export const insertTimelineEventSchema = createInsertSchema(timelineEvents)
   .omit({ id: true })
   .pick({
     userId: true,
+    timelineId: true,
     name: true,
     startTime: true,
     endTime: true,

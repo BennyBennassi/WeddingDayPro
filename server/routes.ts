@@ -653,7 +653,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         templateEvents.map(async (event) => {
           return await storage.createTimelineEvent({
             userId: req.user!.id,
-            timelineId,
             name: event.name,
             startTime: event.startTime,
             endTime: event.endTime,
@@ -661,6 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             color: event.color,
             notes: event.notes,
             position: event.position,
+            timelineId
           });
         })
       );
