@@ -18,14 +18,17 @@ import { Loader2 } from "lucide-react";
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  email: z.string().email("Please enter a valid email").optional(),
+  email: z.union([
+    z.string().email("Please enter a valid email"),
+    z.string().length(0) // Allow empty string
+  ]).optional(),
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
 }).refine(data => {
   // At least provide either email or name
-  return data.email || data.name;
+  return (data.email && data.email.length > 0) || (data.name && data.name.length > 0);
 }, {
   message: "Please provide either your email or name",
-  path: ["email"],
+  path: ["name"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -103,12 +106,21 @@ export default function RegisterForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email (optional)</FormLabel>
+                <FormLabel>
+                  Email <span className="text-xs text-muted-foreground">(optional)</span>
+                </FormLabel>
                 <FormControl>
                   <Input 
                     type="email"
-                    placeholder="Enter your email" 
+                    placeholder="Enter your email or leave empty" 
                     {...field} 
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      // If the user clears the field, set it to an empty string
+                      // rather than undefined, which causes validation issues
+                      const value = e.target.value;
+                      field.onChange(value);
+                    }}
                     disabled={registerMutation.isPending}
                   />
                 </FormControl>
@@ -122,11 +134,18 @@ export default function RegisterForm() {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>
+                  Full Name <span className="text-xs text-muted-foreground">(provide name or email)</span>
+                </FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Enter your name" 
                     {...field} 
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value);
+                    }}
                     disabled={registerMutation.isPending}
                   />
                 </FormControl>
