@@ -35,6 +35,18 @@ export interface IStorage {
   getVenueRestriction(timelineId: number): Promise<VenueRestriction | undefined>;
   createVenueRestriction(restriction: InsertVenueRestriction): Promise<VenueRestriction>;
   updateVenueRestriction(timelineId: number, restriction: Partial<InsertVenueRestriction>): Promise<VenueRestriction | undefined>;
+  
+  // Timeline Question operations
+  getTimelineQuestions(active?: boolean): Promise<TimelineQuestion[]>;
+  getTimelineQuestion(id: number): Promise<TimelineQuestion | undefined>;
+  createTimelineQuestion(question: InsertTimelineQuestion): Promise<TimelineQuestion>;
+  updateTimelineQuestion(id: number, question: Partial<InsertTimelineQuestion>): Promise<TimelineQuestion | undefined>;
+  deleteTimelineQuestion(id: number): Promise<boolean>;
+  
+  // User Question Response operations
+  getUserQuestionResponses(userId: number, timelineId: number): Promise<UserQuestionResponse[]>;
+  createUserQuestionResponse(response: InsertUserQuestionResponse): Promise<UserQuestionResponse>;
+  updateUserQuestionResponse(id: number, response: Partial<InsertUserQuestionResponse>): Promise<UserQuestionResponse | undefined>;
 }
 
 import { db } from "./db";
@@ -43,6 +55,12 @@ import {
   timelineEvents, 
   weddingTimelines, 
   venueRestrictions,
+  timelineQuestions,
+  userQuestionResponses,
+  type TimelineQuestion,
+  type InsertTimelineQuestion,
+  type UserQuestionResponse,
+  type InsertUserQuestionResponse,
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -223,6 +241,98 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedRestriction;
   }
+  
+  // Timeline Question methods
+  async getTimelineQuestions(active?: boolean): Promise<TimelineQuestion[]> {
+    let query = db.select().from(timelineQuestions);
+    
+    if (active !== undefined) {
+      query = query.where(eq(timelineQuestions.active, active));
+    }
+    
+    return query.orderBy(timelineQuestions.order);
+  }
+  
+  async getTimelineQuestion(id: number): Promise<TimelineQuestion | undefined> {
+    const [question] = await db
+      .select()
+      .from(timelineQuestions)
+      .where(eq(timelineQuestions.id, id));
+    return question;
+  }
+  
+  async createTimelineQuestion(question: InsertTimelineQuestion): Promise<TimelineQuestion> {
+    const [newQuestion] = await db
+      .insert(timelineQuestions)
+      .values({
+        ...question,
+        defaultName: question.defaultName ?? null,
+        defaultCategory: question.defaultCategory ?? null,
+        defaultStartTime: question.defaultStartTime ?? null,
+        defaultEndTime: question.defaultEndTime ?? null,
+        defaultColor: question.defaultColor ?? null,
+        defaultNotes: question.defaultNotes ?? null,
+      })
+      .returning();
+    return newQuestion;
+  }
+  
+  async updateTimelineQuestion(id: number, question: Partial<InsertTimelineQuestion>): Promise<TimelineQuestion | undefined> {
+    const [updatedQuestion] = await db
+      .update(timelineQuestions)
+      .set({
+        ...question,
+        defaultName: question.defaultName !== undefined ? (question.defaultName ?? null) : undefined,
+        defaultCategory: question.defaultCategory !== undefined ? (question.defaultCategory ?? null) : undefined,
+        defaultStartTime: question.defaultStartTime !== undefined ? (question.defaultStartTime ?? null) : undefined,
+        defaultEndTime: question.defaultEndTime !== undefined ? (question.defaultEndTime ?? null) : undefined,
+        defaultColor: question.defaultColor !== undefined ? (question.defaultColor ?? null) : undefined,
+        defaultNotes: question.defaultNotes !== undefined ? (question.defaultNotes ?? null) : undefined,
+      })
+      .where(eq(timelineQuestions.id, id))
+      .returning();
+    return updatedQuestion;
+  }
+  
+  async deleteTimelineQuestion(id: number): Promise<boolean> {
+    await db
+      .delete(timelineQuestions)
+      .where(eq(timelineQuestions.id, id));
+    return true;
+  }
+  
+  // User Question Response methods
+  async getUserQuestionResponses(userId: number, timelineId: number): Promise<UserQuestionResponse[]> {
+    return db
+      .select()
+      .from(userQuestionResponses)
+      .where(
+        and(
+          eq(userQuestionResponses.userId, userId),
+          eq(userQuestionResponses.timelineId, timelineId)
+        )
+      );
+  }
+  
+  async createUserQuestionResponse(response: InsertUserQuestionResponse): Promise<UserQuestionResponse> {
+    const [newResponse] = await db
+      .insert(userQuestionResponses)
+      .values(response)
+      .returning();
+    return newResponse;
+  }
+  
+  async updateUserQuestionResponse(id: number, response: Partial<InsertUserQuestionResponse>): Promise<UserQuestionResponse | undefined> {
+    const [updatedResponse] = await db
+      .update(userQuestionResponses)
+      .set({
+        ...response,
+        updatedAt: new Date()
+      })
+      .where(eq(userQuestionResponses.id, id))
+      .returning();
+    return updatedResponse;
+  }
 }
 
 // Initialize the storage with the database implementation
@@ -327,6 +437,104 @@ async function initializeDefaultData() {
         ceremonyStartTime: null,
         dinnerStartTime: "19:00",
       });
+      
+      // Add default timeline questions
+      const defaultQuestions: InsertTimelineQuestion[] = [
+        {
+          question: "Will you have a hair and makeup session?",
+          description: "Beauty preparations for the bride and bridal party",
+          active: true,
+          order: 1,
+          defaultName: "Hair & Makeup",
+          defaultCategory: "preparation",
+          defaultStartTime: "08:00",
+          defaultEndTime: "10:00",
+          defaultColor: "bg-pink-100",
+          defaultNotes: "For bride and bridesmaids",
+          promptName: false,
+          promptCategory: false,
+          promptStartTime: true,
+          promptEndTime: true,
+          promptColor: false,
+          promptNotes: true,
+        },
+        {
+          question: "Will there be a first look before the ceremony?",
+          description: "A private moment when the couple sees each other before the ceremony",
+          active: true,
+          order: 2,
+          defaultName: "First Look",
+          defaultCategory: "photos",
+          defaultStartTime: "11:00",
+          defaultEndTime: "11:30",
+          defaultColor: "bg-purple-100",
+          defaultNotes: "Private moment for the couple",
+          promptName: false,
+          promptCategory: false,
+          promptStartTime: true,
+          promptEndTime: true,
+          promptColor: false,
+          promptNotes: false,
+        },
+        {
+          question: "Do you need transport to the ceremony venue?",
+          description: "Travel arrangements from preparation location to ceremony venue",
+          active: true,
+          order: 3,
+          defaultName: "Travel to Ceremony",
+          defaultCategory: "travel",
+          defaultStartTime: "11:30",
+          defaultEndTime: "12:00",
+          defaultColor: "bg-blue-100",
+          defaultNotes: "",
+          promptName: false,
+          promptCategory: false,
+          promptStartTime: true,
+          promptEndTime: true,
+          promptColor: false,
+          promptNotes: true,
+        },
+        {
+          question: "Will you have a receiving line after the ceremony?",
+          description: "Greeting guests formally after the ceremony",
+          active: true,
+          order: 4,
+          defaultName: "Receiving Line",
+          defaultCategory: "custom",
+          defaultStartTime: "13:30",
+          defaultEndTime: "14:00",
+          defaultColor: "bg-yellow-100",
+          defaultNotes: "",
+          promptName: false,
+          promptCategory: false,
+          promptStartTime: true,
+          promptEndTime: true,
+          promptColor: false,
+          promptNotes: false,
+        },
+        {
+          question: "Will you have formal family photos?",
+          description: "Scheduled time for formal family and wedding party portraits",
+          active: true,
+          order: 5,
+          defaultName: "Family Photos",
+          defaultCategory: "photos",
+          defaultStartTime: "14:00",
+          defaultEndTime: "15:00",
+          defaultColor: "bg-green-100",
+          defaultNotes: "Family, bridal party and couple portraits",
+          promptName: false,
+          promptCategory: false,
+          promptStartTime: true,
+          promptEndTime: true,
+          promptColor: false,
+          promptNotes: true,
+        },
+      ];
+
+      for (const question of defaultQuestions) {
+        await storage.createTimelineQuestion(question);
+      }
       
       console.log('Default data initialized successfully');
     }

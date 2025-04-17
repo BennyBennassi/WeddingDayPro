@@ -98,3 +98,76 @@ export const insertVenueRestrictionSchema = createInsertSchema(venueRestrictions
 
 export type InsertVenueRestriction = z.infer<typeof insertVenueRestrictionSchema>;
 export type VenueRestriction = typeof venueRestrictions.$inferSelect;
+
+// Timeline Question Templates Table (for admins to create questions)
+export const timelineQuestions = pgTable("timeline_questions", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  description: text("description"),
+  active: boolean("active").default(true).notNull(),
+  order: integer("order").default(0).notNull(),
+  // Fields to prefill when user answers yes
+  defaultName: text("default_name"),
+  defaultCategory: text("default_category"),
+  defaultStartTime: text("default_start_time"),
+  defaultEndTime: text("default_end_time"),
+  defaultColor: text("default_color"),
+  defaultNotes: text("default_notes"),
+  // Fields to prompt the user for (true = ask user, false = use default)
+  promptName: boolean("prompt_name").default(true).notNull(),
+  promptCategory: boolean("prompt_category").default(false).notNull(),
+  promptStartTime: boolean("prompt_start_time").default(true).notNull(),
+  promptEndTime: boolean("prompt_end_time").default(true).notNull(),
+  promptColor: boolean("prompt_color").default(false).notNull(),
+  promptNotes: boolean("prompt_notes").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTimelineQuestionSchema = createInsertSchema(timelineQuestions)
+  .omit({ id: true, createdAt: true })
+  .pick({
+    question: true,
+    description: true,
+    active: true,
+    order: true,
+    defaultName: true,
+    defaultCategory: true,
+    defaultStartTime: true,
+    defaultEndTime: true,
+    defaultColor: true,
+    defaultNotes: true,
+    promptName: true,
+    promptCategory: true,
+    promptStartTime: true,
+    promptEndTime: true,
+    promptColor: true,
+    promptNotes: true,
+  });
+
+export type InsertTimelineQuestion = z.infer<typeof insertTimelineQuestionSchema>;
+export type TimelineQuestion = typeof timelineQuestions.$inferSelect;
+
+// User Question Responses Table (tracks user's answers)
+export const userQuestionResponses = pgTable("user_question_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  timelineId: integer("timeline_id").references(() => weddingTimelines.id).notNull(),
+  questionId: integer("question_id").references(() => timelineQuestions.id).notNull(),
+  answer: boolean("answer").default(false).notNull(), // yes/no response
+  completed: boolean("completed").default(false).notNull(), // whether user completed follow-up inputs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserQuestionResponseSchema = createInsertSchema(userQuestionResponses)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .pick({
+    userId: true,
+    timelineId: true,
+    questionId: true,
+    answer: true,
+    completed: true,
+  });
+
+export type InsertUserQuestionResponse = z.infer<typeof insertUserQuestionResponseSchema>;
+export type UserQuestionResponse = typeof userQuestionResponses.$inferSelect;
