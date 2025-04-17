@@ -98,13 +98,13 @@ async function hashPassword(password: string): Promise<string> {
 
 async function createAdminUserIfNotExists() {
   try {
-    // Check if admin user exists
+    // Check if any admin user exists
     const adminResult = await pool.query(`
-      SELECT * FROM users WHERE username = 'admin';
+      SELECT * FROM users WHERE is_admin = TRUE LIMIT 1;
     `);
     
     if (adminResult.rows.length === 0) {
-      // Admin user does not exist, create it
+      // No admin users exist, create one
       const hashedPassword = await hashPassword('admin123');
       
       await pool.query(`
@@ -114,18 +114,10 @@ async function createAdminUserIfNotExists() {
       
       console.log("Created admin user");
     } else {
-      // Update existing user to be an admin if not already
-      if (!adminResult.rows[0].is_admin) {
-        await pool.query(`
-          UPDATE users SET is_admin = TRUE WHERE username = 'admin';
-        `);
-        console.log("Updated admin user privileges");
-      } else {
-        console.log("Admin user already exists");
-      }
+      console.log("At least one admin user already exists");
     }
   } catch (error) {
-    console.error("Error creating admin user:", error);
+    console.error("Error checking for admin users:", error);
   }
 }
 
@@ -371,19 +363,19 @@ async function createSampleTimelineTemplates() {
       
       const singleVenueTemplate = await pool.query(`
         INSERT INTO timeline_templates (name, description, is_default) 
-        VALUES ('Single Venue', 'Wedding where both ceremony and reception are at the same venue', true)
+        VALUES ('Single Venue', 'Wedding where both ceremony and reception are at the same venue', false)
         RETURNING id;
       `);
       
       const morningTemplate = await pool.query(`
         INSERT INTO timeline_templates (name, description, is_default) 
-        VALUES ('Morning Ceremony', 'Early ceremony with daytime reception', true)
+        VALUES ('Morning Ceremony', 'Early ceremony with daytime reception', false)
         RETURNING id;
       `);
       
       const eveningTemplate = await pool.query(`
         INSERT INTO timeline_templates (name, description, is_default) 
-        VALUES ('Evening Ceremony', 'Late afternoon or evening ceremony with evening reception', true)
+        VALUES ('Evening Ceremony', 'Late afternoon or evening ceremony with evening reception', false)
         RETURNING id;
       `);
       
