@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, User, Settings, Home, Save, Share } from "lucide-react";
+import { LogOut, User, Settings, Home, Save, Share, Menu, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AuthModal from "@/components/auth/auth-modal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeaderProps {
   onSave?: () => void;
@@ -22,6 +25,8 @@ interface HeaderProps {
 export default function Header({ onSave, onShare, showActionButtons = false }: HeaderProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -46,17 +51,90 @@ export default function Header({ onSave, onShare, showActionButtons = false }: H
                 </div>
               </Link>
               <div className="flex flex-col">
-                <Link href="/"><span className="text-xl font-bold">Wedding Day Timeline</span></Link>
-                <div>
+                <Link href="/">
+                  <span className="text-xl font-bold">
+                    <span className="md:inline hidden">Wedding Day Timeline</span>
+                    <span className="md:hidden inline">WD Timeline</span>
+                  </span>
+                </Link>
+                <div className="hidden sm:block">
                   <p className="text-xs text-gray-600">for all couples from <a href="https://lauraandbennyphotography.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura and Benny Photography</a></p>
-                  <p className="text-xs text-gray-500">follow us on instagram <a href="https://www.instagram.com/lauraandbennyphotography/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
+                  <p className="text-xs text-gray-500 hidden md:block">follow us on instagram <a href="https://www.instagram.com/lauraandbennyphotography/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@lauraandbennyphotography</a></p>
                 </div>
               </div>
             </div>
           </div>
           
           <div className="flex items-center">
-            {/* Navigation Links */}
+            {/* Mobile Menu Button - Only visible on small screens */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden mr-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <nav className="flex flex-col space-y-4 mt-8">
+                  <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                    <span className={`text-base font-medium transition-colors hover:text-primary ${
+                      location === "/" ? "text-primary" : "text-muted-foreground"
+                    }`}>
+                      Home
+                    </span>
+                  </Link>
+                  {user && (
+                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                      <span className={`text-base font-medium transition-colors hover:text-primary ${
+                        location === "/profile" ? "text-primary" : "text-muted-foreground"
+                      }`}>
+                        My Profile
+                      </span>
+                    </Link>
+                  )}
+                  {user?.isAdmin && (
+                    <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                      <span className={`text-base font-medium transition-colors hover:text-primary ${
+                        location === "/admin" ? "text-primary" : "text-muted-foreground"
+                      }`}>
+                        Admin
+                      </span>
+                    </Link>
+                  )}
+                  
+                  {/* Mobile action buttons */}
+                  {showActionButtons && isMobile && (
+                    <div className="pt-4 border-t border-gray-200 mt-4">
+                      <h3 className="font-medium mb-3">Actions</h3>
+                      <div className="flex flex-col space-y-3">
+                        {onSave && (
+                          <Button 
+                            variant="default" 
+                            className="bg-primary hover:bg-primary-dark text-white justify-start" 
+                            onClick={onSave}
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Timeline
+                          </Button>
+                        )}
+                        
+                        {onShare && (
+                          <Button 
+                            variant="secondary"
+                            className="bg-secondary hover:bg-secondary-dark text-white justify-start"
+                            onClick={onShare}
+                          >
+                            <Share className="h-4 w-4 mr-2" />
+                            Share Timeline
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+            
+            {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center space-x-6 mr-4">
               <Link href="/">
                 <span className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -85,9 +163,9 @@ export default function Header({ onSave, onShare, showActionButtons = false }: H
               )}
             </nav>
             
-            {/* Action Buttons - Only show on home page */}
+            {/* Action Buttons - Only show on home page and desktop */}
             {showActionButtons && (
-              <div className="flex items-center space-x-3 mr-4">
+              <div className="hidden md:flex items-center space-x-3 mr-4">
                 {onSave && (
                   <Button 
                     variant="default" 
