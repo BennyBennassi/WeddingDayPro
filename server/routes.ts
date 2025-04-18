@@ -281,8 +281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Step 1: Delete associated venue restrictions directly from the database
       try {
-        // Use direct SQL to bypass the foreign key constraint
-        await db.execute(`DELETE FROM venue_restrictions WHERE timeline_id = $1`, [id]);
+        // Use Drizzle ORM instead of raw SQL
+        await db.delete(venueRestrictions).where(eq(venueRestrictions.timelineId, id));
         console.log(`Deleted venue restrictions for timeline ${id}`);
       } catch (err) {
         console.error(`Error deleting venue restrictions for timeline ${id}:`, err);
@@ -302,11 +302,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Also look for events that might belong to this user without proper timeline_id
         if (timeline.userId) {
-          // Get all events from this user that don't have a timeline_id
-          await db.execute(`
-            DELETE FROM timeline_events 
-            WHERE user_id = $1 AND (timeline_id IS NULL OR timeline_id = $2)
-          `, [timeline.userId, id]);
+          // Delete all events from this user that don't have a timeline_id or match this timeline
+          await db.delete(timelineEvents)
+            .where(
+              and(
+                eq(timelineEvents.userId, timeline.userId),
+                eq(timelineEvents.timelineId, id)
+              )
+            );
+            
+          // Also clean up events with null timeline ID from this user
+          const eventsWithNullTimeline = await db.select()
+            .from(timelineEvents)
+            .where(
+              and(
+                eq(timelineEvents.userId, timeline.userId),
+                eq(timelineEvents.timelineId, null)
+              )
+            );
+            
+          for (const event of eventsWithNullTimeline) {
+            await storage.deleteTimelineEvent(event.id);
+          }
         }
       } catch (err) {
         console.error(`Error deleting events for timeline ${id}:`, err);
