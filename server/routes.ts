@@ -896,6 +896,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Route to clear all timeline data (events, restrictions, responses)
+  app.delete("/api/timelines/:timelineId/all-data", isAuthenticated, async (req, res) => {
+    try {
+      const timelineId = parseInt(req.params.timelineId);
+      
+      if (isNaN(timelineId)) {
+        return res.status(400).json({ message: "Invalid timeline ID" });
+      }
+      
+      // Check if timeline exists and belongs to the user
+      const timeline = await storage.getWeddingTimeline(timelineId);
+      
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
+      }
+      
+      if (timeline.userId !== req.user!.id && !req.user!.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to clear this timeline" });
+      }
+      
+      // 1. Delete all timeline events
+      const events = await storage.getTimelineEvents(timelineId);
+      for (const event of events) {
+        await storage.deleteTimelineEvent(event.id);
+      }
+      
+      // 2. Delete venue restrictions if they exist
+      try {
+        await db.execute(`DELETE FROM venue_restrictions WHERE timeline_id = $1`, [timelineId]);
+        console.log(`Deleted venue restrictions for timeline ${timelineId}`);
+      } catch (err) {
+        console.error(`Error deleting venue restrictions for timeline ${timelineId}:`, err);
+        // Continue anyway
+      }
+      
+      // 3. Delete user question responses for this timeline
+      try {
+        if (timeline.userId) {
+          await db.execute(`
+            DELETE FROM user_question_responses 
+            WHERE user_id = $1 AND timeline_id = $2
+          `, [timeline.userId, timelineId]);
+          console.log(`Deleted user question responses for timeline ${timelineId}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting user question responses for timeline ${timelineId}:`, err);
+        // Continue anyway
+      }
+      
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error clearing all timeline data:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // Route to delete a timeline
   app.delete("/api/timelines/:id", isAuthenticated, async (req, res) => {
     try {

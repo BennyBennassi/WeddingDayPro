@@ -149,20 +149,25 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   });
   
   // Clear timeline events mutation
-  const clearTimelineEventsMutation = useMutation({
+  const clearAllTimelineDataMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('DELETE', `/api/timeline-events/timeline/${timeline?.id}`, null);
+      return apiRequest('DELETE', `/api/timelines/${timeline?.id}/all-data`, null);
     },
     onSuccess: () => {
-      // Invalidate the current timeline's events
+      // Invalidate all the relevant queries for this timeline
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/venue-restrictions/${timeline?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/user-question-responses/${user?.id}/${timeline?.id}`] });
       
       // Force a refresh of the timeline view by setting events to empty array directly
       queryClient.setQueryData([`/api/timeline-events/${timeline?.id}`], []);
       
+      // Also clear venue restrictions from the cache
+      queryClient.setQueryData([`/api/venue-restrictions/${timeline?.id}`], null);
+      
       toast({
-        title: "Timeline cleared",
-        description: "All events have been removed from your timeline.",
+        title: "Timeline fully cleared",
+        description: "All events, time restrictions, and 'Things to Consider' responses have been cleared.",
       });
     },
     onError: (error: Error) => {
@@ -187,7 +192,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
   
   const handleClearTimeline = () => {
-    clearTimelineEventsMutation.mutate();
+    clearAllTimelineDataMutation.mutate();
   };
 
   const loadTemplate = async (templateType: string) => {
@@ -252,7 +257,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     }
     
     // Clear existing timeline events
-    await clearTimelineEventsMutation.mutateAsync();
+    await clearAllTimelineDataMutation.mutateAsync();
     
     // Create new events from the template
     for (const event of templateEvents) {
@@ -366,7 +371,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               onDeleteTimeline={user ? handleDeleteTimeline : undefined}
               onClearTimeline={user ? handleClearTimeline : undefined}
               isDeleting={deleteTimelineMutation.isPending}
-              isClearing={clearTimelineEventsMutation.isPending}
+              isClearing={clearAllTimelineDataMutation.isPending}
             />
           </CollapsibleSection>
           
@@ -525,7 +530,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             onDeleteTimeline={user ? handleDeleteTimeline : undefined}
             onClearTimeline={user ? handleClearTimeline : undefined}
             isDeleting={deleteTimelineMutation.isPending}
-            isClearing={clearTimelineEventsMutation.isPending}
+            isClearing={clearAllTimelineDataMutation.isPending}
           />
           
           {/* Time Restrictions - Moved below Timeline Settings */}
