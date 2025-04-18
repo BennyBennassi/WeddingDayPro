@@ -264,22 +264,33 @@ async function updateExistingQuestionsPromptFields() {
     const tableExists = tableResult.rows[0].exists;
     
     if (tableExists) {
-      // Update existing questions to set all prompt fields to false
-      await pool.query(`
-        UPDATE timeline_questions 
-        SET 
-          prompt_name = false,
-          prompt_category = false,
-          prompt_start_time = false,
-          prompt_end_time = false,
-          prompt_color = false,
-          prompt_notes = false;
+      // Check if we've already run this migration (we'll only do it for new installations)
+      const promptInitialized = await pool.query(`
+        SELECT COUNT(*) as count FROM timeline_questions;
       `);
       
-      console.log("Updated existing timeline questions to default prompt fields to FALSE");
+      // Only apply this update for first-time installations, not on redeployments
+      // This preserves admin settings between deployments
+      if (promptInitialized.rows[0].count === 0) {
+        // Update only for new installations
+        await pool.query(`
+          UPDATE timeline_questions 
+          SET 
+            prompt_name = false,
+            prompt_category = false,
+            prompt_start_time = false,
+            prompt_end_time = false,
+            prompt_color = false,
+            prompt_notes = false;
+        `);
+        
+        console.log("New installation: initialized timeline questions prompt fields to FALSE");
+      } else {
+        console.log("Existing installation: preserving timeline questions prompt field settings");
+      }
     }
   } catch (error) {
-    console.error("Error updating existing timeline questions:", error);
+    console.error("Error handling timeline questions:", error);
   }
 }
 
