@@ -13,6 +13,7 @@ import TimeRestrictions from './time-restrictions';
 import TemplateSelector from './template-selector';
 import ExportOptions from './export-options';
 import AuthModal from '@/components/auth/auth-modal';
+import CollapsibleSection from '@/components/ui/collapsible-section';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -29,6 +30,7 @@ interface ControlPanelProps {
   selectedTimelineId?: number | null;
   setSelectedTimelineId?: (id: number) => void;
   handleCreateTimeline?: () => void;
+  isMobile?: boolean;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -41,7 +43,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   userTimelines,
   selectedTimelineId,
   setSelectedTimelineId,
-  handleCreateTimeline
+  handleCreateTimeline,
+  isMobile = false
 }) => {
   const { user } = useAuth();
   const selectedEvent = events?.find(event => event.id === selectedEventId);

@@ -506,41 +506,61 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         </div>
       </div>
       
-      {/* Mobile Drawer for Control Panel */}
-      <Drawer snapPoints={[0.9, 0.5, 0.15]} activeSnapPoint={activeSnapPoint} setActiveSnapPoint={setActiveSnapPoint} open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerTrigger asChild>
-          <button 
-            id="mobile-controls-toggle" 
-            className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-50"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </DrawerTrigger>
-        <DrawerContent className="max-h-[90vh] overflow-y-auto">
-          <DrawerHeader>
-            <DrawerTitle>Timeline Controls</DrawerTitle>
-            <DrawerDescription>Manage your wedding timeline</DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4 pt-0">
-            <ControlPanel 
-              timeline={timeline}
-              events={events}
-              venueRestrictions={restrictions}
-              selectedEventId={selectedEventId}
-              setSelectedEventId={setSelectedEventId}
-              handleExportPdf={handleExportPdf}
-              userTimelines={userTimelines}
-              selectedTimelineId={selectedTimelineId}
-              setSelectedTimelineId={handleTimelineChange}
-              handleCreateTimeline={handleCreateTimeline}
-              isMobile={true}
-            />
+      {/* Mobile Controls Toggle Button */}
+      <button 
+        id="mobile-controls-toggle" 
+        className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-50"
+        onClick={() => {
+          // Show mobile panel
+          const mobilePanel = document.getElementById('mobile-control-panel');
+          if (mobilePanel) {
+            mobilePanel.classList.remove('hidden');
+            mobilePanel.classList.add('fixed', 'inset-0', 'z-50', 'bg-white', 'overflow-y-auto');
+          }
+        }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+      
+      {/* Mobile Control Panel - Hidden by default */}
+      <div id="mobile-control-panel" className="hidden">
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-medium">Timeline Controls</h2>
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100"
+              onClick={() => {
+                const mobilePanel = document.getElementById('mobile-control-panel');
+                if (mobilePanel) {
+                  mobilePanel.classList.add('hidden');
+                  mobilePanel.classList.remove('fixed', 'inset-0', 'z-50', 'bg-white', 'overflow-y-auto');
+                }
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        </DrawerContent>
-      </Drawer>
+          
+          <ControlPanel 
+            timeline={timeline}
+            events={events}
+            venueRestrictions={restrictions}
+            selectedEventId={selectedEventId}
+            setSelectedEventId={setSelectedEventId}
+            handleExportPdf={handleExportPdf}
+            userTimelines={userTimelines}
+            selectedTimelineId={selectedTimelineId}
+            setSelectedTimelineId={handleTimelineChange}
+            handleCreateTimeline={handleCreateTimeline}
+            isMobile={true}
+          />
+        </div>
+      </div>
 
       {/* Auth Prompt Dialog */}
       <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
