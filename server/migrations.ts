@@ -58,6 +58,10 @@ export async function runMigrations() {
     
     // Create password reset tokens table if not exists
     await createPasswordResetTokensTable();
+    
+    // Create email templates table and default templates if not exists
+    await createEmailTemplatesTable();
+    await createDefaultEmailTemplates();
 
   } catch (error) {
     console.error("Error running migrations:", error);
@@ -494,6 +498,128 @@ async function createPasswordResetTokensTable() {
     }
   } catch (error) {
     console.error("Error creating password_reset_tokens table:", error);
+  }
+}
+
+async function createEmailTemplatesTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'email_templates'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE email_templates (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          html_body TEXT NOT NULL,
+          text_body TEXT NOT NULL, 
+          is_default BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created email_templates table");
+    } else {
+      console.log("email_templates table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating email_templates table:", error);
+  }
+}
+
+async function createDefaultEmailTemplates() {
+  try {
+    // Check if we already have a password reset template
+    const templateResult = await pool.query(`
+      SELECT * FROM email_templates 
+      WHERE type = 'password_reset' AND is_default = TRUE
+      LIMIT 1;
+    `);
+    
+    if (templateResult.rows.length === 0) {
+      // No password reset template exists, create one
+      const defaultHtmlTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .content { background-color: #f9f9f9; padding: 20px; border-radius: 5px; }
+    .button { display: inline-block; background-color: #4a6ee0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Reset Your Password</h2>
+    </div>
+    <div class="content">
+      <p>Hello {{username}},</p>
+      <p>We received a request to reset your password for your Wedding Timeline Planner account. To reset your password, please click on the button below:</p>
+      <p style="text-align: center;">
+        <a href="{{resetLink}}" class="button">Reset Password</a>
+      </p>
+      <p>This link will expire in 1 hour for security reasons.</p>
+      <p>If you didn't request this, please ignore this email and your password will remain unchanged.</p>
+    </div>
+    <div class="footer">
+      <p>This is an automated message, please do not reply.</p>
+      <p>Wedding Timeline Planner</p>
+    </div>
+  </div>
+</body>
+</html>
+      `;
+      
+      const defaultTextTemplate = `
+Reset Your Password
+
+Hello {{username}},
+
+We received a request to reset your password for your Wedding Timeline Planner account.
+To reset your password, please visit the following link:
+
+{{resetLink}}
+
+This link will expire in 1 hour for security reasons.
+
+If you didn't request this, please ignore this email and your password will remain unchanged.
+
+This is an automated message, please do not reply.
+Wedding Timeline Planner
+      `;
+      
+      await pool.query(`
+        INSERT INTO email_templates (
+          name, type, subject, html_body, text_body, is_default
+        ) VALUES (
+          'Default Password Reset', 'password_reset', 'Reset Your Password - Wedding Timeline Planner', 
+          $1, $2, TRUE
+        );
+      `, [defaultHtmlTemplate, defaultTextTemplate]);
+      
+      console.log("Created default password reset email template");
+    } else {
+      console.log("Default password reset email template already exists");
+    }
+  } catch (error) {
+    console.error("Error creating default email templates:", error);
   }
 }
 
