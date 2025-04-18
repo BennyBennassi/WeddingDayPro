@@ -16,7 +16,9 @@ import {
   type TemplateEvent,
   type InsertTemplateEvent,
   type PasswordResetToken,
-  type InsertPasswordResetToken
+  type InsertPasswordResetToken,
+  type EmailTemplate,
+  type InsertEmailTemplate
 } from "@shared/schema";
 
 export interface IStorage {
@@ -78,6 +80,15 @@ export interface IStorage {
   createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   invalidatePasswordResetToken(token: string): Promise<boolean>;
+  
+  // Email Template operations
+  getEmailTemplates(): Promise<EmailTemplate[]>;
+  getEmailTemplatesByType(type: string): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number): Promise<EmailTemplate | undefined>;
+  getDefaultEmailTemplate(type: string): Promise<EmailTemplate | undefined>;
+  createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
+  updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number): Promise<boolean>;
 }
 
 import { db } from "./db";
@@ -90,7 +101,8 @@ import {
   userQuestionResponses,
   timelineTemplates,
   templateEvents,
-  passwordResetTokens
+  passwordResetTokens,
+  emailTemplates
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -549,6 +561,113 @@ export class DatabaseStorage implements IStorage {
       .update(passwordResetTokens)
       .set({ used: true })
       .where(eq(passwordResetTokens.token, token));
+    return true;
+  }
+  
+  // Email Template methods
+  async getEmailTemplates(): Promise<EmailTemplate[]> {
+    return db
+      .select()
+      .from(emailTemplates)
+      .orderBy(emailTemplates.name);
+  }
+  
+  async getEmailTemplatesByType(type: string): Promise<EmailTemplate[]> {
+    return db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.type, type))
+      .orderBy(emailTemplates.name);
+  }
+  
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.id, id));
+    return template;
+  }
+  
+  async getDefaultEmailTemplate(type: string): Promise<EmailTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(emailTemplates)
+      .where(
+        and(
+          eq(emailTemplates.type, type),
+          eq(emailTemplates.isDefault, true)
+        )
+      );
+    return template;
+  }
+  
+  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    // If this is set as default, we need to ensure no other template of this type is default
+    if (template.isDefault) {
+      await db
+        .update(emailTemplates)
+        .set({ isDefault: false })
+        .where(eq(emailTemplates.type, template.type));
+    }
+    
+    const [newTemplate] = await db
+      .insert(emailTemplates)
+      .values({
+        ...template,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return newTemplate;
+  }
+  
+  async updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
+    const [existingTemplate] = await db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.id, id));
+      
+    if (!existingTemplate) {
+      return undefined;
+    }
+    
+    // If this is being set as default, we need to ensure no other template of this type is default
+    if (template.isDefault) {
+      await db
+        .update(emailTemplates)
+        .set({ isDefault: false })
+        .where(
+          and(
+            eq(emailTemplates.type, template.type || existingTemplate.type),
+            eq(emailTemplates.id, id).not()
+          )
+        );
+    }
+    
+    const [updatedTemplate] = await db
+      .update(emailTemplates)
+      .set({
+        ...template,
+        updatedAt: new Date(),
+      })
+      .where(eq(emailTemplates.id, id))
+      .returning();
+    return updatedTemplate;
+  }
+  
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    const [template] = await db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.id, id));
+      
+    // Don't allow deleting the default template
+    if (template && template.isDefault) {
+      throw new Error("Cannot delete the default template");
+    }
+    
+    await db
+      .delete(emailTemplates)
+      .where(eq(emailTemplates.id, id));
     return true;
   }
 }
