@@ -21,6 +21,14 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { 
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
+} from "@/components/ui/drawer";
+import { 
   Select, 
   SelectContent, 
   SelectItem, 
@@ -46,6 +54,10 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const [newTimelineName, setNewTimelineName] = useState("");
   const [newTimelineDate, setNewTimelineDate] = useState("");
   const [hasLoadedDefaultTemplate, setHasLoadedDefaultTemplate] = useState(false);
+  
+  // Mobile drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeSnapPoint, setActiveSnapPoint] = useState<string | number>(0.5);
   
   // State for timeline switching
   const [showSaveChangesDialog, setShowSaveChangesDialog] = useState(false);
@@ -473,23 +485,10 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             )}
           </div>
           
-          {/* Right Column: Control Panel - Hidden on mobile by default */}
+          {/* Right Column: Control Panel - Always visible on desktop, drawer on mobile */}
           <div className="lg:w-96 bg-white shadow-md lg:shadow-none lg:border-l border-gray-200 p-4 md:p-6 lg:h-screen lg:overflow-y-auto mt-6 lg:mt-0 
-                         fixed lg:static inset-0 z-40 transform transition-transform duration-300 ease-in-out 
-                         translate-x-full lg:translate-x-0" 
-               id="mobile-control-panel">
-            {/* Close button for mobile - only visible on small screens */}
-            <button 
-              className="lg:hidden absolute top-4 right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-              onClick={() => {
-                const panel = document.getElementById('mobile-control-panel');
-                if (panel) panel.classList.add('translate-x-full');
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+                         hidden lg:block" 
+               id="desktop-control-panel">
 
             <ControlPanel 
               timeline={timeline}
@@ -507,20 +506,41 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         </div>
       </div>
       
-      {/* Mobile Controls Toggle Button (visible only on mobile) */}
-      <button 
-        id="mobile-controls-toggle" 
-        className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-50"
-        onClick={() => {
-          const panel = document.getElementById('mobile-control-panel');
-          if (panel) panel.classList.remove('translate-x-full');
-        }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </button>
+      {/* Mobile Drawer for Control Panel */}
+      <Drawer snapPoints={[0.9, 0.5, 0.15]} activeSnapPoint={activeSnapPoint} setActiveSnapPoint={setActiveSnapPoint} open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerTrigger asChild>
+          <button 
+            id="mobile-controls-toggle" 
+            className="lg:hidden fixed bottom-4 right-4 bg-primary text-white rounded-full p-4 shadow-lg z-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </DrawerTrigger>
+        <DrawerContent className="max-h-[90vh] overflow-y-auto">
+          <DrawerHeader>
+            <DrawerTitle>Timeline Controls</DrawerTitle>
+            <DrawerDescription>Manage your wedding timeline</DrawerDescription>
+          </DrawerHeader>
+          <div className="p-4 pt-0">
+            <ControlPanel 
+              timeline={timeline}
+              events={events}
+              venueRestrictions={restrictions}
+              selectedEventId={selectedEventId}
+              setSelectedEventId={setSelectedEventId}
+              handleExportPdf={handleExportPdf}
+              userTimelines={userTimelines}
+              selectedTimelineId={selectedTimelineId}
+              setSelectedTimelineId={handleTimelineChange}
+              handleCreateTimeline={handleCreateTimeline}
+              isMobile={true}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Auth Prompt Dialog */}
       <Dialog open={showAuthPrompt} onOpenChange={setShowAuthPrompt}>
