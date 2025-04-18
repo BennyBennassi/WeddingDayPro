@@ -916,10 +916,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You don't have permission to clear this timeline" });
       }
       
-      // 1. Delete all timeline events
-      const events = await storage.getTimelineEvents(timelineId);
-      for (const event of events) {
-        await storage.deleteTimelineEvent(event.id);
+      // 1. Delete all timeline events - if any exist
+      try {
+        const events = await storage.getTimelineEvents(timelineId);
+        if (events && events.length > 0) {
+          for (const event of events) {
+            await storage.deleteTimelineEvent(event.id);
+          }
+        }
+        console.log(`Events deleted or none existed for timeline ${timelineId}`);
+      } catch (err) {
+        console.error(`Error deleting events for timeline ${timelineId}:`, err);
+        // Continue with other deletions anyway
       }
       
       // 2. Delete venue restrictions if they exist

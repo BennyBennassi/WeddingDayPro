@@ -151,7 +151,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   // Clear timeline events mutation
   const clearAllTimelineDataMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('DELETE', `/api/timelines/${timeline?.id}/all-data`, null);
+      // Make sure timeline ID is valid before making the request
+      if (!timeline?.id) {
+        throw new Error("No active timeline selected");
+      }
+      return apiRequest('DELETE', `/api/timelines/${timeline.id}/all-data`, null);
     },
     onSuccess: () => {
       // Invalidate all the relevant queries for this timeline
@@ -196,7 +200,27 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   const loadTemplate = async (templateType: string) => {
-    let templateEvents = [];
+    // Make sure timeline ID is valid before making the request
+    if (!timeline?.id) {
+      toast({
+        title: "Cannot apply template",
+        description: "No active timeline selected",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    type TemplateEvent = {
+      name: string;
+      startTime: string;
+      endTime: string;
+      category: string;
+      color: string;
+      notes: string;
+      position: number;
+    };
+    
+    let templateEvents: TemplateEvent[] = [];
     
     switch (templateType) {
       case 'church':
