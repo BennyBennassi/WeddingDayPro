@@ -4,10 +4,13 @@ import { Download, Share } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExportOptionsProps {
-  handleExportPdf: () => void;
+  handleExportPdf?: () => void;
+  onExport?: () => void;
 }
 
-const ExportOptions: React.FC<ExportOptionsProps> = ({ handleExportPdf }) => {
+const ExportOptions: React.FC<ExportOptionsProps> = ({ handleExportPdf, onExport }) => {
+  // Use onExport prop if provided, otherwise use handleExportPdf
+  const handleExport = onExport || handleExportPdf;
   const { toast } = useToast();
 
   const handleShare = () => {
@@ -52,7 +55,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ handleExportPdf }) => {
       <div className="grid grid-cols-2 gap-3">
         <Button
           className="bg-secondary hover:bg-secondary-dark text-white py-2 px-3 rounded-md text-sm font-medium transition-colors flex items-center justify-center"
-          onClick={handleExportPdf}
+          onClick={handleExport}
         >
           <Download className="h-4 w-4 mr-1" />
           PDF

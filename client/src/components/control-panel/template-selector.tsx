@@ -33,10 +33,11 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, LayoutTemplate, AlertCircle, LogIn } from "lucide-react";
 
 interface TemplateSelectorProps {
-  timelineId: number;
+  timelineId?: number;
+  onSelectTemplate?: (templateType: string) => Promise<void>;
 }
 
-export default function TemplateSelector({ timelineId }: TemplateSelectorProps) {
+export default function TemplateSelector({ timelineId, onSelectTemplate }: TemplateSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -63,13 +64,29 @@ export default function TemplateSelector({ timelineId }: TemplateSelectorProps) 
     setIsConfirmDialogOpen(true);
   };
   
-  const handleApplyTemplate = () => {
+  const handleApplyTemplate = async () => {
     if (selectedTemplateId === null || !user) return;
     
-    applyTemplate({
-      timelineId,
-      templateId: selectedTemplateId
-    });
+    // If we have a direct template handler function, use it
+    if (onSelectTemplate && selectedTemplateId) {
+      const selectedTemplate = templates?.find(t => t.id === selectedTemplateId);
+      if (selectedTemplate) {
+        // Extract template type from template name or use a default
+        const templateType = selectedTemplate.name.toLowerCase().includes('church') ? 'church' : 
+                             selectedTemplate.name.toLowerCase().includes('single') ? 'single-venue' :
+                             selectedTemplate.name.toLowerCase().includes('morning') ? 'morning-ceremony' :
+                             selectedTemplate.name.toLowerCase().includes('evening') ? 'evening-ceremony' : 
+                             'single-venue';
+        
+        await onSelectTemplate(templateType);
+      }
+    } else if (timelineId) {
+      // Otherwise use the default applyTemplate function
+      applyTemplate({
+        timelineId,
+        templateId: selectedTemplateId
+      });
+    }
     
     setIsConfirmDialogOpen(false);
     setIsOpen(false);
