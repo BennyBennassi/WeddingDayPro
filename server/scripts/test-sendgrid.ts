@@ -13,7 +13,7 @@ const mailService = new MailService();
 mailService.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Get sender from environment or use default
-const VERIFIED_SENDER = process.env.VERIFIED_SENDER || 'Benny@lauraandbennyphotography.com';
+const VERIFIED_SENDER = process.env.VERIFIED_SENDER || 'info@lauraandbennyphotography.eu';
 console.log(`Using sender email: ${VERIFIED_SENDER}`);
 
 // Target recipient - can be overridden with TARGET_EMAIL env var

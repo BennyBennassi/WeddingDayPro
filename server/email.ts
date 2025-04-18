@@ -9,7 +9,7 @@ if (!process.env.SENDGRID_API_KEY) {
 // This should be a verified sender in your SendGrid account
 // We need to use an email that has been verified with SendGrid
 // Can be overridden with VERIFIED_SENDER environment variable
-const VERIFIED_SENDER = process.env.VERIFIED_SENDER || 'Benny@lauraandbennyphotography.com';
+const VERIFIED_SENDER = process.env.VERIFIED_SENDER || 'info@lauraandbennyphotography.eu';
 console.log(`Email system configured with sender: ${VERIFIED_SENDER}`);
 
 const mailService = new MailService();
