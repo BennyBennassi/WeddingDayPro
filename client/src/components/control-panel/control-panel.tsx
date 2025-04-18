@@ -245,28 +245,24 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           { name: "Dinner Service", startTime: "19:00", endTime: "21:00", category: "dining", color: "bg-red-100", notes: "", position: 5 },
           { name: "Speeches", startTime: "21:00", endTime: "21:30", category: "speeches", color: "bg-accent-light", notes: "", position: 6 },
           { name: "Dancing", startTime: "21:30", endTime: "01:30", category: "dancing", color: "bg-indigo-100", notes: "", position: 7 },
-          { name: "Late Night Snacks", startTime: "23:00", endTime: "23:30", category: "dining", color: "bg-orange-100", notes: "", position: 8 },
         ];
         break;
       default:
-        return;
+        break;
     }
     
-    // Delete existing events
-    for (const event of events || []) {
-      await apiRequest('DELETE', `/api/timeline-events/${event.id}`, null);
-    }
+    // Clear existing timeline events
+    await clearTimelineEventsMutation.mutateAsync();
     
-    // Create new events from template
+    // Create new events from the template
     for (const event of templateEvents) {
       await apiRequest('POST', '/api/timeline-events', {
         ...event,
-        userId: user?.id || 1, // Use logged in user or default user
-        timelineId: timeline?.id // Important: Add timelineId to associate with the timeline
+        timelineId: timeline?.id
       });
     }
     
-    // Refresh events
+    // Invalidate the events query to refresh the timeline
     queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${timeline?.id}`] });
     
     toast({
@@ -277,197 +273,296 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <div className="control-panel">
-      <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
-      
-      {/* Wedding Of & Date Fields */}
-      {timeline && (
-        <div className="mb-6">
-          <h3 className="text-md font-medium text-gray-700 mb-3">Wedding Details</h3>
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="wedding-couple" className="block text-sm text-gray-600 mb-1">Wedding Couple</label>
-              <input 
-                id="wedding-couple"
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                placeholder="Mary & John"
-                maxLength={30}
-                value={weddingCoupleValue}
-                onChange={(e) => {
-                  setWeddingCoupleValue(e.target.value);
-                  debouncedUpdateWeddingCouple(e.target.value);
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="wedding-date" className="block text-sm text-gray-600 mb-1">Wedding Date</label>
-              <input 
-                id="wedding-date"
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                value={weddingDateValue}
-                onChange={(e) => {
-                  setWeddingDateValue(e.target.value);
-                  debouncedUpdateWeddingDate(e.target.value);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Timeline Management Section */}
-      {user ? (
-        <div className="mb-6">
-          <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
+      {isMobile ? (
+        // Mobile view with collapsible sections
+        <>
+          {/* Wedding Details */}
+          {timeline && (
+            <CollapsibleSection title="Wedding Details" defaultOpen={true}>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="wedding-couple-mobile" className="block text-sm text-gray-600 mb-1">Wedding Couple</label>
+                  <input 
+                    id="wedding-couple-mobile"
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    placeholder="Mary & John"
+                    maxLength={30}
+                    value={weddingCoupleValue}
+                    onChange={(e) => {
+                      setWeddingCoupleValue(e.target.value);
+                      debouncedUpdateWeddingCouple(e.target.value);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="wedding-date-mobile" className="block text-sm text-gray-600 mb-1">Wedding Date</label>
+                  <input 
+                    id="wedding-date-mobile"
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    value={weddingDateValue}
+                    onChange={(e) => {
+                      setWeddingDateValue(e.target.value);
+                      debouncedUpdateWeddingDate(e.target.value);
+                    }}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+          )}
           
-          {/* Timeline Selector - only shows when user has timelines */}
-          {userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 ? (
-            <div className="space-y-3">
-              <div className="flex gap-2 items-center">
-                <Select
-                  value={selectedTimelineId?.toString()}
-                  onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
-                  disabled={!setSelectedTimelineId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a timeline" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userTimelines.map((t: any) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {handleCreateTimeline && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCreateTimeline}
-                    title="Create new timeline"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                )}
+          {/* Timeline Management Section */}
+          {user && (
+            <CollapsibleSection title="Your Timelines" defaultOpen={true}>
+              {userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex gap-2 items-center">
+                    <Select
+                      value={selectedTimelineId?.toString()}
+                      onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
+                      disabled={!setSelectedTimelineId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a timeline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userTimelines.map((t: any) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {handleCreateTimeline && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={handleCreateTimeline}
+                        title="Create New Timeline"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  {handleCreateTimeline && (
+                    <Button onClick={handleCreateTimeline} className="w-full">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Timeline
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CollapsibleSection>
+          )}
+          
+          {/* Timeline Settings */}
+          <CollapsibleSection title="Timeline Settings">
+            <TimelineSettings 
+              timeline={timeline} 
+              onUpdate={handleTimelineSettingsUpdate}
+              onDeleteTimeline={user ? handleDeleteTimeline : undefined}
+              onClearTimeline={user ? handleClearTimeline : undefined}
+              isDeleting={deleteTimelineMutation.isPending}
+              isClearing={clearTimelineEventsMutation.isPending}
+            />
+          </CollapsibleSection>
+          
+          {/* Time Restrictions */}
+          <CollapsibleSection title="Venue Restrictions">
+            <TimeRestrictions 
+              restrictions={venueRestrictions} 
+              onUpdate={handleTimeRestrictionsUpdate} 
+            />
+          </CollapsibleSection>
+          
+          {/* Add New Block of Time */}
+          <CollapsibleSection title="Add New Block of Time" defaultOpen={!selectedEvent}>
+            <AddTimeBlockForm timelineId={timeline?.id} />
+          </CollapsibleSection>
+          
+          {/* Edit Selected Block */}
+          {selectedEvent && (
+            <CollapsibleSection title="Edit Selected Block" defaultOpen={true}>
+              <div ref={selectedBlockRef}>
+                <EditTimeBlockForm 
+                  event={selectedEvent}
+                  onClose={() => setSelectedEventId(null)}
+                />
+              </div>
+            </CollapsibleSection>
+          )}
+          
+          {/* Template Selector */}
+          <CollapsibleSection title="Templates">
+            <TemplateSelector onSelectTemplate={loadTemplate} />
+          </CollapsibleSection>
+          
+          {/* Export Options */}
+          <CollapsibleSection title="Export">
+            <ExportOptions handleExportPdf={handleExportPdf} />
+          </CollapsibleSection>
+        </>
+      ) : (
+        // Desktop view
+        <>
+          <h2 className="text-xl font-medium text-gray-800 mb-6">Timeline Controls</h2>
+          
+          {/* Wedding Of & Date Fields */}
+          {timeline && (
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Wedding Details</h3>
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="wedding-couple" className="block text-sm text-gray-600 mb-1">Wedding Couple</label>
+                  <input 
+                    id="wedding-couple"
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    placeholder="Mary & John"
+                    maxLength={30}
+                    value={weddingCoupleValue}
+                    onChange={(e) => {
+                      setWeddingCoupleValue(e.target.value);
+                      debouncedUpdateWeddingCouple(e.target.value);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="wedding-date" className="block text-sm text-gray-600 mb-1">Wedding Date</label>
+                  <input 
+                    id="wedding-date"
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    value={weddingDateValue}
+                    onChange={(e) => {
+                      setWeddingDateValue(e.target.value);
+                      debouncedUpdateWeddingDate(e.target.value);
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          ) : (
-            /* New Timeline Form - shows when user has no timelines */
-            <div className="space-y-3 p-4 bg-gray-50 rounded border border-gray-200">
-              <p className="text-sm text-gray-500">You don't have any timelines yet. Create your first timeline:</p>
-              {handleCreateTimeline && (
-                <Button
-                  variant="default"
-                  onClick={handleCreateTimeline}
-                  className="w-full"
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create New Timeline
-                </Button>
+          )}
+          
+          {/* Timeline Management Section */}
+          {user ? (
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
+              
+              {/* Timeline Selector - only shows when user has timelines */}
+              {userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex gap-2 items-center">
+                    <Select
+                      value={selectedTimelineId?.toString()}
+                      onValueChange={setSelectedTimelineId ? (value) => setSelectedTimelineId(parseInt(value)) : undefined}
+                      disabled={!setSelectedTimelineId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a timeline" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userTimelines.map((t: any) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {handleCreateTimeline && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCreateTimeline}
+                        title="Create new timeline"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* New Timeline Form - shows when user has no timelines */
+                <div className="space-y-3 p-4 bg-gray-50 rounded border border-gray-200">
+                  <p className="text-sm text-gray-500">You don't have any timelines yet. Create your first timeline:</p>
+                  {handleCreateTimeline && (
+                    <Button
+                      variant="default"
+                      onClick={handleCreateTimeline}
+                      className="w-full"
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Create New Timeline
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
+          ) : (
+            /* Not logged in message */
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
+                <p className="text-sm text-gray-500 mb-3">You need to be logged in to create and manage timelines</p>
+                <AuthModal 
+                  triggerButton={
+                    <Button variant="default" className="w-full">
+                      Login / Register
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
           )}
-        </div>
-      ) : (
-        /* Not logged in message */
-        <div className="mb-6">
-          <h3 className="text-md font-medium text-gray-700 mb-3">Your Timelines</h3>
-          <div className="p-4 bg-gray-50 rounded border border-gray-200">
-            <p className="text-sm text-gray-500 mb-3">You need to be logged in to create and manage timelines</p>
-            <AuthModal 
-              triggerButton={
-                <Button variant="default" className="w-full">
-                  Login / Register
-                </Button>
-              }
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* Timeline Settings */}
-      <TimelineSettings 
-        timeline={timeline} 
-        onUpdate={handleTimelineSettingsUpdate}
-        onDeleteTimeline={user ? handleDeleteTimeline : undefined}
-        onClearTimeline={user ? handleClearTimeline : undefined}
-        isDeleting={deleteTimelineMutation.isPending}
-        isClearing={clearTimelineEventsMutation.isPending}
-      />
-      
-      {/* Time Restrictions - Moved below Timeline Settings */}
-      <TimeRestrictions 
-        restrictions={venueRestrictions} 
-        onUpdate={handleTimeRestrictionsUpdate} 
-      />
-      
-      {/* Create New Block of Time */}
-      <div className="mb-8">
-        <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
-        <AddTimeBlockForm timelineId={timeline?.id} />
-      </div>
-      
-      {/* Currently Selected Block of Time */}
-      {selectedEvent ? (
-        <div ref={selectedBlockRef} className="mb-8 bg-gray-50 p-4 rounded-lg border-2 border-primary animate-pulse-light">
-          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
-          <EditTimeBlockForm 
-            event={selectedEvent} 
-            onClose={() => setSelectedEventId(null)} 
+          
+          {/* Timeline Settings */}
+          <TimelineSettings 
+            timeline={timeline} 
+            onUpdate={handleTimelineSettingsUpdate}
+            onDeleteTimeline={user ? handleDeleteTimeline : undefined}
+            onClearTimeline={user ? handleClearTimeline : undefined}
+            isDeleting={deleteTimelineMutation.isPending}
+            isClearing={clearTimelineEventsMutation.isPending}
           />
-        </div>
-      ) : (
-        <div className="mb-8 bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
-          <p className="text-sm text-gray-500 mb-4">Click on a block of time in the timeline to edit it</p>
-        </div>
-      )}
-      
-      {/* Template Options */}
-      <div className="mb-6">
-        <h3 className="text-md font-medium text-gray-700 mb-4">Templates</h3>
-        
-        {/* Dynamic Template Selector */}
-        {timeline && timeline.id && (
-          <TemplateSelector timelineId={timeline.id} />
-        )}
-        
-        {/* Legacy Template Options */}
-        <div className="mt-3">
-          <p className="text-xs text-gray-500 mb-2">Legacy Quick Templates:</p>
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-              onClick={() => loadTemplate('church')}
-            >
-              Church Wedding
-            </button>
-            <button 
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-              onClick={() => loadTemplate('single-venue')}
-            >
-              Single Venue
-            </button>
-            <button 
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-              onClick={() => loadTemplate('morning-ceremony')}
-            >
-              Morning Ceremony
-            </button>
-            <button 
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded-md text-sm font-medium transition-colors"
-              onClick={() => loadTemplate('evening-ceremony')}
-            >
-              Evening Ceremony
-            </button>
+          
+          {/* Time Restrictions - Moved below Timeline Settings */}
+          <TimeRestrictions 
+            restrictions={venueRestrictions} 
+            onUpdate={handleTimeRestrictionsUpdate} 
+          />
+          
+          {/* Create New Block of Time */}
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
+            <AddTimeBlockForm timelineId={timeline?.id} />
           </div>
-        </div>
-      </div>
-      
-      {/* Export Options */}
-      <ExportOptions handleExportPdf={handleExportPdf} />
+          
+          {/* Currently Selected Block of Time */}
+          {selectedEvent ? (
+            <div ref={selectedBlockRef} className="mb-8 bg-gray-50 p-4 rounded-lg border-2 border-primary animate-pulse-light">
+              <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
+              <EditTimeBlockForm 
+                event={selectedEvent} 
+                onClose={() => setSelectedEventId(null)} 
+              />
+            </div>
+          ) : (
+            <div className="mb-8 bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
+              <p className="text-sm text-gray-500 mb-4">Click on a block of time in the timeline to edit it</p>
+            </div>
+          )}
+          
+          {/* Template Selector */}
+          <TemplateSelector onSelectTemplate={loadTemplate} />
+          
+          {/* Export Options */}
+          <ExportOptions handleExportPdf={handleExportPdf} />
+        </>
+      )}
     </div>
   );
 };
