@@ -46,7 +46,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const { user } = useAuth();
   const selectedEvent = events?.find(event => event.id === selectedEventId);
   const selectedBlockRef = useRef<HTMLDivElement>(null);
-  const [weddingOfValue, setWeddingOfValue] = useState(timeline?.weddingOf || '');
   const [weddingCoupleValue, setWeddingCoupleValue] = useState(timeline?.weddingCouple || '');
   const [weddingDateValue, setWeddingDateValue] = useState(timeline?.weddingDate || '');
   
@@ -64,7 +63,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   // Update local state when timeline changes
   useEffect(() => {
     if (timeline) {
-      setWeddingOfValue(timeline.weddingOf || '');
       setWeddingCoupleValue(timeline.weddingCouple || '');
       setWeddingDateValue(timeline.weddingDate || '');
     }
@@ -79,13 +77,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     }
   });
   
-  // Create debounced handler for wedding of field
-  const debouncedUpdateWeddingOf = useCallback(
-    debounce((value: string) => {
-      updateTimelineMutation.mutate({ weddingOf: value });
-    }, 500),
-    [updateTimelineMutation]
-  );
+  // Debounced handlers for wedding details
   
   // Create debounced handler for wedding date field
   const debouncedUpdateWeddingDate = useCallback(
@@ -289,20 +281,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <div className="mb-6">
           <h3 className="text-md font-medium text-gray-700 mb-3">Wedding Details</h3>
           <div className="space-y-3">
-            <div>
-              <label htmlFor="wedding-of" className="block text-sm text-gray-600 mb-1">Wedding of</label>
-              <input 
-                id="wedding-of"
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                placeholder="Enter couple's names"
-                value={weddingOfValue}
-                onChange={(e) => {
-                  setWeddingOfValue(e.target.value);
-                  debouncedUpdateWeddingOf(e.target.value);
-                }}
-              />
-            </div>
             <div>
               <label htmlFor="wedding-couple" className="block text-sm text-gray-600 mb-1">Wedding Couple</label>
               <input 
