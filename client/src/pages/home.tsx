@@ -284,14 +284,25 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
 
   const isLoading = isTimelineLoading || isEventsLoading || isRestrictionsLoading;
   
-  // For non-logged-in users, automatically load a default template
+  // Load a default template for users with no timelines or non-logged in users
   useEffect(() => {
     const loadDefaultTemplateEvents = async () => {
-      if (!user && !hasLoadedDefaultTemplate && timeline) {
+      // For non-logged-in users OR for logged-in users with no timelines
+      const shouldLoadForLoggedInUser = user && 
+        userTimelines && 
+        Array.isArray(userTimelines) && 
+        userTimelines.length === 0 && 
+        !hasLoadedDefaultTemplate && 
+        timeline;
+        
+      const shouldLoadForGuestUser = !user && 
+        !hasLoadedDefaultTemplate && 
+        timeline;
+        
+      if (shouldLoadForLoggedInUser || shouldLoadForGuestUser) {
         // Only load this once per session
         setHasLoadedDefaultTemplate(true);
         
-        // Load church wedding template by default for non-logged in users
         try {
           const { data: templates } = await queryClient.fetchQuery({ 
             queryKey: ['/api/timeline-templates'] 
@@ -309,22 +320,59 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             });
             
             if (templateEvents && templateEvents.length > 0) {
-              // Convert template events to timeline events - this will show in the UI
-              // but won't be saved since the user isn't logged in
-              const newEvents = templateEvents.map((event: any) => ({
-                ...event,
-                id: event.id + 1000, // Ensure unique IDs
-                userId: null,
-                timelineId: timeline.id
-              }));
-              
-              // Update the events cache to display these events
-              queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
-              
-              toast({
-                title: "Example Timeline Loaded",
-                description: "This is a sample template. Login to create and save your own timelines.",
-              });
+              if (user) {
+                // For logged-in users, create a real timeline with the template
+                const timelineNamePrefix = "TL1 - ";
+                const newTimelineName = `${timelineNamePrefix}${defaultTemplate.name}`;
+                
+                // Create the timeline
+                const res = await apiRequest('POST', '/api/wedding-timelines', {
+                  userId: user.id,
+                  name: newTimelineName,
+                  weddingDate: new Date().toISOString().split('T')[0], // Today's date
+                  startHour: 6,
+                  timeFormat: "24h"
+                });
+                
+                if (res.ok) {
+                  const newTimeline = await res.json();
+                  setSelectedTimelineId(newTimeline.id);
+                  
+                  // Create timeline events based on template
+                  for (const event of templateEvents) {
+                    await apiRequest('POST', '/api/timeline-events', {
+                      ...event,
+                      userId: user.id,
+                      timelineId: newTimeline.id
+                    });
+                  }
+                  
+                  // Refresh data
+                  queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
+                  queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${newTimeline.id}`] });
+                  
+                  toast({
+                    title: "Default Timeline Created",
+                    description: `A "${defaultTemplate.name}" timeline has been created for you to start with.`,
+                  });
+                }
+              } else {
+                // For non-logged in users, just show the template in UI without saving
+                const newEvents = templateEvents.map((event: any) => ({
+                  ...event,
+                  id: event.id + 1000, // Ensure unique IDs
+                  userId: null,
+                  timelineId: timeline.id
+                }));
+                
+                // Update the events cache to display these events
+                queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
+                
+                toast({
+                  title: "Example Timeline Loaded",
+                  description: "This is a sample template. Login to create and save your own timelines.",
+                });
+              }
             }
           }
         } catch (error) {
@@ -334,13 +382,35 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     };
     
     loadDefaultTemplateEvents();
-  }, [user, hasLoadedDefaultTemplate, timeline, selectedTimelineId, toast]);
+  }, [user, userTimelines, hasLoadedDefaultTemplate, timeline, selectedTimelineId, toast]);
   
   // Set the correct timeline ID when user data or timelines change
+  // Save selected timeline ID to localStorage when it changes
   useEffect(() => {
-    // For logged-in users, auto-select their first timeline if they have any
+    if (user && selectedTimelineId) {
+      localStorage.setItem(`lastUsedTimeline_${user.id}`, selectedTimelineId.toString());
+    }
+  }, [user, selectedTimelineId]);
+
+  useEffect(() => {
+    // For logged-in users, check for previously used timeline or select their first timeline
     if (user && userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 && !selectedTimelineId) {
-      // Only set if not already set to avoid infinite loops
+      // Try to get last used timeline from localStorage
+      const lastUsedTimelineId = localStorage.getItem(`lastUsedTimeline_${user.id}`);
+      
+      if (lastUsedTimelineId) {
+        // Verify the timeline still exists in the user's list
+        const timelineExists = userTimelines.some(
+          (timeline: any) => timeline.id.toString() === lastUsedTimelineId
+        );
+        
+        if (timelineExists) {
+          setSelectedTimelineId(parseInt(lastUsedTimelineId));
+          return;
+        }
+      }
+      
+      // If no last used timeline or it doesn't exist anymore, use the first timeline
       setSelectedTimelineId(userTimelines[0].id);
     } else if (!user && !selectedTimelineId) {
       // For non-logged in users, set to a default demo timeline (ID 1)
