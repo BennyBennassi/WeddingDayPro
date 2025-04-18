@@ -198,7 +198,6 @@ const Timeline: React.FC<TimelineProps> = ({
           {/* Enhanced timeline header with restriction markers */}
           <TimelineHeader 
             weddingDate={timeline?.weddingDate} 
-            weddingOf={timeline?.weddingOf}
             weddingCouple={timeline?.weddingCouple}
             startHour={timeline?.startHour || 6}
             venueRestrictions={venueRestrictions}

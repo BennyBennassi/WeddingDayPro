@@ -4,7 +4,6 @@ import { calculateTimePosition } from '@/lib/helpers';
 
 interface TimelineHeaderProps {
   weddingDate?: string;
-  weddingOf?: string;
   weddingCouple?: string;
   startHour?: number;
   venueRestrictions?: any;
@@ -14,7 +13,6 @@ interface TimelineHeaderProps {
 
 const TimelineHeader = ({ 
   weddingDate, 
-  weddingOf,
   weddingCouple,
   startHour = 6,
   venueRestrictions,
@@ -181,11 +179,7 @@ const TimelineHeader = ({
     <div className="mb-4 sm:mb-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 sm:mb-4">
         <div>
-          {weddingOf ? (
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding of {weddingOf}</h1>
-          ) : (
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding Day Timeline</h1>
-          )}
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding Day Timeline</h1>
           {weddingCouple ? (
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mt-1">{weddingCouple}</h2>
           ) : null}
