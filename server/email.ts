@@ -8,7 +8,9 @@ if (!process.env.SENDGRID_API_KEY) {
 
 // This should be a verified sender in your SendGrid account
 // We need to use an email that has been verified with SendGrid
-const VERIFIED_SENDER = 'Benny@lauraandbennyphotography.com';
+// Can be overridden with VERIFIED_SENDER environment variable
+const VERIFIED_SENDER = process.env.VERIFIED_SENDER || 'Benny@lauraandbennyphotography.com';
+console.log(`Email system configured with sender: ${VERIFIED_SENDER}`);
 
 const mailService = new MailService();
 mailService.setApiKey(process.env.SENDGRID_API_KEY || '');
@@ -57,6 +59,29 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       // Additional specific error information
       if (error.response.body && error.response.body.errors && error.response.body.errors.length > 0) {
         console.error('SendGrid specific error:', JSON.stringify(error.response.body.errors, null, 2));
+        
+        // Check for sender verification issue and provide detailed guidance
+        const errors = error.response.body.errors;
+        for (const err of errors) {
+          if (err.field === 'from' && err.message.includes('verified Sender Identity')) {
+            console.error(`
+=============================================================================
+SENDGRID SENDER VERIFICATION ERROR
+=============================================================================
+The sender email "${VERIFIED_SENDER}" is not verified in your SendGrid account.
+
+To fix this issue:
+1. Go to your SendGrid Dashboard > Settings > Sender Authentication
+2. Add and verify the email address you want to use as a sender
+3. Update the VERIFIED_SENDER environment variable to use this verified email
+   OR update the default sender in server/email.ts
+
+For more information, visit:
+https://sendgrid.com/docs/for-developers/sending-email/sender-identity/
+=============================================================================
+`);
+          }
+        }
       }
     }
     
