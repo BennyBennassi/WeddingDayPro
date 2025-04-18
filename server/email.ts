@@ -125,7 +125,7 @@ export async function sendPasswordResetEmail(
         textBody = textBody.replace(/{{username}}/g, 'there');
       }
       
-      // Send the email using the customized template
+      // Send the email using SendGrid with the customized template
       const result = await sendEmail({
         to: email,
         subject: template.subject,

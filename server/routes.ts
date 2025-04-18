@@ -982,22 +982,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Attempting to send password reset email to: ${email}`);
       let emailSent = false;
       
-      // In development mode, we'll use a fallback mechanism since SendGrid may not be properly configured
+      // Always attempt to send the actual email using SendGrid
+      // But log the reset URL info in development mode for debugging
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Development mode: Using fallback for email sending');
         console.log('==== PASSWORD RESET INFORMATION ====');
         console.log(`Email: ${email}`);
         console.log(`Username: ${user.username}`);
         console.log(`Token: ${token}`);
         console.log(`Reset URL: ${resetUrl}?token=${token}`);
         console.log('====================================');
-        
-        // In development, we'll consider this a success and allow the token to work
-        emailSent = true;
-      } else {
-        // In production, we'll use the actual SendGrid service
-        emailSent = await sendPasswordResetEmail(email, token, resetUrl, user.username);
       }
+      
+      // Use the actual SendGrid service
+      emailSent = await sendPasswordResetEmail(email, token, resetUrl, user.username);
       
       if (!emailSent) {
         console.error(`Failed to send password reset email to: ${email}`);
