@@ -466,8 +466,8 @@ export default function EmailTemplateManager() {
                           />
                         </FormControl>
                         <FormDescription>
-                          HTML version of the email. Use {{resetLink}} for password reset links
-                          and {{username}} to include the recipient's username.
+                          HTML version of the email. Use {'{{resetLink}}'} for password reset links
+                          and {'{{username}}'} to include the recipient's username.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -490,7 +490,7 @@ export default function EmailTemplateManager() {
                         </FormControl>
                         <FormDescription>
                           Plain text version of the email for clients that don't support HTML.
-                          Use {{resetLink}} for password reset links and {{username}} to include 
+                          Use {'{{resetLink}}'} for password reset links and {'{{username}}'} to include 
                           the recipient's username.
                         </FormDescription>
                         <FormMessage />
