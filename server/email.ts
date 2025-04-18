@@ -1,4 +1,5 @@
 import { MailService } from '@sendgrid/mail';
+import { storage } from './storage';
 
 // Initialize SendGrid with API key
 if (!process.env.SENDGRID_API_KEY) {
@@ -69,67 +70,103 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 export async function sendPasswordResetEmail(
   email: string,
   resetToken: string,
-  resetUrl: string
+  resetUrl: string,
+  username: string = ''
 ): Promise<boolean> {
   console.log(`Preparing password reset email for ${email} with token length: ${resetToken.length}`);
   console.log(`Reset URL base: ${resetUrl}`);
   
-  const subject = 'Reset Your Wedding Day Timeline Password';
   const resetLink = `${resetUrl}?token=${resetToken}`;
-  
   console.log(`Complete reset link: ${resetLink}`);
   
-  // HTML with fallback in case button doesn't render
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Reset Your Password</title>
-    </head>
-    <body style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333; padding: 20px;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #4f46e5; margin-bottom: 5px; font-size: 24px;">Wedding Day Timeline</h1>
-          <h2 style="color: #333; margin-top: 0; font-size: 22px;">Password Reset</h2>
-        </div>
-        
-        <p style="margin-bottom: 15px;">Hello,</p>
-        
-        <p style="margin-bottom: 15px;">We received a request to reset your password for the Wedding Day Timeline application.</p>
-        
-        <p style="margin-bottom: 15px;">To reset your password, please click the button below:</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetLink}" 
-             style="background-color: #4f46e5; color: white; padding: 12px 24px; 
-                    text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
-            Reset Password
-          </a>
-        </div>
-        
-        <p style="margin-bottom: 5px;">If the button above doesn't work, copy and paste this link into your browser:</p>
-        <p style="margin-bottom: 20px; background-color: #f5f5f5; padding: 10px; word-break: break-all; font-size: 14px;">
-          ${resetLink}
-        </p>
-        
-        <p style="margin-bottom: 15px;">If you didn't request this password reset, you can safely ignore this email.</p>
-        
-        <p style="margin-bottom: 15px;">This link will expire in 1 hour for security reasons.</p>
-        
-        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 14px; color: #666;">
-          <p style="margin: 0;">Thank you,<br>The Wedding Day Timeline Team</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  const text = `
+  try {
+    // First, try to get the default email template from the database
+    const template = await storage.getDefaultEmailTemplate('password_reset');
+    
+    if (template) {
+      console.log(`Using email template: ${template.name}`);
+      
+      // Replace placeholders in the template
+      let htmlBody = template.htmlBody.replace(/{{resetLink}}/g, resetLink);
+      let textBody = template.textBody.replace(/{{resetLink}}/g, resetLink);
+      
+      // Replace username placeholder if provided
+      if (username) {
+        htmlBody = htmlBody.replace(/{{username}}/g, username);
+        textBody = textBody.replace(/{{username}}/g, username);
+      } else {
+        // If no username provided, replace with a generic greeting
+        htmlBody = htmlBody.replace(/{{username}}/g, 'there');
+        textBody = textBody.replace(/{{username}}/g, 'there');
+      }
+      
+      // Send the email using the customized template
+      const result = await sendEmail({
+        to: email,
+        subject: template.subject,
+        html: htmlBody,
+        text: textBody,
+      });
+      
+      console.log(`Password reset email send attempt result: ${result}`);
+      return result;
+    } else {
+      console.warn("No default password reset template found, using fallback template");
+      
+      // Fallback HTML template if no database template exists
+      const subject = 'Reset Your Wedding Day Timeline Password';
+      
+      // HTML with fallback in case button doesn't render
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password</title>
+        </head>
+        <body style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h1 style="color: #4f46e5; margin-bottom: 5px; font-size: 24px;">Wedding Day Timeline</h1>
+              <h2 style="color: #333; margin-top: 0; font-size: 22px;">Password Reset</h2>
+            </div>
+            
+            <p style="margin-bottom: 15px;">Hello${username ? ' ' + username : ''},</p>
+            
+            <p style="margin-bottom: 15px;">We received a request to reset your password for the Wedding Day Timeline application.</p>
+            
+            <p style="margin-bottom: 15px;">To reset your password, please click the button below:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" 
+                 style="background-color: #4f46e5; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                Reset Password
+              </a>
+            </div>
+            
+            <p style="margin-bottom: 5px;">If the button above doesn't work, copy and paste this link into your browser:</p>
+            <p style="margin-bottom: 20px; background-color: #f5f5f5; padding: 10px; word-break: break-all; font-size: 14px;">
+              ${resetLink}
+            </p>
+            
+            <p style="margin-bottom: 15px;">If you didn't request this password reset, you can safely ignore this email.</p>
+            
+            <p style="margin-bottom: 15px;">This link will expire in 1 hour for security reasons.</p>
+            
+            <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 14px; color: #666;">
+              <p style="margin: 0;">Thank you,<br>The Wedding Day Timeline Team</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      const text = `
 Reset Your Password
 
-Hello,
+Hello${username ? ' ' + username : ''},
 
 We received a request to reset your password for the Wedding Day Timeline application.
 
@@ -142,18 +179,18 @@ This link will expire in 1 hour for security reasons.
 
 Thank you,
 The Wedding Day Timeline Team
-  `;
-  
-  try {
-    const result = await sendEmail({
-      to: email,
-      subject,
-      html,
-      text,
-    });
-    
-    console.log(`Password reset email send attempt result: ${result}`);
-    return result;
+      `;
+      
+      const result = await sendEmail({
+        to: email,
+        subject,
+        html,
+        text,
+      });
+      
+      console.log(`Password reset email send attempt result (fallback): ${result}`);
+      return result;
+    }
   } catch (error) {
     console.error('Error in sendPasswordResetEmail:', error);
     return false;

@@ -9,9 +9,11 @@ import {
   insertUserQuestionResponseSchema,
   insertTimelineTemplateSchema,
   insertTemplateEventSchema,
+  insertEmailTemplateSchema,
   timelineEvents,
   venueRestrictions,
-  weddingTimelines
+  weddingTimelines,
+  emailTemplates
 } from "@shared/schema";
 import { sendPasswordResetEmail } from "./email";
 import { ZodError } from "zod";
@@ -985,6 +987,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Development mode: Using fallback for email sending');
         console.log('==== PASSWORD RESET INFORMATION ====');
         console.log(`Email: ${email}`);
+        console.log(`Username: ${user.username}`);
         console.log(`Token: ${token}`);
         console.log(`Reset URL: ${resetUrl}?token=${token}`);
         console.log('====================================');
@@ -993,7 +996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailSent = true;
       } else {
         // In production, we'll use the actual SendGrid service
-        emailSent = await sendPasswordResetEmail(email, token, resetUrl);
+        emailSent = await sendPasswordResetEmail(email, token, resetUrl, user.username);
       }
       
       if (!emailSent) {
@@ -1052,6 +1055,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ message: "Password has been successfully reset" });
     } catch (error) {
       console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Email Templates API (Admin only)
+  
+  // Get all email templates
+  app.get("/api/email-templates", isAdmin, async (req, res) => {
+    try {
+      const templates = await storage.getEmailTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error getting email templates:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get email templates by type
+  app.get("/api/email-templates/type/:type", isAdmin, async (req, res) => {
+    try {
+      const { type } = req.params;
+      const templates = await storage.getEmailTemplatesByType(type);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error getting email templates by type:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get a specific email template
+  app.get("/api/email-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const template = await storage.getEmailTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Email template not found" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error getting email template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Create a new email template
+  app.post("/api/email-templates", isAdmin, async (req, res) => {
+    try {
+      const templateData = insertEmailTemplateSchema.parse(req.body);
+      const newTemplate = await storage.createEmailTemplate(templateData);
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating email template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Update an email template
+  app.put("/api/email-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const existingTemplate = await storage.getEmailTemplate(id);
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Email template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateEmailTemplate(id, req.body);
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating email template:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Delete an email template
+  app.delete("/api/email-templates/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
+      const existingTemplate = await storage.getEmailTemplate(id);
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Email template not found" });
+      }
+      
+      // Don't allow deleting the default template
+      if (existingTemplate.isDefault) {
+        return res.status(400).json({ message: "Cannot delete the default template" });
+      }
+      
+      const success = await storage.deleteEmailTemplate(id);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete template" });
+      }
+    } catch (error) {
+      console.error("Error deleting email template:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
