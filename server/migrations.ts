@@ -26,6 +26,9 @@ export async function runMigrations() {
       console.log("Users table does not exist, no migrations needed");
     }
     
+    // Add wedding_couple column to wedding_timelines table if it doesn't exist
+    await addColumnIfNotExists('wedding_timelines', 'wedding_couple', 'TEXT');
+    
     // Create admin user if not exists
     await createAdminUserIfNotExists();
     

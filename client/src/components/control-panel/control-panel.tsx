@@ -47,6 +47,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const selectedEvent = events?.find(event => event.id === selectedEventId);
   const selectedBlockRef = useRef<HTMLDivElement>(null);
   const [weddingOfValue, setWeddingOfValue] = useState(timeline?.weddingOf || '');
+  const [weddingCoupleValue, setWeddingCoupleValue] = useState(timeline?.weddingCouple || '');
   const [weddingDateValue, setWeddingDateValue] = useState(timeline?.weddingDate || '');
   
   // Scroll to the selected block section when a block is selected
@@ -64,6 +65,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   useEffect(() => {
     if (timeline) {
       setWeddingOfValue(timeline.weddingOf || '');
+      setWeddingCoupleValue(timeline.weddingCouple || '');
       setWeddingDateValue(timeline.weddingDate || '');
     }
   }, [timeline]);
@@ -89,6 +91,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   const debouncedUpdateWeddingDate = useCallback(
     debounce((value: string) => {
       updateTimelineMutation.mutate({ weddingDate: value });
+    }, 500),
+    [updateTimelineMutation]
+  );
+  
+  // Create debounced handler for wedding couple field
+  const debouncedUpdateWeddingCouple = useCallback(
+    debounce((value: string) => {
+      updateTimelineMutation.mutate({ weddingCouple: value });
     }, 500),
     [updateTimelineMutation]
   );
@@ -290,6 +300,21 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 onChange={(e) => {
                   setWeddingOfValue(e.target.value);
                   debouncedUpdateWeddingOf(e.target.value);
+                }}
+              />
+            </div>
+            <div>
+              <label htmlFor="wedding-couple" className="block text-sm text-gray-600 mb-1">Wedding Couple</label>
+              <input 
+                id="wedding-couple"
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="Mary & John"
+                maxLength={30}
+                value={weddingCoupleValue}
+                onChange={(e) => {
+                  setWeddingCoupleValue(e.target.value);
+                  debouncedUpdateWeddingCouple(e.target.value);
                 }}
               />
             </div>

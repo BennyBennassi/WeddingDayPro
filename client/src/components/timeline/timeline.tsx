@@ -199,6 +199,7 @@ const Timeline: React.FC<TimelineProps> = ({
           <TimelineHeader 
             weddingDate={timeline?.weddingDate} 
             weddingOf={timeline?.weddingOf}
+            weddingCouple={timeline?.weddingCouple}
             startHour={timeline?.startHour || 6}
             venueRestrictions={venueRestrictions}
             showRestrictionLines={venueRestrictions?.showRestrictionLines === true}
