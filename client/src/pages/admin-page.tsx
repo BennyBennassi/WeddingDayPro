@@ -317,6 +317,10 @@ export default function AdminPage() {
         <TabsContent value="templates" className="border rounded-lg shadow-sm bg-card">
           <TemplateManager />
         </TabsContent>
+        
+        <TabsContent value="emails" className="border rounded-lg shadow-sm bg-card">
+          <EmailTemplateManager />
+        </TabsContent>
       </Tabs>
       
       {/* Edit User Dialog */}
