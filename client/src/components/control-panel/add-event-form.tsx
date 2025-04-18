@@ -7,6 +7,7 @@ import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,6 +30,7 @@ const formSchema = z.object({
 
 const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,9 +46,13 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
+      if (!user) {
+        throw new Error('You must be logged in to add blocks of time');
+      }
       return apiRequest('POST', '/api/timeline-events', {
         ...data,
-        userId: 1, // Using the default user for now
+        userId: user.id,
+        timelineId,
         position: 999 // Put at the end
       });
     },

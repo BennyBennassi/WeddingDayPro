@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
 export function useWeddingTimeline(timelineId: number) {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const { user } = useAuth();
 
   // Fetch the timeline data
   const { data: timeline, isLoading: isTimelineLoading } = useQuery({
@@ -32,10 +34,14 @@ export function useWeddingTimeline(timelineId: number) {
 
   const createEventMutation = useMutation({
     mutationFn: async (data: any) => {
+      if (!user) {
+        throw new Error('You must be logged in to add timeline events');
+      }
       return apiRequest('POST', '/api/timeline-events', {
         ...data,
-        userId: 1, // Using the default user ID
-        position: events?.length ? events.length + 1 : 1
+        userId: user.id,
+        timelineId,
+        position: Array.isArray(events) && events.length ? events.length + 1 : 1
       });
     },
     onSuccess: () => {
