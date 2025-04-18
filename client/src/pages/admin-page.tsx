@@ -54,10 +54,12 @@ import {
   Users,
   LayoutTemplate,
   Trash2,
+  Mail,
 } from "lucide-react";
 import { format } from "date-fns";
 import TimelineQuestionsManager from "@/components/admin/timeline-questions-manager";
 import TemplateManager from "@/components/admin/template-manager";
+import EmailTemplateManager from "@/components/admin/email-template-manager";
 
 // Type for user without password
 type UserWithoutPassword = Omit<User, 'password'>;
@@ -221,6 +223,10 @@ export default function AdminPage() {
           <TabsTrigger value="templates" className="flex items-center gap-1">
             <LayoutTemplate className="h-4 w-4" />
             Timeline Templates
+          </TabsTrigger>
+          <TabsTrigger value="emails" className="flex items-center gap-1">
+            <Mail className="h-4 w-4" />
+            Email Templates
           </TabsTrigger>
         </TabsList>
         
