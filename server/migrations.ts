@@ -286,6 +286,48 @@ async function updateExistingQuestionsPromptFields() {
         
         console.log("New installation: initialized timeline questions prompt fields to FALSE");
       } else {
+        // IMPORTANT: For existing installations, we DO NOT reset prompt fields
+        // First, check if we need to create a backup (only if it doesn't exist)
+        const backupTableExists = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'timeline_questions_backup'
+          );
+        `);
+        
+        if (!backupTableExists.rows[0].exists) {
+          // Create a backup table to store current settings
+          await pool.query(`
+            CREATE TABLE timeline_questions_backup AS
+            SELECT id, prompt_name, prompt_category, prompt_start_time, 
+                   prompt_end_time, prompt_color, prompt_notes
+            FROM timeline_questions;
+          `);
+          console.log("Created backup of timeline questions prompt settings");
+        } else {
+          // Restore from backup if it exists
+          const backupCount = await pool.query(`
+            SELECT COUNT(*) as count FROM timeline_questions_backup;
+          `);
+          
+          if (parseInt(backupCount.rows[0].count) > 0) {
+            // We have backup data - restore it
+            await pool.query(`
+              UPDATE timeline_questions t
+              SET 
+                prompt_name = b.prompt_name,
+                prompt_category = b.prompt_category,
+                prompt_start_time = b.prompt_start_time,
+                prompt_end_time = b.prompt_end_time,
+                prompt_color = b.prompt_color,
+                prompt_notes = b.prompt_notes
+              FROM timeline_questions_backup b
+              WHERE t.id = b.id;
+            `);
+            console.log("Restored timeline questions prompt settings from backup");
+          }
+        }
+        
         console.log("Existing installation: preserving timeline questions prompt field settings");
       }
     }

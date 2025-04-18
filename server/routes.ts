@@ -21,7 +21,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -312,12 +312,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             
           // Also clean up events with null timeline ID from this user
+          // Use isNull for checking null values instead of eq with null
           const eventsWithNullTimeline = await db.select()
             .from(timelineEvents)
             .where(
               and(
                 eq(timelineEvents.userId, timeline.userId),
-                eq(timelineEvents.timelineId, null)
+                // Check for timeline_id IS NULL
+                sql`${timelineEvents.timelineId} IS NULL`
               )
             );
             
