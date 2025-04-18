@@ -13,6 +13,7 @@ import {
   timelineEvents,
   venueRestrictions,
   weddingTimelines,
+  userQuestionResponses,
   emailTemplates
 } from "@shared/schema";
 import { sendPasswordResetEmail } from "./email";
@@ -20,7 +21,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -932,8 +933,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // 2. Delete venue restrictions if they exist
       try {
-        await db.execute(`DELETE FROM venue_restrictions WHERE timeline_id = $1`, [timelineId]);
-        console.log(`Deleted venue restrictions for timeline ${timelineId}`);
+        const venueRestriction = await storage.getVenueRestriction(timelineId);
+        if (venueRestriction) {
+          await db.delete(venueRestrictions).where(eq(venueRestrictions.timelineId, timelineId));
+          console.log(`Deleted venue restrictions for timeline ${timelineId}`);
+        }
       } catch (err) {
         console.error(`Error deleting venue restrictions for timeline ${timelineId}:`, err);
         // Continue anyway
@@ -942,11 +946,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 3. Delete user question responses for this timeline
       try {
         if (timeline.userId) {
-          await db.execute(`
-            DELETE FROM user_question_responses 
-            WHERE user_id = $1 AND timeline_id = $2
-          `, [timeline.userId, timelineId]);
-          console.log(`Deleted user question responses for timeline ${timelineId}`);
+          const responses = await storage.getUserQuestionResponses(timeline.userId, timelineId);
+          if (responses && responses.length > 0) {
+            await db.delete(userQuestionResponses)
+              .where(and(
+                eq(userQuestionResponses.userId, timeline.userId), 
+                eq(userQuestionResponses.timelineId, timelineId)
+              ));
+            console.log(`Deleted user question responses for timeline ${timelineId}`);
+          }
         }
       } catch (err) {
         console.error(`Error deleting user question responses for timeline ${timelineId}:`, err);
