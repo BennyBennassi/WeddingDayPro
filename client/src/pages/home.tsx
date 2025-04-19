@@ -329,8 +329,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         userTimelines && 
         Array.isArray(userTimelines) && 
         userTimelines.length === 0 && 
-        !hasLoadedDefaultTemplate && 
-        timeline;
+        !hasLoadedDefaultTemplate;
         
       const shouldLoadForGuestUser = !user && 
         !hasLoadedDefaultTemplate && 
@@ -341,9 +340,9 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         setHasLoadedDefaultTemplate(true);
         
         try {
-          const { data: templates } = await queryClient.fetchQuery({ 
-            queryKey: ['/api/timeline-templates'] 
-          });
+          // Fetch all available templates
+          const response = await fetch('/api/timeline-templates');
+          const templates = await response.json();
           
           if (templates && templates.length > 0) {
             // Find Church Wedding template or use the first one
@@ -352,20 +351,21 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             ) || templates[0];
             
             // Fetch template events using the public endpoint
-            const { data: templateEvents } = await queryClient.fetchQuery({ 
-              queryKey: [`/api/template-events/${defaultTemplate.id}`] 
-            });
+            const eventsResponse = await fetch(`/api/template-events/${defaultTemplate.id}`);
+            const templateEvents = await eventsResponse.json();
             
             if (templateEvents && templateEvents.length > 0) {
               if (user) {
                 // For logged-in users, create a real timeline with the template
                 const timelineNamePrefix = "TL1 - ";
-                const newTimelineName = `${timelineNamePrefix}${defaultTemplate.name}`;
+                // Rename to "Default" instead of the template name
+                const newTimelineName = `${timelineNamePrefix}Default`;
                 
                 // Create the timeline
                 const res = await apiRequest('POST', '/api/wedding-timelines', {
                   userId: user.id,
                   name: newTimelineName,
+                  weddingCouple: "Your Wedding", // Default wedding couple name
                   weddingDate: new Date().toISOString().split('T')[0], // Today's date
                   startHour: 6,
                   timeFormat: "24h"
@@ -373,7 +373,6 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
                 
                 if (res.ok) {
                   const newTimeline = await res.json();
-                  setSelectedTimelineId(newTimeline.id);
                   
                   // Create timeline events based on template
                   for (const event of templateEvents) {
@@ -388,9 +387,17 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
                   queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
                   queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${newTimeline.id}`] });
                   
+                  // Set this timeline as the selected one
+                  setSelectedTimelineId(newTimeline.id);
+                  
+                  // Save this as the last used timeline
+                  if (user) {
+                    localStorage.setItem(`lastUsedTimeline_${user.id}`, newTimeline.id.toString());
+                  }
+                  
                   toast({
                     title: "Default Timeline Created",
-                    description: `A "${defaultTemplate.name}" timeline has been created for you to start with.`,
+                    description: "A default timeline has been created for you to start with.",
                   });
                 }
               } else {
@@ -399,11 +406,13 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
                   ...event,
                   id: event.id + 1000, // Ensure unique IDs
                   userId: null,
-                  timelineId: timeline.id
+                  timelineId: timeline?.id || 1
                 }));
                 
                 // Update the events cache to display these events
-                queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
+                if (selectedTimelineId) {
+                  queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
+                }
                 
                 toast({
                   title: "Example Timeline Loaded",
@@ -447,8 +456,18 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         }
       }
       
-      // If no last used timeline or it doesn't exist anymore, use the first timeline
-      setSelectedTimelineId(userTimelines[0].id);
+      // Look for a "Default" timeline first (prioritize it)
+      const defaultTimeline = userTimelines.find(
+        (timeline: any) => timeline.name && timeline.name.includes("Default")
+      );
+
+      if (defaultTimeline) {
+        // If a default timeline exists, use it
+        setSelectedTimelineId(defaultTimeline.id);
+      } else {
+        // Otherwise use the first timeline
+        setSelectedTimelineId(userTimelines[0].id);
+      }
     } else if (!user && !selectedTimelineId) {
       // For non-logged in users, set to a default demo timeline (ID 1)
       setSelectedTimelineId(1);
