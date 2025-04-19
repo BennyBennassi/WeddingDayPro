@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import ColorPicker from '@/components/ui/color-picker';
+import TimeSelect from '@/components/ui/time-select';
 
 interface AddTimeBlockFormProps {
   timelineId: number;
@@ -85,20 +86,7 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
     createEventMutation.mutate(data);
   };
   
-  // Generate time options for select
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const formattedHour = hour.toString().padStart(2, '0');
-        const formattedMinute = minute.toString().padStart(2, '0');
-        options.push(`${formattedHour}:${formattedMinute}`);
-      }
-    }
-    return options;
-  };
-
-  const timeOptions = generateTimeOptions();
+  // No need to generate time options since we're using the TimeSelect component
 
   return (
     <Form {...form}>
@@ -123,21 +111,13 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Start Time</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select start time" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[200px]">
-                    {timeOptions.map((time) => (
-                      <SelectItem key={time} value={time}>{time}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <TimeSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select start time"
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
@@ -148,21 +128,13 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>End Time</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select end time" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[200px]">
-                    {timeOptions.map((time) => (
-                      <SelectItem key={time} value={time}>{time}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <TimeSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select end time"
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
