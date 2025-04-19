@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { AlertTriangle, EyeIcon, EyeOffIcon, Clock } from 'lucide-react';
+import TimeSelect from '@/components/ui/time-select';
 
 interface TimeRestrictionsProps {
   restrictions: any;
@@ -129,10 +130,10 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                     name="musicEndTime"
                     render={({ field: timeField }) => (
                       <FormControl>
-                        <Input
-                          type="time"
-                          className="ml-2 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                          {...timeField}
+                        <TimeSelect
+                          value={timeField.value}
+                          onChange={timeField.onChange}
+                          className="ml-2 w-32"
                         />
                       </FormControl>
                     )}
@@ -164,10 +165,10 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                     name="ceremonyStartTime"
                     render={({ field: timeField }) => (
                       <FormControl>
-                        <Input
-                          type="time"
-                          className="ml-2 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                          {...timeField}
+                        <TimeSelect
+                          value={timeField.value}
+                          onChange={timeField.onChange}
+                          className="ml-2 w-32"
                         />
                       </FormControl>
                     )}

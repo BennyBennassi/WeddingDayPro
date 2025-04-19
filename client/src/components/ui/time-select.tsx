@@ -2,7 +2,7 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TimeSelectProps {
-  value: string;
+  value: string | undefined;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
@@ -35,7 +35,7 @@ const TimeSelect: React.FC<TimeSelectProps> = ({
   const timeOptions = generateTimeOptions();
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value || ""} onValueChange={onChange}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
