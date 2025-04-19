@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,6 +40,20 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
       color: event.color
     }
   });
+  
+  // Reset form values when the selected event changes
+  useEffect(() => {
+    // Only update if there's a valid event object
+    if (event && event.id) {
+      form.reset({
+        name: event.name,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        category: event.category,
+        color: event.color
+      });
+    }
+  }, [event, form]);
 
   const updateEventMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
@@ -140,7 +154,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
                   <FormLabel>Start Time</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -165,7 +179,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
                   <FormLabel>End Time</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -191,7 +205,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
                 <FormLabel>Category</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
