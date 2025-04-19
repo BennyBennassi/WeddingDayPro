@@ -130,11 +130,21 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
       return await res.json();
     },
     onSuccess: (newTimeline) => {
+      // Invalidate all timelines list
       queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
+      
+      // Set empty events data for the new timeline to ensure it starts fresh
+      queryClient.setQueryData([`/api/timeline-events/${newTimeline.id}`], []);
+      
+      // Reset timelineModified flag since this is a brand new timeline
+      setTimelineModified(false);
+      
+      // Close dialogs and reset form values
       setSelectedTimelineId(newTimeline.id);
       setShowNewTimelineDialog(false);
       setNewTimelineName("");
       setNewTimelineDate("");
+      
       toast({
         title: 'Timeline Created',
         description: `"${newTimeline.name}" has been created successfully.`,
