@@ -14,6 +14,7 @@ interface TimelineProps {
   venueRestrictions: any;
   selectedEventId: number | null;
   setSelectedEventId: (id: number | null) => void;
+  setTimelineModified?: (value: boolean) => void;
 }
 
 const Timeline: React.FC<TimelineProps> = ({ 
@@ -21,7 +22,8 @@ const Timeline: React.FC<TimelineProps> = ({
   events, 
   venueRestrictions,
   selectedEventId,
-  setSelectedEventId
+  setSelectedEventId,
+  setTimelineModified
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -45,6 +47,11 @@ const Timeline: React.FC<TimelineProps> = ({
     const event = events.find(e => e.id === eventId);
     
     if (!event) return;
+    
+    // Mark timeline as modified when dragging events
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     
     // Calculate new position based on drop location
     try {
@@ -71,6 +78,11 @@ const Timeline: React.FC<TimelineProps> = ({
     newStartTime: string, 
     newEndTime: string
   ) => {
+    // Mark timeline as modified when updating time blocks
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
+    
     try {
       await apiRequest(
         'PUT',

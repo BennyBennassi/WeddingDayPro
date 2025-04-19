@@ -30,6 +30,7 @@ interface ControlPanelProps {
   selectedTimelineId?: number | null;
   setSelectedTimelineId?: (id: number) => void;
   handleCreateTimeline?: () => void;
+  setTimelineModified?: (value: boolean) => void;
   isMobile?: boolean;
 }
 
@@ -44,6 +45,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   selectedTimelineId,
   setSelectedTimelineId,
   handleCreateTimeline,
+  setTimelineModified,
   isMobile = false
 }) => {
   const { user } = useAuth();
