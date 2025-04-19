@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import TimeSelect from '@/components/ui/time-select';
 import { AlertTriangle, EyeIcon, EyeOffIcon, Clock } from 'lucide-react';
 
 interface TimeRestrictionsProps {

@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ColorPicker from "@/components/ui/color-picker";
+import TimeSelect from "@/components/ui/time-select";
 import { Check, ChevronDown, ChevronUp, Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -348,10 +349,10 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                             {question.promptStartTime && (
                               <div className="space-y-2">
                                 <label className="text-sm font-medium">Start Time</label>
-                                <Input
-                                  placeholder={question.defaultStartTime || "HH:MM"}
+                                <TimeSelect
                                   value={questionData.startTime || ""}
-                                  onChange={(e) => handleFollowUpChange(question.id, "startTime", e.target.value)}
+                                  onChange={(value) => handleFollowUpChange(question.id, "startTime", value)}
+                                  placeholder={question.defaultStartTime || "Select start time"}
                                 />
                               </div>
                             )}
@@ -360,10 +361,10 @@ export default function ThingsToConsider({ timelineId, onAddEvent }: ThingsToCon
                             {question.promptEndTime && (
                               <div className="space-y-2">
                                 <label className="text-sm font-medium">End Time</label>
-                                <Input
-                                  placeholder={question.defaultEndTime || "HH:MM"}
+                                <TimeSelect
                                   value={questionData.endTime || ""}
-                                  onChange={(e) => handleFollowUpChange(question.id, "endTime", e.target.value)}
+                                  onChange={(value) => handleFollowUpChange(question.id, "endTime", value)}
+                                  placeholder={question.defaultEndTime || "Select end time"}
                                 />
                               </div>
                             )}
