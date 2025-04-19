@@ -18,6 +18,7 @@ import TimeSelect from '@/components/ui/time-select';
 
 interface AddTimeBlockFormProps {
   timelineId: number;
+  setTimelineModified?: (value: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -29,7 +30,7 @@ const formSchema = z.object({
   notes: z.string().optional()
 });
 
-const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
+const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId, setTimelineModified }) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -83,6 +84,10 @@ const AddTimeBlockForm: React.FC<AddTimeBlockFormProps> = ({ timelineId }) => {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Mark the timeline as modified when adding a new event
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     createEventMutation.mutate(data);
   };
   

@@ -17,6 +17,7 @@ import ColorPicker from '@/components/ui/color-picker';
 interface EditTimeBlockFormProps {
   event: any;
   onClose: () => void;
+  setTimelineModified?: (value: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -27,7 +28,7 @@ const formSchema = z.object({
   color: z.string().min(1, 'Color is required')
 });
 
-const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose }) => {
+const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose, setTimelineModified }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -99,6 +100,10 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Mark timeline as modified when updating blocks of time
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     updateEventMutation.mutate(data);
   };
 
@@ -106,6 +111,14 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
 
   const handleDelete = () => {
     setShowDeleteDialog(true);
+  };
+  
+  const handleConfirmDelete = () => {
+    // Mark timeline as modified when deleting blocks of time
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
+    deleteEventMutation.mutate();
   };
   
   // Generate time options for select
@@ -279,7 +292,7 @@ const EditTimeBlockForm: React.FC<EditTimeBlockFormProps> = ({ event, onClose })
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteEventMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => deleteEventMutation.mutate()}
+              onClick={handleConfirmDelete}
               disabled={deleteEventMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
