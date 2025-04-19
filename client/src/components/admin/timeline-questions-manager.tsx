@@ -153,7 +153,18 @@ export default function TimelineQuestionsManager() {
     console.log('Form submitted:', data);
     if (selectedQuestionId) {
       console.log(`Updating question with ID ${selectedQuestionId}:`, data);
-      updateQuestionMutation.mutate({ id: selectedQuestionId, data }, {
+      // Convert empty strings to null for all optional fields
+      const formattedData = {
+        ...data,
+        description: data.description || null,
+        defaultName: data.defaultName || null,
+        defaultCategory: data.defaultCategory || null,
+        defaultStartTime: data.defaultStartTime || null,
+        defaultEndTime: data.defaultEndTime || null,
+        defaultColor: data.defaultColor || null,
+        defaultNotes: data.defaultNotes || null
+      };
+      updateQuestionMutation.mutate({ id: selectedQuestionId, data: formattedData }, {
         onSuccess: (updated) => {
           console.log('Question updated successfully:', updated);
         },
@@ -162,7 +173,18 @@ export default function TimelineQuestionsManager() {
         }
       });
     } else {
-      createQuestionMutation.mutate(data);
+      // Convert empty strings to null for all optional fields
+      const formattedData = {
+        ...data,
+        description: data.description || null,
+        defaultName: data.defaultName || null,
+        defaultCategory: data.defaultCategory || null,
+        defaultStartTime: data.defaultStartTime || null,
+        defaultEndTime: data.defaultEndTime || null,
+        defaultColor: data.defaultColor || null,
+        defaultNotes: data.defaultNotes || null
+      };
+      createQuestionMutation.mutate(formattedData);
       setShowNewForm(false);
     }
   };
@@ -511,10 +533,10 @@ export default function TimelineQuestionsManager() {
                                 <FormItem>
                                   <FormLabel>Default Start Time</FormLabel>
                                   <FormControl>
-                                    <Input
-                                      placeholder="HH:MM"
-                                      {...field}
-                                      value={field.value || ""}
+                                    <TimeSelect
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      placeholder="Select start time"
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -529,10 +551,10 @@ export default function TimelineQuestionsManager() {
                                 <FormItem>
                                   <FormLabel>Default End Time</FormLabel>
                                   <FormControl>
-                                    <Input
-                                      placeholder="HH:MM"
-                                      {...field}
-                                      value={field.value || ""}
+                                    <TimeSelect
+                                      value={field.value}
+                                      onChange={field.onChange}
+                                      placeholder="Select end time"
                                     />
                                   </FormControl>
                                   <FormMessage />
