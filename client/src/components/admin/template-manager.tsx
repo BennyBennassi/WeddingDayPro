@@ -704,7 +704,10 @@ export default function TemplateManager() {
                     <FormItem>
                       <FormLabel>Start Time</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <TimeSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -718,7 +721,10 @@ export default function TemplateManager() {
                     <FormItem>
                       <FormLabel>End Time</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <TimeSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
