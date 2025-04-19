@@ -136,6 +136,9 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
       // Set empty events data for the new timeline to ensure it starts fresh
       queryClient.setQueryData([`/api/timeline-events/${newTimeline.id}`], []);
       
+      // Set empty venue restrictions data for the new timeline
+      queryClient.setQueryData([`/api/venue-restrictions/${newTimeline.id}`], null);
+      
       // Reset timelineModified flag since this is a brand new timeline
       setTimelineModified(false);
       
