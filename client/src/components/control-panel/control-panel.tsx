@@ -87,17 +87,25 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   // Create debounced handler for wedding date field
   const debouncedUpdateWeddingDate = useCallback(
     debounce((value: string) => {
+      // Mark timeline as modified when updating wedding date
+      if (setTimelineModified) {
+        setTimelineModified(true);
+      }
       updateTimelineMutation.mutate({ weddingDate: value });
     }, 500),
-    [updateTimelineMutation]
+    [updateTimelineMutation, setTimelineModified]
   );
   
   // Create debounced handler for wedding couple field
   const debouncedUpdateWeddingCouple = useCallback(
     debounce((value: string) => {
+      // Mark timeline as modified when updating wedding couple
+      if (setTimelineModified) {
+        setTimelineModified(true);
+      }
       updateTimelineMutation.mutate({ weddingCouple: value });
     }, 500),
-    [updateTimelineMutation]
+    [updateTimelineMutation, setTimelineModified]
   );
   
   const updateTimeRestrictionsMutation = useMutation({
@@ -186,10 +194,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   });
 
   const handleTimelineSettingsUpdate = (data: any) => {
+    // Mark timeline as modified when updating timeline settings
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     updateTimelineMutation.mutate(data);
   };
 
   const handleTimeRestrictionsUpdate = (data: any) => {
+    // Mark timeline as modified when updating venue restrictions
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     updateTimeRestrictionsMutation.mutate(data);
   };
   
@@ -198,6 +214,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
   
   const handleClearTimeline = () => {
+    // Mark timeline as modified when clearing timeline
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
     clearAllTimelineDataMutation.mutate();
   };
 
