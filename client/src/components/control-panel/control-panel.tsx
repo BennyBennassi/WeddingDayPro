@@ -212,6 +212,11 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       return;
     }
     
+    // Mark timeline as modified when applying a template
+    if (setTimelineModified) {
+      setTimelineModified(true);
+    }
+    
     type TemplateEvent = {
       name: string;
       startTime: string;
@@ -411,7 +416,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           
           {/* Add New Block of Time */}
           <CollapsibleSection title="Add New Block of Time" defaultOpen={!selectedEvent}>
-            <AddTimeBlockForm timelineId={timeline?.id} />
+            <AddTimeBlockForm 
+              timelineId={timeline?.id}
+              setTimelineModified={setTimelineModified}
+            />
           </CollapsibleSection>
           
           {/* Edit Selected Block */}
@@ -421,6 +429,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <EditTimeBlockForm 
                   event={selectedEvent}
                   onClose={() => setSelectedEventId(null)}
+                  setTimelineModified={setTimelineModified}
                 />
               </div>
             </CollapsibleSection>
@@ -568,7 +577,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           {/* Create New Block of Time */}
           <div className="mb-8">
             <h3 className="text-md font-medium text-gray-700 mb-4">Add New Block of Time</h3>
-            <AddTimeBlockForm timelineId={timeline?.id} />
+            <AddTimeBlockForm 
+              timelineId={timeline?.id} 
+              setTimelineModified={setTimelineModified} 
+            />
           </div>
           
           {/* Currently Selected Block of Time */}
@@ -577,7 +589,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               <h3 className="text-md font-medium text-gray-700 mb-4">Selected Block of Time</h3>
               <EditTimeBlockForm 
                 event={selectedEvent} 
-                onClose={() => setSelectedEventId(null)} 
+                onClose={() => setSelectedEventId(null)}
+                setTimelineModified={setTimelineModified}
               />
             </div>
           ) : (
