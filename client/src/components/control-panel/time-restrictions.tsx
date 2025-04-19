@@ -130,10 +130,10 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                     name="musicEndTime"
                     render={({ field: timeField }) => (
                       <FormControl>
-                        <Input
-                          type="time"
-                          className="ml-2 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                          {...timeField}
+                        <TimeSelect
+                          value={timeField.value}
+                          onChange={timeField.onChange}
+                          className="ml-2"
                         />
                       </FormControl>
                     )}
@@ -165,10 +165,10 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                     name="ceremonyStartTime"
                     render={({ field: timeField }) => (
                       <FormControl>
-                        <Input
-                          type="time"
-                          className="ml-2 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                          {...timeField}
+                        <TimeSelect
+                          value={timeField.value}
+                          onChange={timeField.onChange}
+                          className="ml-2"
                         />
                       </FormControl>
                     )}
@@ -200,10 +200,10 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                     name="dinnerStartTime"
                     render={({ field: timeField }) => (
                       <FormControl>
-                        <Input
-                          type="time"
-                          className="ml-2 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                          {...timeField}
+                        <TimeSelect
+                          value={timeField.value}
+                          onChange={timeField.onChange}
+                          className="ml-2"
                         />
                       </FormControl>
                     )}
@@ -249,10 +249,9 @@ const TimeRestrictions: React.FC<TimeRestrictionsProps> = ({ restrictions, onUpd
                       name="customRestrictionTime"
                       render={({ field: timeField }) => (
                         <FormControl>
-                          <Input
-                            type="time"
-                            className="px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-auto"
-                            {...timeField}
+                          <TimeSelect
+                            value={timeField.value}
+                            onChange={timeField.onChange}
                           />
                         </FormControl>
                       )}
