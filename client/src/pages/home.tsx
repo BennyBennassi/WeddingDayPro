@@ -62,6 +62,8 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   // State for timeline switching
   const [showSaveChangesDialog, setShowSaveChangesDialog] = useState(false);
   const [pendingTimelineId, setPendingTimelineId] = useState<number | null>(null);
+  // Track if timeline has been modified since last save
+  const [timelineModified, setTimelineModified] = useState(false);
   const { generatePdf } = usePdfExport();
   
   // Fetch user's timelines
@@ -101,6 +103,8 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     onSuccess: () => {
       // Invalidate events query to refresh the list
       queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${selectedTimelineId}`] });
+      // Mark timeline as modified
+      setTimelineModified(true);
       toast({
         title: 'Event Added',
         description: 'The event has been added to your timeline.',
@@ -152,6 +156,9 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
       return;
     }
     
+    // Reset the modified flag since we're saving
+    setTimelineModified(false);
+    
     toast({
       title: "Timeline Saved",
       description: "Your wedding timeline has been saved successfully.",
@@ -170,9 +177,14 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     // Don't do anything if trying to switch to the current timeline
     if (newTimelineId === selectedTimelineId) return;
     
-    // Show save changes dialog
-    setPendingTimelineId(newTimelineId);
-    setShowSaveChangesDialog(true);
+    if (timelineModified) {
+      // Only show save changes dialog if there are unsaved changes
+      setPendingTimelineId(newTimelineId);
+      setShowSaveChangesDialog(true);
+    } else {
+      // If no changes, switch timelines directly
+      setSelectedTimelineId(newTimelineId);
+    }
   };
   
   // Handle creating a new timeline
@@ -470,6 +482,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
                   venueRestrictions={restrictions}
                   selectedEventId={selectedEventId}
                   setSelectedEventId={setSelectedEventId}
+                  setTimelineModified={setTimelineModified}
                 />
               )}
             </div>
@@ -501,6 +514,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
               selectedTimelineId={selectedTimelineId}
               setSelectedTimelineId={handleTimelineChange}
               handleCreateTimeline={handleCreateTimeline}
+              setTimelineModified={setTimelineModified}
             />
           </div>
         </div>
@@ -557,6 +571,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             selectedTimelineId={selectedTimelineId}
             setSelectedTimelineId={handleTimelineChange}
             handleCreateTimeline={handleCreateTimeline}
+            setTimelineModified={setTimelineModified}
             isMobile={true}
           />
         </div>
