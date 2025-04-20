@@ -796,6 +796,84 @@ async function initializeDefaultAppSettings() {
     } else {
       console.log("Timeline questions settings already exist in app_settings");
     }
+    
+    // Add general application settings
+    const defaultSystemSettings = [
+      {
+        key: 'application_name',
+        value: 'Wedding Timeline Planner',
+        description: 'The name of the application shown in various places',
+        category: 'system'
+      },
+      {
+        key: 'application_version',
+        value: '1.0.0',
+        description: 'Current application version',
+        category: 'system'
+      },
+      {
+        key: 'default_timeline_name_format',
+        value: 'TL{number} - {name}',
+        description: 'The format for new timeline names',
+        category: 'timeline'
+      },
+      {
+        key: 'default_timeline_name',
+        value: 'Default',
+        description: 'The default name for the first timeline',
+        category: 'timeline'
+      },
+      {
+        key: 'minimum_timeline_length_minutes',
+        value: 120,
+        description: 'Minimum timeline length in minutes',
+        category: 'timeline'
+      },
+      {
+        key: 'company_name',
+        value: 'Laura and Benny Photography',
+        description: 'Company name used in emails and on the site',
+        category: 'system'
+      },
+      {
+        key: 'company_email',
+        value: 'info@lauraandbennyphotography.eu',
+        description: 'Company email for contact purposes',
+        category: 'system'
+      },
+      {
+        key: 'email_settings',
+        value: {
+          from_name: 'Laura and Benny Photography',
+          reply_to: 'info@lauraandbennyphotography.eu',
+          subject_prefix: '[Wedding Timeline] '
+        },
+        description: 'Default email settings',
+        category: 'email'
+      }
+    ];
+    
+    // Check if each setting exists and add if it doesn't
+    for (const setting of defaultSystemSettings) {
+      try {
+        const settingExists = await pool.query(`
+          SELECT * FROM app_settings WHERE key = $1 LIMIT 1;
+        `, [setting.key]);
+        
+        if (settingExists.rows.length === 0) {
+          await pool.query(`
+            INSERT INTO app_settings (key, value, description, category)
+            VALUES ($1, $2, $3, $4);
+          `, [setting.key, typeof setting.value === 'object' ? JSON.stringify(setting.value) : setting.value, 
+              setting.description, setting.category]);
+          
+          console.log(`Added default app setting: ${setting.key}`);
+        }
+      } catch (settingError) {
+        console.error(`Error adding default app setting ${setting.key}:`, settingError);
+      }
+    }
+    
   } catch (error) {
     console.error("Error initializing default app settings:", error);
   }
