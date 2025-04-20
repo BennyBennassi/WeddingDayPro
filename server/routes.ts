@@ -1401,6 +1401,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+  
+  // Test endpoint to force update of timeline questions settings
+  app.get("/api/test/update-timeline-settings", isAdmin, async (req, res) => {
+    try {
+      await updateTimelineQuestionsSettings();
+      
+      // Get the updated setting to verify
+      const updatedSetting = await storage.getAppSetting('timeline_questions_settings');
+      
+      res.json({ 
+        success: true, 
+        message: "Timeline questions settings updated",
+        updatedSetting
+      });
+    } catch (error) {
+      console.error("Error updating timeline questions settings:", error);
+      res.status(500).json({ message: "Error updating settings" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
