@@ -10,11 +10,13 @@ import {
   insertTimelineTemplateSchema,
   insertTemplateEventSchema,
   insertEmailTemplateSchema,
+  insertAppSettingSchema,
   timelineEvents,
   venueRestrictions,
   weddingTimelines,
   userQuestionResponses,
-  emailTemplates
+  emailTemplates,
+  appSettings
 } from "@shared/schema";
 import { sendPasswordResetEmail } from "./email";
 import { ZodError } from "zod";
@@ -1259,6 +1261,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // App Settings Routes - only accessible by admin
+  
+  // Get all app settings (optionally filtered by category)
+  app.get("/api/app-settings", isAdmin, async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const settings = await storage.getAppSettings(category);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error getting app settings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Get a specific app setting by key
+  app.get("/api/app-settings/:key", isAdmin, async (req, res) => {
+    try {
+      const key = req.params.key;
+      const setting = await storage.getAppSetting(key);
+      
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error getting app setting:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Create or update an app setting
+  app.post("/api/app-settings", isAdmin, async (req, res) => {
+    try {
+      const settingData = insertAppSettingSchema.parse(req.body);
+      const setting = await storage.setAppSetting(settingData);
+      res.status(201).json(setting);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating/updating app setting:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Update an app setting
+  app.put("/api/app-settings/:key", isAdmin, async (req, res) => {
+    try {
+      const key = req.params.key;
+      const existingSetting = await storage.getAppSetting(key);
+      
+      if (!existingSetting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      const updatedSetting = await storage.updateAppSetting(key, req.body);
+      res.json(updatedSetting);
+    } catch (error) {
+      console.error("Error updating app setting:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Delete an app setting
+  app.delete("/api/app-settings/:key", isAdmin, async (req, res) => {
+    try {
+      const key = req.params.key;
+      const existingSetting = await storage.getAppSetting(key);
+      
+      if (!existingSetting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      const success = await storage.deleteAppSetting(key);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete setting" });
+      }
+    } catch (error) {
+      console.error("Error deleting app setting:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

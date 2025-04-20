@@ -680,6 +680,65 @@ export class DatabaseStorage implements IStorage {
       .where(eq(emailTemplates.id, id));
     return true;
   }
+  
+  // App Settings methods
+  async getAppSettings(category?: string): Promise<AppSetting[]> {
+    let query = db.select().from(appSettings);
+    
+    if (category) {
+      query = query.where(eq(appSettings.category, category));
+    }
+    
+    return query.orderBy(appSettings.key);
+  }
+  
+  async getAppSetting(key: string): Promise<AppSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, key));
+    return setting;
+  }
+  
+  async setAppSetting(setting: InsertAppSetting): Promise<AppSetting> {
+    // Check if setting already exists
+    const existingSetting = await this.getAppSetting(setting.key);
+    
+    if (existingSetting) {
+      // Update existing setting
+      return this.updateAppSetting(setting.key, setting) as Promise<AppSetting>;
+    }
+    
+    // Create new setting
+    const [newSetting] = await db
+      .insert(appSettings)
+      .values({
+        ...setting,
+        description: setting.description ?? null,
+      })
+      .returning();
+    return newSetting;
+  }
+  
+  async updateAppSetting(key: string, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined> {
+    const [updatedSetting] = await db
+      .update(appSettings)
+      .set({
+        ...setting,
+        description: setting.description !== undefined ? (setting.description ?? null) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(appSettings.key, key))
+      .returning();
+    return updatedSetting;
+  }
+  
+  async deleteAppSetting(key: string): Promise<boolean> {
+    await db
+      .delete(appSettings)
+      .where(eq(appSettings.key, key));
+    return true;
+  }
 }
 
 // Initialize the storage with the database implementation
