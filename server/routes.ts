@@ -517,10 +517,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const questionData = insertTimelineQuestionSchema.parse(req.body);
       const newQuestion = await storage.createTimelineQuestion(questionData);
-      
-      // Also update the timeline_questions_settings in app_settings
-      await updateTimelineQuestionsSettings();
-      
       res.status(201).json(newQuestion);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -545,10 +541,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedQuestion = await storage.updateTimelineQuestion(id, req.body);
-      
-      // Also update the timeline_questions_settings in app_settings
-      await updateTimelineQuestionsSettings();
-      
       res.json(updatedQuestion);
     } catch (error) {
       console.error("Error updating timeline question:", error);
@@ -556,48 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Helper function to update timeline_questions_settings in app_settings
-  async function updateTimelineQuestionsSettings() {
-    try {
-      // Get all timeline questions
-      const questions = await storage.getTimelineQuestions();
-      
-      // Format them for the settings
-      const settingsValue = {
-        prompt_settings: questions.map(q => ({
-          question_id: q.id,
-          prompt_name: q.promptName,
-          prompt_category: q.promptCategory,
-          prompt_start_time: q.promptStartTime,
-          prompt_end_time: q.promptEndTime,
-          prompt_color: q.promptColor,
-          prompt_notes: q.promptNotes
-        })),
-        last_updated: new Date().toISOString()
-      };
-      
-      // Check if setting exists
-      const existingSetting = await storage.getAppSetting('timeline_questions_settings');
-      
-      if (existingSetting) {
-        // Update existing setting
-        await storage.updateAppSetting('timeline_questions_settings', {
-          value: settingsValue
-          // The updatedAt field is handled automatically by the database
-        });
-      } else {
-        // Create new setting
-        await storage.setAppSetting({
-          key: 'timeline_questions_settings',
-          value: settingsValue,
-          description: 'Timeline question prompt settings',
-          category: 'admin'
-        });
-      }
-    } catch (error) {
-      console.error("Error updating timeline_questions_settings:", error);
-    }
-  }
+
 
   app.delete("/api/admin/timeline-questions/:id", isAdmin, async (req, res) => {
     try {
@@ -610,9 +561,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!success) {
         return res.status(404).json({ message: "Question not found" });
       }
-      
-      // Also update the timeline_questions_settings in app_settings after deletion
-      await updateTimelineQuestionsSettings();
       
       res.status(204).send();
     } catch (error) {
@@ -1402,24 +1350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Test endpoint to force update of timeline questions settings
-  app.get("/api/test/update-timeline-settings", isAdmin, async (req, res) => {
-    try {
-      await updateTimelineQuestionsSettings();
-      
-      // Get the updated setting to verify
-      const updatedSetting = await storage.getAppSetting('timeline_questions_settings');
-      
-      res.json({ 
-        success: true, 
-        message: "Timeline questions settings updated",
-        updatedSetting
-      });
-    } catch (error) {
-      console.error("Error updating timeline questions settings:", error);
-      res.status(500).json({ message: "Error updating settings" });
-    }
-  });
+
 
   const httpServer = createServer(app);
   return httpServer;
