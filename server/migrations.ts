@@ -863,9 +863,8 @@ async function initializeDefaultAppSettings() {
         if (settingExists.rows.length === 0) {
           await pool.query(`
             INSERT INTO app_settings (key, value, description, category)
-            VALUES ($1, $2, $3, $4);
-          `, [setting.key, typeof setting.value === 'object' ? JSON.stringify(setting.value) : setting.value, 
-              setting.description, setting.category]);
+            VALUES ($1, $2::jsonb, $3, $4);
+          `, [setting.key, JSON.stringify(setting.value), setting.description, setting.category]);
           
           console.log(`Added default app setting: ${setting.key}`);
         }
