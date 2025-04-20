@@ -18,7 +18,9 @@ import {
   type PasswordResetToken,
   type InsertPasswordResetToken,
   type EmailTemplate,
-  type InsertEmailTemplate
+  type InsertEmailTemplate,
+  type AppSetting,
+  type InsertAppSetting
 } from "@shared/schema";
 
 export interface IStorage {
@@ -89,6 +91,13 @@ export interface IStorage {
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
   deleteEmailTemplate(id: number): Promise<boolean>;
+  
+  // App Settings operations
+  getAppSettings(category?: string): Promise<AppSetting[]>;
+  getAppSetting(key: string): Promise<AppSetting | undefined>;
+  setAppSetting(setting: InsertAppSetting): Promise<AppSetting>;
+  updateAppSetting(key: string, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined>;
+  deleteAppSetting(key: string): Promise<boolean>;
 }
 
 import { db } from "./db";
@@ -102,7 +111,8 @@ import {
   timelineTemplates,
   templateEvents,
   passwordResetTokens,
-  emailTemplates
+  emailTemplates,
+  appSettings
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 

@@ -62,6 +62,12 @@ export async function runMigrations() {
     // Create email templates table and default templates if not exists
     await createEmailTemplatesTable();
     await createDefaultEmailTemplates();
+    
+    // Create app settings table for persistent configuration
+    await createAppSettingsTable();
+    
+    // Initialize default app settings
+    await initializeDefaultAppSettings();
 
   } catch (error) {
     console.error("Error running migrations:", error);
@@ -673,6 +679,125 @@ Wedding Timeline Planner
     }
   } catch (error) {
     console.error("Error creating default email templates:", error);
+  }
+}
+
+async function createAppSettingsTable() {
+  try {
+    // Check if table exists
+    const tableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'app_settings'
+      );
+    `);
+    
+    const tableExists = tableResult.rows[0].exists;
+    
+    if (!tableExists) {
+      // Create table
+      await pool.query(`
+        CREATE TABLE app_settings (
+          id SERIAL PRIMARY KEY,
+          key TEXT NOT NULL UNIQUE,
+          value JSONB,
+          description TEXT,
+          category TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created app_settings table");
+    } else {
+      console.log("app_settings table already exists");
+    }
+  } catch (error) {
+    console.error("Error creating app_settings table:", error);
+  }
+}
+
+async function initializeDefaultAppSettings() {
+  try {
+    // Check if we have settings for timeline questions already
+    const settingsResult = await pool.query(`
+      SELECT * FROM app_settings WHERE key = 'timeline_questions_settings' LIMIT 1;
+    `);
+    
+    if (settingsResult.rows.length === 0) {
+      // Create timeline questions settings from current database state
+
+      // First, check if we have timeline_questions_backup
+      const backupTableExists = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'timeline_questions_backup'
+        );
+      `);
+      
+      if (backupTableExists.rows[0].exists) {
+        // Get backup data
+        const backupResult = await pool.query(`
+          SELECT * FROM timeline_questions_backup;
+        `);
+        
+        if (backupResult.rows.length > 0) {
+          // We have backup data, use it to create settings
+          const settingsValue = {
+            prompt_settings: backupResult.rows.map((row: any) => ({
+              question_id: row.id,
+              prompt_name: row.prompt_name,
+              prompt_category: row.prompt_category,
+              prompt_start_time: row.prompt_start_time,
+              prompt_end_time: row.prompt_end_time,
+              prompt_color: row.prompt_color,
+              prompt_notes: row.prompt_notes
+            })),
+            last_updated: new Date().toISOString()
+          };
+          
+          // Store settings in app_settings
+          await pool.query(`
+            INSERT INTO app_settings (key, value, description, category)
+            VALUES ('timeline_questions_settings', $1, 'Timeline question prompt settings', 'admin');
+          `, [JSON.stringify(settingsValue)]);
+          
+          console.log("Initialized timeline questions settings from backup");
+        }
+      } else {
+        // No backup, get current live data
+        const questionsResult = await pool.query(`
+          SELECT * FROM timeline_questions;
+        `);
+        
+        if (questionsResult.rows.length > 0) {
+          // We have questions data, use it to create settings
+          const settingsValue = {
+            prompt_settings: questionsResult.rows.map((row: any) => ({
+              question_id: row.id,
+              prompt_name: row.prompt_name,
+              prompt_category: row.prompt_category,
+              prompt_start_time: row.prompt_start_time,
+              prompt_end_time: row.prompt_end_time,
+              prompt_color: row.prompt_color,
+              prompt_notes: row.prompt_notes
+            })),
+            last_updated: new Date().toISOString()
+          };
+          
+          // Store settings in app_settings
+          await pool.query(`
+            INSERT INTO app_settings (key, value, description, category)
+            VALUES ('timeline_questions_settings', $1, 'Timeline question prompt settings', 'admin');
+          `, [JSON.stringify(settingsValue)]);
+          
+          console.log("Initialized timeline questions settings from current data");
+        }
+      }
+    } else {
+      console.log("Timeline questions settings already exist in app_settings");
+    }
+  } catch (error) {
+    console.error("Error initializing default app settings:", error);
   }
 }
 
