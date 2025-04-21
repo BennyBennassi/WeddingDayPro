@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { format, parse } from "date-fns";
 
 interface HomeProps {
   provideSaveHandler?: (handler: () => void) => void;
@@ -321,112 +322,9 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   
   // Load a default template for users with no timelines or non-logged in users
   useEffect(() => {
-    const loadDefaultTemplateEvents = async () => {
-      // For non-logged-in users OR for logged-in users with no timelines
-      const shouldLoadForLoggedInUser = user && 
-        userTimelines && 
-        Array.isArray(userTimelines) && 
-        userTimelines.length === 0 && 
-        !hasLoadedDefaultTemplate;
-        
-      const shouldLoadForGuestUser = !user && 
-        !hasLoadedDefaultTemplate && 
-        timeline;
-        
-      if (shouldLoadForLoggedInUser || shouldLoadForGuestUser) {
-        // Only load this once per session
-        setHasLoadedDefaultTemplate(true);
-        
-        try {
-          // Fetch all available templates
-          const response = await fetch('/api/timeline-templates');
-          const templates = await response.json();
-          
-          if (templates && templates.length > 0) {
-            // Find Church Wedding template or use the first one
-            const defaultTemplate = templates.find((t: any) => 
-              t.name.toLowerCase().includes("church")
-            ) || templates[0];
-            
-            // Fetch template events using the public endpoint
-            const eventsResponse = await fetch(`/api/template-events/${defaultTemplate.id}`);
-            const templateEvents = await eventsResponse.json();
-            
-            if (templateEvents && templateEvents.length > 0) {
-              if (user) {
-                // For logged-in users, create a real timeline with the template
-                const timelineNamePrefix = "TL1 - ";
-                // Rename to "Default" instead of the template name
-                const newTimelineName = `${timelineNamePrefix}Default`;
-                
-                // Create the timeline
-                const res = await apiRequest('POST', '/api/wedding-timelines', {
-                  userId: user.id,
-                  name: newTimelineName,
-                  weddingCouple: "Your Wedding", // Default wedding couple name
-                  weddingDate: new Date().toISOString().split('T')[0], // Today's date
-                  startHour: 6,
-                  timeFormat: "24h"
-                });
-                
-                if (res.ok) {
-                  const newTimeline = await res.json();
-                  
-                  // Create timeline events based on template
-                  for (const event of templateEvents) {
-                    await apiRequest('POST', '/api/timeline-events', {
-                      ...event,
-                      userId: user.id,
-                      timelineId: newTimeline.id
-                    });
-                  }
-                  
-                  // Refresh data
-                  queryClient.invalidateQueries({ queryKey: ['/api/wedding-timelines'] });
-                  queryClient.invalidateQueries({ queryKey: [`/api/timeline-events/${newTimeline.id}`] });
-                  
-                  // Set this timeline as the selected one
-                  setSelectedTimelineId(newTimeline.id);
-                  
-                  // Save this as the last used timeline
-                  if (user) {
-                    localStorage.setItem(`lastUsedTimeline_${user.id}`, newTimeline.id.toString());
-                  }
-                  
-                  toast({
-                    title: "Default Timeline Created",
-                    description: "A default timeline has been created for you to start with.",
-                  });
-                }
-              } else {
-                // For non-logged in users, just show the template in UI without saving
-                const newEvents = templateEvents.map((event: any) => ({
-                  ...event,
-                  id: event.id + 1000, // Ensure unique IDs
-                  userId: null,
-                  timelineId: timeline?.id || 1
-                }));
-                
-                // Update the events cache to display these events
-                if (selectedTimelineId) {
-                  queryClient.setQueryData([`/api/timeline-events/${selectedTimelineId}`], newEvents);
-                }
-                
-                toast({
-                  title: "Example Timeline Loaded",
-                  description: "This is a sample template. Login to create and save your own timelines.",
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error loading default template:", error);
-        }
-      }
-    };
-    
-    loadDefaultTemplateEvents();
-  }, [user, userTimelines, hasLoadedDefaultTemplate, timeline, selectedTimelineId, toast]);
+    // Remove automatic template loading
+    // Only load templates when explicitly requested through TemplateSelector
+  }, [user, userTimelines, timeline, hasLoadedDefaultTemplate]);
   
   // Set the correct timeline ID when user data or timelines change
   // Save selected timeline ID to localStorage when it changes
@@ -481,8 +379,71 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
     });
   };
 
+  // Add these variables at the top of the component
+  const weddingCouple = timeline?.weddingCouple || '';
+  const formattedDate = timeline?.weddingDate ? 
+    format(parse(timeline.weddingDate, 'yyyy-MM-dd', new Date()), 'EEEE, MMMM do, yyyy') : 
+    'Your Wedding Day';
+
   return (
     <div className="min-h-screen flex flex-col">
+      
+      {/* New Top Section */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-2 sm:px-4 py-4">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+            <div>
+              {weddingCouple ? (
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{weddingCouple}</h1>
+              ) : (
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding Day Timeline</h1>
+              )}
+              <h2 className="text-base sm:text-lg md:text-xl font-medium text-gray-700 mt-1">{formattedDate}</h2>
+            </div>
+            <div className="flex flex-col md:flex-row items-center gap-4 mt-4 md:mt-0">
+              {/* Timeline Selection Controls */}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedTimelineId?.toString()}
+                  onValueChange={(value) => handleTimelineChange(parseInt(value))}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select a Timeline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 ? (
+                      userTimelines.map((timeline: any) => (
+                        <SelectItem key={timeline.id} value={timeline.id.toString()}>
+                          {timeline.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="create" onClick={handleCreateTimeline}>
+                        Create Your First Timeline
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={handleCreateTimeline}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Timeline
+                </Button>
+              </div>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="sm" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Timeline
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Main Content */}
       <div className="flex-grow container mx-auto px-2 sm:px-4 pb-8">

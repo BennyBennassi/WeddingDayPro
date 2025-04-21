@@ -6,7 +6,14 @@ interface TimelineHeaderProps {
   weddingDate?: string;
   weddingCouple?: string;
   startHour?: number;
-  venueRestrictions?: any;
+  venueRestrictions?: {
+    musicEndTime?: string;
+    ceremonyStartTime?: string;
+    dinnerStartTime?: string;
+    customRestrictionTime?: string;
+    customRestrictionName?: string;
+    showRestrictionLines?: boolean;
+  };
   showRestrictionLines?: boolean;
   eventCount?: number;
 }
@@ -177,26 +184,11 @@ const TimelineHeader = ({
 
   return (
     <div className="mb-4 sm:mb-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-2 sm:mb-4">
-        <div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-primary">Wedding Day Timeline</h1>
-          {weddingCouple ? (
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mt-1">{weddingCouple}</h2>
-          ) : null}
-          <h2 className="text-base sm:text-lg md:text-xl font-medium text-gray-700 mt-1">{formattedDate}</h2>
-          <p className="text-gray-500 text-xs sm:text-sm mt-1 hidden sm:block">Drag blocks to reorganize your timeline</p>
-        </div>
-        <div className="flex items-center text-gray-500 text-xs sm:text-sm mt-2 md:mt-0">
-          <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-          <span>24-hour format</span>
-        </div>
-      </div>
-      
       {/* Time ruler with hour markings and restrictions */}
       <div className="pl-16 sm:pl-32 md:pl-48 relative">
-        <div className={`relative ${showRestrictionLines ? 'h-10 sm:h-12' : 'h-6 sm:h-8'} bg-gray-50 border-t border-b border-gray-200 mb-2 sm:mb-4 rounded-md`}>
+        <div className={`relative ${showRestrictionLines ? 'h-10 sm:h-12' : 'h-6 sm:h-8'} bg-gray-50 border border-gray-200 mb-2 sm:mb-4 rounded-md shadow-sm`}>
           {/* Hour markers at the top */}
-          <div className="absolute top-0 left-0 right-0 h-6 flex items-center">
+          <div className="absolute top-0 left-0 right-0 h-6 flex items-center border-b border-gray-200">
             {generateHourMarks()}
           </div>
           

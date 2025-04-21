@@ -3,8 +3,12 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import type { InferModel } from "drizzle-orm";
 
+// Define table types first
+type UsersTable = ReturnType<typeof pgTable>;
+type WeddingTimelinesTable = ReturnType<typeof pgTable>;
+
 // Define tables
-export const users = pgTable("users", {
+const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
@@ -12,12 +16,12 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastSelectedTimelineId: integer("last_selected_timeline_id").references(() => weddingTimelines.id, { onDelete: "set null" }),
+  lastSelectedTimelineId: integer("last_selected_timeline_id").references(() => weddingTimelinesTable.id, { onDelete: "set null" }),
 });
 
-export const weddingTimelines = pgTable("wedding_timelines", {
+const weddingTimelinesTable = pgTable("wedding_timelines", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("user_id").references(() => usersTable.id),
   name: text("name").notNull(),
   weddingOf: text("wedding_of"),
   weddingCouple: text("wedding_couple"),
@@ -28,14 +32,17 @@ export const weddingTimelines = pgTable("wedding_timelines", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const users = usersTable;
+export const weddingTimelines = weddingTimelinesTable;
+
 export const timelineEvents = pgTable("timeline_events", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   startTime: text("start_time").notNull(),
   endTime: text("end_time").notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
-  timelineId: integer("timeline_id").references(() => weddingTimelines.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
+  timelineId: integer("timeline_id").references(() => weddingTimelinesTable.id, { onDelete: "cascade" }),
   category: text("category"),
   color: text("color"),
   notes: text("notes"),
@@ -46,7 +53,7 @@ export const timelineEvents = pgTable("timeline_events", {
 
 export const venueRestrictions = pgTable("venue_restrictions", {
   id: serial("id").primaryKey(),
-  timelineId: integer("timeline_id").references(() => weddingTimelines.id),
+  timelineId: integer("timeline_id").references(() => weddingTimelinesTable.id),
   musicEndTime: text("music_end_time"),
   ceremonyStartTime: text("ceremony_start_time"),
   dinnerStartTime: text("dinner_start_time"),
@@ -72,14 +79,14 @@ export const timelineQuestions = pgTable("timeline_questions", {
   promptStartTime: boolean("prompt_start_time").default(true).notNull(),
   promptEndTime: boolean("prompt_end_time").default(true).notNull(),
   promptColor: boolean("prompt_color").default(false).notNull(),
-  promptNotes: boolean("prompt_notes").default(false).notNull(),
+  promptNotes: boolean("prompt_notes").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const userQuestionResponses = pgTable("user_question_responses", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  timelineId: integer("timeline_id").references(() => weddingTimelines.id).notNull(),
+  userId: integer("user_id").references(() => usersTable.id).notNull(),
+  timelineId: integer("timeline_id").references(() => weddingTimelinesTable.id).notNull(),
   questionId: integer("question_id").references(() => timelineQuestions.id).notNull(),
   answer: boolean("answer").default(false).notNull(),
   completed: boolean("completed").default(false).notNull(),
@@ -110,7 +117,7 @@ export const templateEvents = pgTable("template_events", {
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id").references(() => usersTable.id).notNull(),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -139,8 +146,17 @@ export const appSettings = pgTable("app_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const shareTokens = pgTable('share_tokens', {
+  id: serial('id').primaryKey(),
+  timelineId: integer('timeline_id').notNull().references(() => weddingTimelinesTable.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  createdBy: integer('created_by').notNull().references(() => usersTable.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at').notNull(),
+});
+
 // Define insert schemas
-export const insertUserSchema = createInsertSchema(users, {
+export const insertUserSchema = createInsertSchema(usersTable, {
   id: z.number().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
@@ -153,9 +169,9 @@ export const insertTimelineEventSchema = createInsertSchema(timelineEvents, {
 });
 
 // Define types
-export type User = InferModel<typeof users>;
+export type User = InferModel<typeof usersTable>;
 export type TimelineEvent = InferModel<typeof timelineEvents>;
-export type WeddingTimeline = InferModel<typeof weddingTimelines>;
+export type WeddingTimeline = InferModel<typeof weddingTimelinesTable>;
 export type VenueRestriction = InferModel<typeof venueRestrictions>;
 export type TimelineQuestion = InferModel<typeof timelineQuestions>;
 export type UserQuestionResponse = InferModel<typeof userQuestionResponses>;
@@ -164,6 +180,7 @@ export type TemplateEvent = InferModel<typeof templateEvents>;
 export type PasswordResetToken = InferModel<typeof passwordResetTokens>;
 export type EmailTemplate = InferModel<typeof emailTemplates>;
 export type AppSetting = InferModel<typeof appSettings>;
+export type ShareToken = typeof shareTokens.$inferSelect;
 
 // Define insert types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -177,3 +194,4 @@ export type InsertTemplateEvent = Omit<TemplateEvent, 'id'>;
 export type InsertPasswordResetToken = Omit<PasswordResetToken, 'id' | 'createdAt' | 'used'>;
 export type InsertEmailTemplate = Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>;
 export type InsertAppSetting = Omit<AppSetting, 'id' | 'createdAt' | 'updatedAt'>;
+export type InsertShareToken = typeof shareTokens.$inferInsert;

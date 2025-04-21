@@ -97,20 +97,12 @@ const TimelineSettings: React.FC<TimelineSettingsProps> = ({
                 <FormItem className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <FormLabel className="text-sm text-gray-700 mb-2 md:mb-0">Timeline Name</FormLabel>
                   <div className="w-full md:max-w-[220px]">
-                    <div className="flex items-center">
-                      {timeline?.name && (
-                        <div className="bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 border-input text-muted-foreground text-xs md:text-sm">
-                          {getTimelinePrefix(timeline.name)}
-                        </div>
-                      )}
-                      <FormControl>
-                        <Input
-                          className={timeline?.name ? "rounded-l-none" : ""}
-                          placeholder="Timeline name"
-                          {...field}
-                        />
-                      </FormControl>
-                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="Timeline name"
+                        {...field}
+                      />
+                    </FormControl>
                   </div>
                 </FormItem>
               )}

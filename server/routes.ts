@@ -24,6 +24,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { db } from "./db";
 import { eq, and, sql } from "drizzle-orm";
+import crypto from 'crypto';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -1356,7 +1357,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Share timeline route
+  app.post("/api/timelines/:timelineId/share", isAuthenticated, async (req, res) => {
+    try {
+      const timelineId = parseInt(req.params.timelineId);
+      
+      if (isNaN(timelineId)) {
+        return res.status(400).json({ message: "Invalid timeline ID" });
+      }
+      
+      // Check if timeline exists and belongs to the user
+      const timeline = await storage.getWeddingTimeline(timelineId);
+      
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
+      }
+      
+      if (timeline.userId !== req.user!.id && !req.user!.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to share this timeline" });
+      }
+      
+      // Generate a unique share token
+      const shareToken = crypto.randomBytes(32).toString('hex');
+      
+      // Store the share token in the database
+      await storage.createShareToken({
+        timelineId,
+        token: shareToken,
+        createdBy: req.user!.id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      });
+      
+      // Return the share URL
+      const shareUrl = `${process.env.FRONTEND_URL}/share/${timelineId}/${shareToken}`;
+      res.json({ shareUrl });
+    } catch (error) {
+      console.error("Error generating share link:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
+  // View shared timeline route
+  app.get("/api/timelines/share/:timelineId/:token", async (req, res) => {
+    try {
+      const timelineId = parseInt(req.params.timelineId);
+      const token = req.params.token;
+      
+      if (isNaN(timelineId)) {
+        return res.status(400).json({ message: "Invalid timeline ID" });
+      }
+      
+      // Verify the share token
+      const shareToken = await storage.getShareToken(token);
+      
+      if (!shareToken || shareToken.timelineId !== timelineId) {
+        return res.status(404).json({ message: "Invalid or expired share link" });
+      }
+      
+      if (shareToken.expiresAt < new Date()) {
+        return res.status(410).json({ message: "Share link has expired" });
+      }
+      
+      // Get the timeline data
+      const timeline = await storage.getWeddingTimeline(timelineId);
+      if (!timeline) {
+        return res.status(404).json({ message: "Timeline not found" });
+      }
+      
+      // Get the timeline events
+      const events = await storage.getTimelineEvents(timelineId);
+      
+      // Get venue restrictions
+      const restrictions = await storage.getVenueRestriction(timelineId);
+      
+      res.json({
+        timeline,
+        events,
+        restrictions,
+        isShared: true
+      });
+    } catch (error) {
+      console.error("Error viewing shared timeline:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
