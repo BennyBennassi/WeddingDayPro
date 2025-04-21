@@ -20,6 +20,7 @@ export async function runMigrations() {
       await addColumnIfNotExists('users', 'name', 'TEXT');
       await addColumnIfNotExists('users', 'is_admin', 'BOOLEAN', 'FALSE');
       await addColumnIfNotExists('users', 'created_at', 'TIMESTAMP', 'NOW()');
+      await addColumnIfNotExists('users', 'last_selected_timeline_id', 'INTEGER');
       
       console.log("User table migrations completed successfully");
     } else {
@@ -66,6 +67,9 @@ export async function runMigrations() {
     // Create app settings table for persistent configuration
     await createAppSettingsTable();
     
+    // Update any existing settings with missing categories
+    await updateAppSettingsCategories();
+    
     // Initialize default app settings
     await initializeDefaultAppSettings();
 
@@ -76,26 +80,25 @@ export async function runMigrations() {
 
 async function addColumnIfNotExists(table: string, column: string, type: string, defaultValue?: string) {
   try {
-    // Check if column exists
-    const columnResult = await pool.query(`
+    const columnExistsResult = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.columns 
         WHERE table_name = $1 AND column_name = $2
       );
     `, [table, column]);
     
-    const columnExists = columnResult.rows[0].exists;
+    const columnExists = columnExistsResult.rows[0].exists;
     
     if (!columnExists) {
-      // Add column with default value if specified
-      const defaultClause = defaultValue ? ` DEFAULT ${defaultValue}` : '';
-      await pool.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}${defaultClause};`);
+      let query = `ALTER TABLE ${table} ADD COLUMN ${column} ${type}`;
+      if (defaultValue) {
+        query += ` DEFAULT ${defaultValue}`;
+      }
+      await pool.query(query);
       console.log(`Added column ${column} to ${table} table`);
-    } else {
-      console.log(`Column ${column} already exists in ${table} table`);
     }
   } catch (error) {
-    console.error(`Error adding column ${column} to ${table}:`, error);
+    console.error(`Error adding column ${column} to ${table} table:`, error);
   }
 }
 
@@ -713,6 +716,25 @@ async function createAppSettingsTable() {
     }
   } catch (error) {
     console.error("Error creating app_settings table:", error);
+  }
+}
+
+async function updateAppSettingsCategories() {
+  try {
+    // Update any settings missing a category
+    await pool.query(`
+      UPDATE app_settings 
+      SET category = CASE 
+        WHEN key LIKE '%email%' THEN 'email'
+        WHEN key LIKE '%timeline%' THEN 'timeline'
+        WHEN key LIKE '%question%' THEN 'admin'
+        ELSE 'system'
+      END
+      WHERE category IS NULL;
+    `);
+    console.log("Updated app settings categories");
+  } catch (error) {
+    console.error("Error updating app settings categories:", error);
   }
 }
 

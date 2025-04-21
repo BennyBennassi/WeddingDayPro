@@ -1298,7 +1298,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/app-settings", isAdmin, async (req, res) => {
     try {
       const settingData = insertAppSettingSchema.parse(req.body);
-      const setting = await storage.setAppSetting(settingData);
+      const setting = await storage.setAppSetting(
+        settingData.key,
+        settingData.value,
+        settingData.description || '',  // Provide empty string as fallback
+        settingData.category
+      );
       res.status(201).json(setting);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -1320,7 +1325,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Setting not found" });
       }
       
-      const updatedSetting = await storage.updateAppSetting(key, req.body);
+      const updatedSetting = await storage.updateAppSetting(
+        key,
+        req.body.value,
+        req.body.description || existingSetting.description,
+        req.body.category || existingSetting.category
+      );
       res.json(updatedSetting);
     } catch (error) {
       console.error("Error updating app setting:", error);
@@ -1338,12 +1348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Setting not found" });
       }
       
-      const success = await storage.deleteAppSetting(key);
-      if (success) {
-        res.status(204).send();
-      } else {
-        res.status(500).json({ message: "Failed to delete setting" });
-      }
+      await storage.deleteAppSetting(key);
+      res.status(204).send();
     } catch (error) {
       console.error("Error deleting app setting:", error);
       res.status(500).json({ message: "Internal server error" });

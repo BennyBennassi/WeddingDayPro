@@ -105,6 +105,42 @@ export function setupAuth(app: Express) {
         isAdmin: false // Default to non-admin for new registrations
       });
 
+      // Get the default template
+      const templates = await storage.getTimelineTemplates();
+      const defaultTemplate = templates.find(t => t.isDefault) || templates[0];
+      
+      if (defaultTemplate) {
+        // Create a new timeline based on the default template
+        const newTimeline = await storage.createWeddingTimeline({
+          userId: user.id,
+          name: "My Wedding",
+          weddingDate: new Date().toISOString().split('T')[0], // Today's date
+          startHour: 6,
+          timeFormat: "24h",
+        });
+
+        // Get template events
+        const templateEvents = await storage.getTemplateEvents(defaultTemplate.id);
+        
+        // Create timeline events from template events
+        for (const templateEvent of templateEvents) {
+          await storage.createTimelineEvent({
+            userId: user.id,
+            timelineId: newTimeline.id,
+            name: templateEvent.name,
+            startTime: templateEvent.startTime,
+            endTime: templateEvent.endTime,
+            category: templateEvent.category,
+            color: templateEvent.color,
+            notes: templateEvent.notes,
+            position: templateEvent.position,
+          });
+        }
+
+        // Set this as the user's last selected timeline
+        await storage.updateUserLastSelectedTimeline(user.id, newTimeline.id);
+      }
+
       req.login(user, (err) => {
         if (err) return next(err);
         

@@ -94,10 +94,14 @@ export interface IStorage {
   
   // App Settings operations
   getAppSettings(category?: string): Promise<AppSetting[]>;
-  getAppSetting(key: string): Promise<AppSetting | undefined>;
-  setAppSetting(setting: InsertAppSetting): Promise<AppSetting>;
-  updateAppSetting(key: string, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined>;
-  deleteAppSetting(key: string): Promise<boolean>;
+  getAppSetting(key: string): Promise<AppSetting | null>;
+  setAppSetting(key: string, value: unknown, description: string, category: string): Promise<AppSetting>;
+  updateAppSetting(key: string, value: unknown, description: string, category: string): Promise<AppSetting>;
+  deleteAppSetting(key: string): Promise<void>;
+  
+  // Last Selected Timeline operations
+  updateUserLastSelectedTimeline(userId: number, timelineId: number): Promise<void>;
+  getUserLastSelectedTimeline(userId: number): Promise<number | null>;
 }
 
 import { db } from "./db";
@@ -114,7 +118,8 @@ import {
   emailTemplates,
   appSettings
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne, not, inArray } from "drizzle-orm";
+import { pool } from "./db";
 
 export class DatabaseStorage implements IStorage {
   // User methods
@@ -188,7 +193,7 @@ export class DatabaseStorage implements IStorage {
   // Timeline Event methods
   async getTimelineEvents(timelineId: number): Promise<TimelineEvent[]> {
     const timeline = await this.getWeddingTimeline(timelineId);
-    if (!timeline) return [];
+    if (!timeline || timeline.userId === null) return [];
     
     return db
       .select()
@@ -338,10 +343,10 @@ export class DatabaseStorage implements IStorage {
   
   // Timeline Question methods
   async getTimelineQuestions(active?: boolean): Promise<TimelineQuestion[]> {
-    let query = db.select().from(timelineQuestions);
+    const query = db.select().from(timelineQuestions);
     
     if (active !== undefined) {
-      query = query.where(eq(timelineQuestions.active, active));
+      return query.where(eq(timelineQuestions.active, active)).orderBy(timelineQuestions.order);
     }
     
     return query.orderBy(timelineQuestions.order);
@@ -355,22 +360,6 @@ export class DatabaseStorage implements IStorage {
     return question;
   }
   
-  async createTimelineQuestion(question: InsertTimelineQuestion): Promise<TimelineQuestion> {
-    const [newQuestion] = await db
-      .insert(timelineQuestions)
-      .values({
-        ...question,
-        defaultName: question.defaultName ?? null,
-        defaultCategory: question.defaultCategory ?? null,
-        defaultStartTime: question.defaultStartTime ?? null,
-        defaultEndTime: question.defaultEndTime ?? null,
-        defaultColor: question.defaultColor ?? null,
-        defaultNotes: question.defaultNotes ?? null,
-      })
-      .returning();
-    return newQuestion;
-  }
-  
   async updateTimelineQuestion(id: number, question: Partial<InsertTimelineQuestion>): Promise<TimelineQuestion | undefined> {
     const [updatedQuestion] = await db
       .update(timelineQuestions)
@@ -381,18 +370,78 @@ export class DatabaseStorage implements IStorage {
         defaultStartTime: question.defaultStartTime !== undefined ? (question.defaultStartTime ?? null) : undefined,
         defaultEndTime: question.defaultEndTime !== undefined ? (question.defaultEndTime ?? null) : undefined,
         defaultColor: question.defaultColor !== undefined ? (question.defaultColor ?? null) : undefined,
-        defaultNotes: question.defaultNotes !== undefined ? (question.defaultNotes ?? null) : undefined,
+        defaultNotes: question.defaultNotes !== undefined ? (question.defaultNotes ?? null) : undefined
       })
       .where(eq(timelineQuestions.id, id))
       .returning();
+
     return updatedQuestion;
   }
   
+  async createTimelineQuestion(question: InsertTimelineQuestion): Promise<TimelineQuestion> {
+    const [newQuestion] = await db
+      .insert(timelineQuestions)
+      .values({
+        ...question,
+        description: question.description ?? null,
+        defaultName: question.defaultName ?? null,
+        defaultCategory: question.defaultCategory ?? null,
+        defaultStartTime: question.defaultStartTime ?? null,
+        defaultEndTime: question.defaultEndTime ?? null,
+        defaultColor: question.defaultColor ?? null,
+        defaultNotes: question.defaultNotes ?? null
+      })
+      .returning();
+
+    return newQuestion;
+  }
+  
   async deleteTimelineQuestion(id: number): Promise<boolean> {
-    await db
+    const result = await db
       .delete(timelineQuestions)
-      .where(eq(timelineQuestions.id, id));
-    return true;
+      .where(eq(timelineQuestions.id, id))
+      .returning();
+
+    return result.length > 0;
+  }
+  
+  async updateTimelineQuestions(questions: TimelineQuestion[]): Promise<void> {
+    // First, get the current questions to compare
+    const currentQuestions = await this.getTimelineQuestions();
+    
+    // Update or insert each question
+    for (const question of questions) {
+      const existingQuestion = currentQuestions.find(q => q.id === question.id);
+      if (existingQuestion) {
+        await db.update(timelineQuestions)
+          .set({
+            question: question.question,
+            description: question.description,
+            order: question.order
+          })
+          .where(eq(timelineQuestions.id, question.id));
+      } else {
+        await db.insert(timelineQuestions).values({
+          id: question.id,
+          question: question.question,
+          description: question.description,
+          order: question.order
+        });
+      }
+    }
+
+    // Delete questions that are no longer in the list
+    const questionIds = questions.map(q => q.id);
+    await db.delete(timelineQuestions)
+      .where(not(inArray(timelineQuestions.id, questionIds)));
+
+    // Update the app settings to track the last update
+    await this.updateAppSetting(
+      'timeline_questions_last_update',
+      new Date().toISOString(),
+      'Last update timestamp for timeline questions',
+      'system'
+    );
   }
   
   // User Question Response methods
@@ -648,7 +697,7 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(emailTemplates.type, template.type || existingTemplate.type),
-            eq(emailTemplates.id, id).not()
+            ne(emailTemplates.id, id)
           )
         );
     }
@@ -683,61 +732,63 @@ export class DatabaseStorage implements IStorage {
   
   // App Settings methods
   async getAppSettings(category?: string): Promise<AppSetting[]> {
-    let query = db.select().from(appSettings);
+    const query = db.select().from(appSettings);
     
     if (category) {
-      query = query.where(eq(appSettings.category, category));
+      return query.where(eq(appSettings.category, category));
     }
     
-    return query.orderBy(appSettings.key);
+    return query;
   }
   
-  async getAppSetting(key: string): Promise<AppSetting | undefined> {
-    const [setting] = await db
-      .select()
-      .from(appSettings)
-      .where(eq(appSettings.key, key));
-    return setting;
+  async getAppSetting(key: string): Promise<AppSetting | null> {
+    const result = await db.select().from(appSettings).where(eq(appSettings.key, key));
+    return result[0] || null;
   }
   
-  async setAppSetting(setting: InsertAppSetting): Promise<AppSetting> {
-    // Check if setting already exists
-    const existingSetting = await this.getAppSetting(setting.key);
-    
-    if (existingSetting) {
-      // Update existing setting
-      return this.updateAppSetting(setting.key, setting) as Promise<AppSetting>;
-    }
-    
-    // Create new setting
-    const [newSetting] = await db
-      .insert(appSettings)
+  async setAppSetting(key: string, value: unknown, description: string, category: string): Promise<AppSetting> {
+    const result = await db.insert(appSettings)
       .values({
-        ...setting,
-        description: setting.description ?? null,
+        key,
+        value,
+        description,
+        category,
       })
       .returning();
-    return newSetting;
+    return result[0];
   }
   
-  async updateAppSetting(key: string, setting: Partial<InsertAppSetting>): Promise<AppSetting | undefined> {
-    const [updatedSetting] = await db
-      .update(appSettings)
+  async updateAppSetting(key: string, value: unknown, description: string, category: string): Promise<AppSetting> {
+    const result = await db.update(appSettings)
       .set({
-        ...setting,
-        description: setting.description !== undefined ? (setting.description ?? null) : undefined,
+        value,
+        description,
+        category,
         updatedAt: new Date(),
       })
       .where(eq(appSettings.key, key))
       .returning();
-    return updatedSetting;
+    return result[0];
   }
   
-  async deleteAppSetting(key: string): Promise<boolean> {
-    await db
-      .delete(appSettings)
-      .where(eq(appSettings.key, key));
-    return true;
+  async deleteAppSetting(key: string): Promise<void> {
+    await db.delete(appSettings).where(eq(appSettings.key, key));
+  }
+
+  // Last Selected Timeline methods
+  async updateUserLastSelectedTimeline(userId: number, timelineId: number): Promise<void> {
+    await pool.query(
+      'UPDATE users SET last_selected_timeline_id = $1 WHERE id = $2',
+      [timelineId, userId]
+    );
+  }
+
+  async getUserLastSelectedTimeline(userId: number): Promise<number | null> {
+    const result = await pool.query(
+      'SELECT last_selected_timeline_id FROM users WHERE id = $1',
+      [userId]
+    );
+    return result.rows[0]?.last_selected_timeline_id || null;
   }
 }
 
