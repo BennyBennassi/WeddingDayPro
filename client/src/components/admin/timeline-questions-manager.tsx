@@ -77,10 +77,10 @@ export default function TimelineQuestionsManager() {
       defaultNotes: selectedQuestion.defaultNotes || "",
       promptName: selectedQuestion.promptName,
       promptCategory: selectedQuestion.promptCategory,
-      promptStartTime: selectedQuestion.promptStartTime,
-      promptEndTime: selectedQuestion.promptEndTime,
+      promptStartTime: true,
+      promptEndTime: true,
       promptColor: selectedQuestion.promptColor,
-      promptNotes: selectedQuestion.promptNotes,
+      promptNotes: true,
     } : {
       question: "",
       description: "",
@@ -97,7 +97,7 @@ export default function TimelineQuestionsManager() {
       promptStartTime: true,
       promptEndTime: true,
       promptColor: false,
-      promptNotes: false,
+      promptNotes: true,
     }
   });
   

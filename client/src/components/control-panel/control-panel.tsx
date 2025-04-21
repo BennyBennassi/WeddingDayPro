@@ -380,7 +380,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                       disabled={!setSelectedTimelineId}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a timeline" />
+                        <SelectValue placeholder="Select a Timeline" />
                       </SelectTrigger>
                       <SelectContent>
                         {userTimelines.map((t: any) => (
@@ -522,7 +522,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                       disabled={!setSelectedTimelineId}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a timeline" />
+                        <SelectValue placeholder="Select a Timeline" />
                       </SelectTrigger>
                       <SelectContent>
                         {userTimelines.map((t: any) => (
