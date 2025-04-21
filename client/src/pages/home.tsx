@@ -67,25 +67,25 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   const { generatePdf } = usePdfExport();
   
   // Fetch user's timelines
-  const { data: userTimelines, isLoading: isUserTimelinesLoading } = useQuery({
+  const { data: userTimelines = [], isLoading: isUserTimelinesLoading } = useQuery<any[]>({
     queryKey: ['/api/wedding-timelines'],
     enabled: !!user, // Only run this query if user is logged in
   });
 
   // Fetch the timeline data
-  const { data: timeline, isLoading: isTimelineLoading } = useQuery({
+  const { data: timeline = null, isLoading: isTimelineLoading } = useQuery<any>({
     queryKey: [`/api/wedding-timelines/single/${selectedTimelineId}`],
     enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
 
   // Fetch the timeline events
-  const { data: events, isLoading: isEventsLoading } = useQuery({
+  const { data: events = [], isLoading: isEventsLoading } = useQuery<any[]>({
     queryKey: [`/api/timeline-events/${selectedTimelineId}`],
     enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
 
   // Fetch venue restrictions
-  const { data: restrictions, isLoading: isRestrictionsLoading } = useQuery({
+  const { data: restrictions = null, isLoading: isRestrictionsLoading } = useQuery<any>({
     queryKey: [`/api/venue-restrictions/${selectedTimelineId}`],
     enabled: !!selectedTimelineId, // Only run when a timeline is selected
   });
@@ -207,11 +207,12 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
       return;
     }
     
-    // Generate a timeline name with TL prefix and number
-    // Find the highest TL number from existing timelines to ensure continuous numbering
-    let highestTLNumber = 0;
-    
-    if (userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0) {
+    // If this is the user's first timeline, name it "My Wedding"
+    if (!Array.isArray(userTimelines) || userTimelines.length === 0) {
+      setNewTimelineName("My Wedding");
+    } else {
+      // Generate a timeline name with TL prefix and number for subsequent timelines
+      let highestTLNumber = 0;
       userTimelines.forEach((timeline: any) => {
         if (timeline.name) {
           const match = timeline.name.match(/^TL(\d+) -/);
@@ -223,13 +224,10 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
           }
         }
       });
+      const timelinePrefix = `TL${highestTLNumber + 1} - `;
+      setNewTimelineName(`${timelinePrefix}New Timeline`);
     }
     
-    const timelinePrefix = `TL${highestTLNumber + 1} - `;
-    const defaultName = "New Timeline";
-    
-    // Set default values
-    setNewTimelineName(defaultName);
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     setNewTimelineDate(today);
     
@@ -314,7 +312,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   };
 
   const handleExportPdf = () => {
-    if (timeline && events) {
+    if (timeline && Array.isArray(events)) {
       generatePdf(timeline, events);
     }
   };
@@ -439,7 +437,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
   }, [user, selectedTimelineId]);
 
   useEffect(() => {
-    // For logged-in users, check for previously used timeline or select their first timeline
+    // For logged-in users, check for previously used timeline
     if (user && userTimelines && Array.isArray(userTimelines) && userTimelines.length > 0 && !selectedTimelineId) {
       // Try to get last used timeline from localStorage
       const lastUsedTimelineId = localStorage.getItem(`lastUsedTimeline_${user.id}`);
@@ -456,18 +454,8 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
         }
       }
       
-      // Look for a "Default" timeline first (prioritize it)
-      const defaultTimeline = userTimelines.find(
-        (timeline: any) => timeline.name && timeline.name.includes("Default")
-      );
-
-      if (defaultTimeline) {
-        // If a default timeline exists, use it
-        setSelectedTimelineId(defaultTimeline.id);
-      } else {
-        // Otherwise use the first timeline
-        setSelectedTimelineId(userTimelines[0].id);
-      }
+      // If no last used timeline found, use the first timeline
+      setSelectedTimelineId(userTimelines[0].id);
     } else if (!user && !selectedTimelineId) {
       // For non-logged in users, set to a default demo timeline (ID 1)
       setSelectedTimelineId(1);
@@ -510,7 +498,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
               ) : (
                 <Timeline 
                   timeline={timeline} 
-                  events={events} 
+                  events={events as any[]} 
                   venueRestrictions={restrictions}
                   selectedEventId={selectedEventId}
                   setSelectedEventId={setSelectedEventId}
@@ -520,7 +508,7 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
             </div>
             
             {/* Things to Consider - Now below timeline */}
-            {user && (
+            {user && selectedTimelineId && (
               <div className="mt-6 lg:mt-8">
                 <ThingsToConsider
                   timelineId={selectedTimelineId}
@@ -537,12 +525,12 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
 
             <ControlPanel 
               timeline={timeline}
-              events={events}
+              events={events as any[]}
               venueRestrictions={restrictions}
               selectedEventId={selectedEventId}
               setSelectedEventId={setSelectedEventId}
               handleExportPdf={handleExportPdf}
-              userTimelines={userTimelines}
+              userTimelines={userTimelines as any[]}
               selectedTimelineId={selectedTimelineId}
               setSelectedTimelineId={handleTimelineChange}
               handleCreateTimeline={handleCreateTimeline}
@@ -594,12 +582,12 @@ function Home({ provideSaveHandler, provideShareHandler }: HomeProps) {
           
           <ControlPanel 
             timeline={timeline}
-            events={events}
+            events={events as any[]}
             venueRestrictions={restrictions}
             selectedEventId={selectedEventId}
             setSelectedEventId={setSelectedEventId}
             handleExportPdf={handleExportPdf}
-            userTimelines={userTimelines}
+            userTimelines={userTimelines as any[]}
             selectedTimelineId={selectedTimelineId}
             setSelectedTimelineId={handleTimelineChange}
             handleCreateTimeline={handleCreateTimeline}
