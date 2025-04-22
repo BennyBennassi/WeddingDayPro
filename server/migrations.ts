@@ -53,21 +53,66 @@ export async function runMigrations() {
       await pool.query(`
         CREATE TABLE wedding_timelines (
           id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id),
-          name TEXT NOT NULL,
-          wedding_of TEXT,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          title TEXT NOT NULL,
+          wedding_date DATE,
           wedding_couple TEXT,
-          wedding_date TEXT NOT NULL,
-          start_hour INTEGER NOT NULL,
-          time_format TEXT NOT NULL,
+          start_hour INTEGER NOT NULL DEFAULT 0,
+          end_hour INTEGER NOT NULL DEFAULT 24,
           created_at TIMESTAMP NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
       `);
       console.log("Created wedding_timelines table");
-    } else {
-      // Add wedding_couple column to wedding_timelines table if it doesn't exist
-      await addColumnIfNotExists('wedding_timelines', 'wedding_couple', 'TEXT');
+    }
+
+    // Create venue_restrictions table if not exists
+    const venueRestrictionsTableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'venue_restrictions'
+      );
+    `);
+    
+    const venueRestrictionsTableExists = venueRestrictionsTableResult.rows[0].exists;
+    
+    if (!venueRestrictionsTableExists) {
+      await pool.query(`
+        CREATE TABLE venue_restrictions (
+          id SERIAL PRIMARY KEY,
+          timeline_id INTEGER NOT NULL REFERENCES wedding_timelines(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created venue_restrictions table");
+    }
+
+    // Create share_tokens table if not exists
+    const shareTokensTableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'share_tokens'
+      );
+    `);
+    
+    const shareTokensTableExists = shareTokensTableResult.rows[0].exists;
+    
+    if (!shareTokensTableExists) {
+      await pool.query(`
+        CREATE TABLE share_tokens (
+          id SERIAL PRIMARY KEY,
+          timeline_id INTEGER NOT NULL REFERENCES wedding_timelines(id),
+          token TEXT NOT NULL UNIQUE,
+          created_by INTEGER NOT NULL REFERENCES users(id),
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          expires_at TIMESTAMP NOT NULL
+        );
+      `);
+      console.log("Created share_tokens table");
     }
 
     // Create timeline_events table if not exists
