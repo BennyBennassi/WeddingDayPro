@@ -187,6 +187,12 @@ export const insertAppSettingSchema = createInsertSchema(appSettings, {
   updatedAt: z.date().optional(),
 });
 
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
 // Define types
 export type User = InferModel<typeof usersTable>;
 export type TimelineEvent = InferModel<typeof timelineEvents>;
