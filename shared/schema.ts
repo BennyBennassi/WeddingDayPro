@@ -1,14 +1,11 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid, varchar } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import type { InferModel } from "drizzle-orm";
 
-// Define table types first
-type UsersTable = ReturnType<typeof pgTable>;
-type WeddingTimelinesTable = ReturnType<typeof pgTable>;
-
-// Define tables
-const usersTable = pgTable("users", {
+// Define base tables
+export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
@@ -16,12 +13,12 @@ const usersTable = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastSelectedTimelineId: integer("last_selected_timeline_id").references(() => weddingTimelinesTable.id, { onDelete: "set null" }),
+  lastSelectedTimelineId: integer("last_selected_timeline_id"),
 });
 
-const weddingTimelinesTable = pgTable("wedding_timelines", {
+export const weddingTimelinesTable = pgTable("wedding_timelines", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => usersTable.id),
+  userId: integer("user_id"),
   name: text("name").notNull(),
   weddingOf: text("wedding_of"),
   weddingCouple: text("wedding_couple"),
@@ -32,6 +29,22 @@ const weddingTimelinesTable = pgTable("wedding_timelines", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Define relations
+export const userRelations = relations(usersTable, ({ one }) => ({
+  selectedTimeline: one(weddingTimelinesTable, {
+    fields: [usersTable.lastSelectedTimelineId],
+    references: [weddingTimelinesTable.id],
+  }),
+}));
+
+export const timelineRelations = relations(weddingTimelinesTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [weddingTimelinesTable.userId],
+    references: [usersTable.id],
+  }),
+}));
+
+// Export table aliases
 export const users = usersTable;
 export const weddingTimelines = weddingTimelinesTable;
 
@@ -164,6 +177,12 @@ export const insertUserSchema = createInsertSchema(usersTable, {
 
 export const insertTimelineEventSchema = createInsertSchema(timelineEvents, {
   id: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export const insertAppSettingSchema = createInsertSchema(appSettings, {
+  id: z.string().uuid().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });
