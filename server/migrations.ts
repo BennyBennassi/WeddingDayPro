@@ -4,7 +4,7 @@ export async function runMigrations() {
   console.log("Running database migrations...");
   
   try {
-    // Check if users table exists
+    // Create users table if not exists
     const usersTableResult = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -14,7 +14,21 @@ export async function runMigrations() {
     
     const usersTableExists = usersTableResult.rows[0].exists;
     
-    if (usersTableExists) {
+    if (!usersTableExists) {
+      await pool.query(`
+        CREATE TABLE users (
+          id SERIAL PRIMARY KEY,
+          username TEXT NOT NULL UNIQUE,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          last_selected_timeline_id INTEGER
+        );
+      `);
+      console.log("Created users table");
+    } else {
       // Add new columns to users table if they don't exist
       await addColumnIfNotExists('users', 'email', 'TEXT');
       await addColumnIfNotExists('users', 'name', 'TEXT');
@@ -23,12 +37,72 @@ export async function runMigrations() {
       await addColumnIfNotExists('users', 'last_selected_timeline_id', 'INTEGER');
       
       console.log("User table migrations completed successfully");
-    } else {
-      console.log("Users table does not exist, no migrations needed");
     }
+
+    // Create wedding_timelines table if not exists
+    const weddingTimelinesTableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'wedding_timelines'
+      );
+    `);
     
-    // Add wedding_couple column to wedding_timelines table if it doesn't exist
-    await addColumnIfNotExists('wedding_timelines', 'wedding_couple', 'TEXT');
+    const weddingTimelinesTableExists = weddingTimelinesTableResult.rows[0].exists;
+    
+    if (!weddingTimelinesTableExists) {
+      await pool.query(`
+        CREATE TABLE wedding_timelines (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          name TEXT NOT NULL,
+          wedding_of TEXT,
+          wedding_couple TEXT,
+          wedding_date TEXT NOT NULL,
+          start_hour INTEGER NOT NULL,
+          time_format TEXT NOT NULL,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created wedding_timelines table");
+    } else {
+      // Add wedding_couple column to wedding_timelines table if it doesn't exist
+      await addColumnIfNotExists('wedding_timelines', 'wedding_couple', 'TEXT');
+    }
+
+    // Create timeline_events table if not exists
+    const timelineEventsTableResult = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'timeline_events'
+      );
+    `);
+    
+    const timelineEventsTableExists = timelineEventsTableResult.rows[0].exists;
+    
+    if (!timelineEventsTableExists) {
+      await pool.query(`
+        CREATE TABLE timeline_events (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          timeline_id INTEGER REFERENCES wedding_timelines(id) ON DELETE CASCADE,
+          category TEXT,
+          color TEXT,
+          notes TEXT,
+          position INTEGER,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      console.log("Created timeline_events table");
+    } else {
+      // Add timeline_id column to timeline_events if it doesn't exist
+      await addColumnIfNotExists('timeline_events', 'timeline_id', 'INTEGER');
+    }
     
     // Create admin user if not exists
     await createAdminUserIfNotExists();
@@ -44,9 +118,6 @@ export async function runMigrations() {
     
     // Create template events table if not exists
     await createTemplateEventsTable();
-    
-    // Add timeline_id column to timeline_events if it doesn't exist
-    await addColumnIfNotExists('timeline_events', 'timeline_id', 'INTEGER');
     
     // Create sample timeline questions if needed
     await createSampleTimelineQuestions();
