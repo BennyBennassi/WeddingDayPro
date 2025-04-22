@@ -193,6 +193,37 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates, {
   updatedAt: z.date().optional(),
 });
 
+export const insertWeddingTimelineSchema = createInsertSchema(weddingTimelinesTable, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export const insertVenueRestrictionSchema = createInsertSchema(venueRestrictions, {
+  id: z.number().optional(),
+});
+
+export const insertTimelineQuestionSchema = createInsertSchema(timelineQuestions, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(),
+});
+
+export const insertUserQuestionResponseSchema = createInsertSchema(userQuestionResponses, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export const insertTimelineTemplateSchema = createInsertSchema(timelineTemplates, {
+  id: z.number().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export const insertTemplateEventSchema = createInsertSchema(templateEvents, {
+  id: z.number().optional(),
+});
+
 // Define types
 export type User = InferModel<typeof usersTable>;
 export type TimelineEvent = InferModel<typeof timelineEvents>;
